@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Agenda de Laboratório</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/index.html">
+                <i class="bi bi-calendar-check me-2"></i>
+                Sistema de Agenda de Laboratório
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/index.html">
+                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/calendario.html">
+                            <i class="bi bi-calendar3 me-1"></i> Calendário
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/novo-agendamento.html">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Agendamento
+                        </a>
+                    </li>
+                    <li class="nav-item admin-only">
+                        <a class="nav-link" href="/usuarios.html">
+                            <i class="bi bi-people me-1"></i> Usuários
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span id="userName">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/perfil.html">
+                                    <i class="bi bi-person me-2"></i> Meu Perfil
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" id="btnLogout">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <div class="container-fluid py-4">
+        <div class="row">
+            <!-- Sidebar em telas maiores -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="sidebar rounded shadow-sm">
+                    <h5 class="mb-3">Menu Principal</h5>
+                    <div class="nav flex-column">
+                        <a class="nav-link active" href="/index.html">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="/calendario.html">
+                            <i class="bi bi-calendar3"></i> Calendário
+                        </a>
+                        <a class="nav-link" href="/novo-agendamento.html">
+                            <i class="bi bi-plus-circle"></i> Novo Agendamento
+                        </a>
+                        <a class="nav-link admin-only" href="/usuarios.html">
+                            <i class="bi bi-people"></i> Usuários
+                        </a>
+                        <a class="nav-link" href="/perfil.html">
+                            <i class="bi bi-person"></i> Meu Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conteúdo principal -->
+            <div class="col-lg-9">
+                <h2 class="mb-4">Dashboard</h2>
+                
+                <div id="alertContainer"></div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Meus Agendamentos</h5>
+                                <a href="/novo-agendamento.html" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-plus"></i> Novo
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <div id="agendamentosContainer">
+                                    <div class="d-flex justify-content-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Carregando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer text-end">
+                                <a href="/calendario.html" class="btn btn-sm btn-outline-primary">Ver Calendário</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Notificações</h5>
+                                <span class="badge bg-primary rounded-pill" id="notificacoesCount">0</span>
+                            </div>
+                            <div class="card-body">
+                                <div id="notificacoesContainer">
+                                    <div class="d-flex justify-content-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Carregando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Resumo de Utilização</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3 mb-md-0">
+                                        <div class="border rounded p-3 text-center">
+                                            <h3 id="totalAgendamentos">-</h3>
+                                            <p class="text-muted mb-0">Total de Agendamentos</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3 mb-md-0">
+                                        <div class="border rounded p-3 text-center">
+                                            <h3 id="proximoAgendamento">-</h3>
+                                            <p class="text-muted mb-0">Próximo Agendamento</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-3 text-center">
+                                            <h3 id="labMaisUsado">-</h3>
+                                            <p class="text-muted mb-0">Laboratório Mais Usado</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Legenda de cores para turnos -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Legenda de Turnos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="legenda-turnos">
+                            <div class="legenda-item">
+                                <div class="legenda-cor legenda-cor-manha"></div>
+                                <span>Manhã</span>
+                            </div>
+                            <div class="legenda-item">
+                                <div class="legenda-cor legenda-cor-tarde"></div>
+                                <span>Tarde</span>
+                            </div>
+                            <div class="legenda-item">
+                                <div class="legenda-cor legenda-cor-noite"></div>
+                                <span>Noite</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="mt-5 py-3 bg-dark text-white">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 Sistema de Agenda de Laboratório</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">Versão 1.0</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal de Detalhes do Agendamento -->
+    <div class="modal fade" id="agendamentoModal" tabindex="-1" aria-labelledby="agendamentoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agendamentoModalLabel">Detalhes do Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body" id="agendamentoModalBody">
+                    <!-- Conteúdo preenchido via JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditarAgendamento">Editar</button>
+                    <button type="button" class="btn btn-danger" id="btnExcluirAgendamento">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmacaoModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verifica autenticação
+            verificarAutenticacao();
+            
+            // Carrega os agendamentos do usuário
+            carregarAgendamentos();
+            
+            // Carrega as notificações
+            carregarNotificacoes();
+            
+            // Carrega o resumo de utilização
+            carregarResumoUtilizacao();
+            
+            // Variável para armazenar o ID do agendamento selecionado
+            let agendamentoSelecionadoId = null;
+            
+            // Modal de detalhes do agendamento
+            const agendamentoModal = new bootstrap.Modal(document.getElementById('agendamentoModal'));
+            const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
+            
+            // Botões do modal
+            document.getElementById('btnEditarAgendamento').addEventListener('click', function() {
+                if (agendamentoSelecionadoId) {
+                    window.location.href = `/novo-agendamento.html?id=${agendamentoSelecionadoId}`;
+                }
+            });
+            
+            document.getElementById('btnExcluirAgendamento').addEventListener('click', function() {
+                agendamentoModal.hide();
+                confirmacaoModal.show();
+            });
+            
+            document.getElementById('btnConfirmarExclusao').addEventListener('click', async function() {
+                if (agendamentoSelecionadoId) {
+                    try {
+                        await chamarAPI(`/agendamentos/${agendamentoSelecionadoId}`, 'DELETE');
+                        confirmacaoModal.hide();
+                        exibirAlerta('Agendamento excluído com sucesso!', 'success');
+                        carregarAgendamentos();
+                    } catch (error) {
+                        exibirAlerta(`Erro ao excluir agendamento: ${error.message}`, 'danger');
+                    }
+                }
+            });
+        });
+        
+        // Função para obter a classe CSS com base no turno
+        function getClasseTurno(turno) {
+            switch(turno) {
+                case 'Manhã':
+                    return 'agendamento-manha';
+                case 'Tarde':
+                    return 'agendamento-tarde';
+                case 'Noite':
+                    return 'agendamento-noite';
+                default:
+                    return '';
+            }
+        }
+        
+        // Função para carregar os agendamentos do usuário
+        async function carregarAgendamentos() {
+            const agendamentosContainer = document.getElementById('agendamentosContainer');
+            
+            try {
+                const agendamentos = await chamarAPI('/agendamentos');
+                
+                if (agendamentos.length === 0) {
+                    agendamentosContainer.innerHTML = '<p class="text-muted">Nenhum agendamento encontrado.</p>';
+                    return;
+                }
+                
+                // Ordena os agendamentos por data (mais recentes primeiro)
+                agendamentos.sort((a, b) => new Date(b.data) - new Date(a.data));
+                
+                // Limita a 5 agendamentos mais recentes
+                const agendamentosRecentes = agendamentos.slice(0, 5);
+                
+                let html = '<div class="list-group">';
+                
+                agendamentosRecentes.forEach(agendamento => {
+                    // Obtém a classe de cor para o turno
+                    const classeTurno = getClasseTurno(agendamento.turno);
+                    
+                    html += `
+                        <a href="#" class="list-group-item list-group-item-action" data-id="${agendamento.id}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${agendamento.laboratorio} - ${agendamento.turma}</h6>
+                                <small>${formatarData(agendamento.data)}</small>
+                            </div>
+                            <p class="mb-1">Turno: <span class="badge ${classeTurno}">${agendamento.turno}</span></p>
+                        </a>
+                    `;
+                });
+                
+                html += '</div>';
+                agendamentosContainer.innerHTML = html;
+                
+                // Adiciona event listeners para os itens da lista
+                document.querySelectorAll('#agendamentosContainer .list-group-item').forEach(item => {
+                    item.addEventListener('click', async function() {
+                        const id = this.getAttribute('data-id');
+                        await mostrarDetalhesAgendamento(id);
+                    });
+                });
+                
+            } catch (error) {
+                agendamentosContainer.innerHTML = '<p class="text-danger">Erro ao carregar agendamentos.</p>';
+                console.error('Erro ao carregar agendamentos:', error);
+            }
+        }
+        
+        // Função para carregar o resumo de utilização
+        async function carregarResumoUtilizacao() {
+            try {
+                const agendamentos = await chamarAPI('/agendamentos');
+                
+                // Total de agendamentos
+                document.getElementById('totalAgendamentos').textContent = agendamentos.length;
+                
+                // Próximo agendamento
+                const hoje = new Date();
+                const proximosAgendamentos = agendamentos.filter(a => new Date(a.data) >= hoje);
+                proximosAgendamentos.sort((a, b) => new Date(a.data) - new Date(b.data));
+                
+                if (proximosAgendamentos.length > 0) {
+                    document.getElementById('proximoAgendamento').textContent = formatarData(proximosAgendamentos[0].data);
+                } else {
+                    document.getElementById('proximoAgendamento').textContent = 'Nenhum';
+                }
+                
+                // Laboratório mais usado
+                const labCount = {};
+                agendamentos.forEach(a => {
+                    labCount[a.laboratorio] = (labCount[a.laboratorio] || 0) + 1;
+                });
+                
+                let labMaisUsado = '';
+                let maxCount = 0;
+                
+                for (const lab in labCount) {
+                    if (labCount[lab] > maxCount) {
+                        maxCount = labCount[lab];
+                        labMaisUsado = lab;
+                    }
+                }
+                
+                document.getElementById('labMaisUsado').textContent = labMaisUsado || 'Nenhum';
+                
+            } catch (error) {
+                console.error('Erro ao carregar resumo de utilização:', error);
+            }
+        }
+        
+        // Função para mostrar detalhes de um agendamento
+        async function mostrarDetalhesAgendamento(id) {
+            try {
+                const agendamento = await chamarAPI(`/agendamentos/${id}`);
+                agendamentoSelecionadoId = agendamento.id;
+                
+                // Converte os horários de JSON para array
+                const horarios = JSON.parse(agendamento.horarios);
+                
+                // Obtém a classe de cor para o turno
+                const classeTurno = getClasseTurno(agendamento.turno);
+                
+                // Preenche o modal com os detalhes
+                document.getElementById('agendamentoModalLabel').textContent = `Agendamento - ${agendamento.laboratorio}`;
+                
+                document.getElementById('agendamentoModalBody').innerHTML = `
+                    <div class="mb-3">
+                        <h6>Data:</h6>
+                        <p>${formatarData(agendamento.data)}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Laboratório:</h6>
+                        <p>${agendamento.laboratorio}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Turma:</h6>
+                        <p>${agendamento.turma}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Turno:</h6>
+                        <p><span class="badge ${classeTurno}">${agendamento.turno}</span></p>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Horários:</h6>
+                        <p>${horarios.join(', ')}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Data de Criação:</h6>
+                        <p>${formatarData(agendamento.data_criacao)}</p>
+                    </div>
+                `;
+                
+                // Exibe o modal
+                agendamentoModal.show();
+                
+            } catch (error) {
+                exibirAlerta(`Erro ao carregar detalhes do agendamento: ${error.message}`, 'danger');
+            }
+        }
+    </script>
+</body>
+</html>
