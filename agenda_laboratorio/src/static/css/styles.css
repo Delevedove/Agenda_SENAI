@@ -110,6 +110,8 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 20px;
+  max-width: 100%;
+  overflow-x: auto; /* Permite rolagem horizontal em telas muito pequenas */
 }
 
 .calendario-header {
@@ -123,6 +125,8 @@ body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 5px;
+  min-width: 700px; /* Garante tamanho mínimo para evitar compressão excessiva */
+  max-width: 100%;
 }
 
 .calendario-day {
@@ -131,6 +135,8 @@ body {
   border-radius: 4px;
   padding: 5px;
   min-height: 80px;
+  overflow-y: auto; /* Permite rolagem vertical dentro das células */
+  max-height: 120px; /* Limita a altura máxima das células */
 }
 
 .calendario-day-header {
@@ -240,12 +246,13 @@ footer {
     margin-bottom: 20px;
   }
   
-  .calendario-grid {
-    grid-template-columns: repeat(7, 1fr);
+  .calendario-container {
+    padding: 10px;
   }
   
   .calendario-day {
     min-height: 60px;
+    max-height: 100px;
   }
 }
 
@@ -253,16 +260,50 @@ footer {
   .calendario-day {
     min-height: 50px;
     font-size: 0.8rem;
+    max-height: 80px;
   }
   
   .agendamento-item {
     font-size: 0.7rem;
+    padding: 1px 3px;
   }
   
   .legenda-turnos {
     flex-direction: column;
     gap: 5px;
   }
+  
+  .calendario-header h3 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Tela de seleção de sistema */
+.sistema-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  height: 100%;
+}
+
+.sistema-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.sistema-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.sistema-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sistema-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Animações */

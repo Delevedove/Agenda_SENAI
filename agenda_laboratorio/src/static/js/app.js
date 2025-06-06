@@ -31,6 +31,14 @@ async function realizarLogin(username, senha) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('usuario', JSON.stringify(data.usuario));
         
+        // Se for admin, redireciona para a tela de seleção de sistema
+        if (data.usuario.tipo === 'admin') {
+            window.location.href = '/selecao-sistema.html';
+        } else {
+            // Se for usuário comum, redireciona direto para o dashboard
+            window.location.href = '/index.html';
+        }
+        
         return data;
     } catch (error) {
         console.error('Erro no login:', error);
@@ -211,7 +219,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         const link = document.createElement('a');
         link.className = 'nav-link';
         link.href = '/laboratorios-turmas.html';
-        link.innerHTML = '<i class="bi bi-building me-1"></i> Laboratórios e Turmas';
+        link.innerHTML = '<i class="bi bi-building-gear me-1"></i> Laboratórios e Turmas';
         
         navItem.appendChild(link);
         
@@ -227,7 +235,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
         link.href = '/laboratorios-turmas.html';
-        link.innerHTML = '<i class="bi bi-building"></i> Laboratórios e Turmas';
+        link.innerHTML = '<i class="bi bi-building-gear"></i> Laboratórios e Turmas';
         
         // Insere antes do último item (Meu Perfil)
         const lastItem = container.querySelector('a[href="/perfil.html"]');
@@ -243,7 +251,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
 document.addEventListener('DOMContentLoaded', function() {
     // Verifica autenticação em todas as páginas exceto login e registro
     const paginaAtual = window.location.pathname;
-    if (paginaAtual !== '/admin-login.html' && paginaAtual !== '/register.html') {
+    if (paginaAtual !== '/admin-login.html' && paginaAtual !== '/register.html' && paginaAtual !== '/selecao-sistema.html') {
         verificarAutenticacao();
         
         // Páginas que requerem permissão de administrador
@@ -262,6 +270,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Adiciona no menu lateral (sidebar)
             adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
         }
+    } else if (paginaAtual === '/selecao-sistema.html') {
+        // Verifica se é admin para a tela de seleção de sistema
+        verificarAutenticacao();
+        verificarPermissaoAdmin();
     }
     
     // Configura o botão de logout
@@ -350,6 +362,33 @@ async function carregarNotificacoes() {
         });
     } catch (error) {
         notificacoesContainer.innerHTML = '<p class="text-danger">Erro ao carregar notificações.</p>';
+    }
+}
+
+/**
+ * Carrega laboratórios do sistema para uso em filtros e formulários
+ * @returns {Promise<Array>} - Promise com a lista de laboratórios
+ */
+async function carregarLaboratoriosParaFiltro(seletorElemento) {
+    const selectElement = document.querySelector(seletorElemento);
+    if (!selectElement) return [];
+    
+    try {
+        const laboratorios = await chamarAPI('/laboratorios');
+        
+        // Mantém a opção "Todos"
+        let html = '<option value="">Todos</option>';
+        
+        // Adiciona as opções de laboratórios
+        laboratorios.forEach(lab => {
+            html += `<option value="${lab.nome}">${lab.nome}</option>`;
+        });
+        
+        selectElement.innerHTML = html;
+        return laboratorios;
+    } catch (error) {
+        console.error('Erro ao carregar laboratórios para filtro:', error);
+        return [];
     }
 }
 
