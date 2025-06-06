@@ -369,42 +369,43 @@
             });
             
             /**
+             * Atualiza o calendá            /**
              * Atualiza o calendário com os agendamentos do mês atual
              */
             async function atualizarCalendario() {
                 try {
-                    // Atualiza o título do mês/ano
+                    // Atualiza o título do mês e ano
                     const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
                     document.getElementById('mesAnoAtual').textContent = `${meses[mesAtual]} ${anoAtual}`;
                     
-                    // Carrega os agendamentos do mês
-                    agendamentos = await chamarAPI(`/agendamentos/calendario/${mesAtual + 1}/${anoAtual}`);
-                    
-                    // Aplica filtros se necessário
-                    if (filtroLaboratorio || filtroTurno) {
-                        agendamentos = agendamentos.filter(agendamento => {
-                            let passaFiltro = true;
-                            
-                            if (filtroLaboratorio && agendamento.laboratorio !== filtroLaboratorio) {
-                                passaFiltro = false;
-                            }
-                            
-                            if (filtroTurno && agendamento.turno !== filtroTurno) {
-                                passaFiltro = false;
-                            }
-                            
-                            return passaFiltro;
-                        });
-                    }
-                    
-                    // Gera o calendário
+                    // Gera a estrutura do calendário
                     gerarCalendario(mesAtual, anoAtual);
+                    
+                    // Carrega os agendamentos do mês
+                    const response = await chamarAPI(`/agendamentos/calendario/${mesAtual + 1}/${anoAtual}`);
+                    
+                    // Filtra os agendamentos conforme os filtros selecionados
+                    agendamentos = response.filter(agendamento => {
+                        // Aplica filtro de laboratório
+                        if (filtroLaboratorio && agendamento.laboratorio !== filtroLaboratorio) {
+                            return false;
+                        }
+                        
+                        // Aplica filtro de turno
+                        if (filtroTurno && agendamento.turno !== filtroTurno) {
+                            return false;
+                        }
+                        
+                        return true;
+                    });
                     
                     // Preenche os agendamentos no calendário
                     preencherAgendamentos();
                 } catch (error) {
                     console.error('Erro ao atualizar calendário:', error);
                     exibirAlerta('Erro ao carregar agendamentos. Tente novamente mais tarde.', 'danger');
+                }
+            }.', 'danger');
                 }
             }
             

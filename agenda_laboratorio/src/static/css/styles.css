@@ -327,3 +327,62 @@ footer {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Estilos adicionais para corrigir o layout do calendário */
+
+/* Ajustes para o calendário */
+.calendario-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  max-width: 100%;
+  overflow-x: auto; /* Permite rolagem horizontal em telas muito pequenas */
+}
+
+.calendario-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  width: 100%; /* Ajusta para 100% da largura disponível */
+  min-width: auto; /* Remove o tamanho mínimo fixo */
+}
+
+.calendario-day {
+  aspect-ratio: 1;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 5px;
+  min-height: 80px;
+  overflow-y: auto; /* Permite rolagem vertical dentro das células */
+  max-height: 120px; /* Limita a altura máxima das células */
+}
+
+/* Responsividade */
+@media (max-width: 991.98px) {
+  .calendario-day {
+    min-height: 60px;
+    max-height: 100px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .calendario-day {
+    min-height: 50px;
+    font-size: 0.8rem;
+    max-height: 80px;
+  }
+  
+  .agendamento-item {
+    font-size: 0.7rem;
+    padding: 1px 3px;
+  }
+}
+
+/* Ajuste para o ícone de Laboratórios e Turmas */
+.bi-building-gear {
+  /* Garante que o ícone seja exibido corretamente */
+  display: inline-block;
+  vertical-align: -0.125em;
+}
+
