@@ -41,6 +41,11 @@
                             <i class="bi bi-people me-1"></i> Usuários
                         </a>
                     </li>
+                    <li class="nav-item admin-only">
+                        <a class="nav-link" href="/laboratorios-turmas.html">
+                            <i class="bi bi-building-gear me-1"></i> Laboratórios e Turmas
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
@@ -87,6 +92,9 @@
                         <a class="nav-link admin-only" href="/usuarios.html">
                             <i class="bi bi-people"></i> Usuários
                         </a>
+                        <a class="nav-link admin-only" href="/laboratorios-turmas.html">
+                            <i class="bi bi-building-gear"></i> Laboratórios e Turmas
+                        </a>
                         <a class="nav-link" href="/perfil.html">
                             <i class="bi bi-person"></i> Meu Perfil
                         </a>
@@ -100,11 +108,7 @@
                             <label for="filtroLaboratorio" class="form-label">Laboratório</label>
                             <select class="form-select" id="filtroLaboratorio">
                                 <option value="">Todos</option>
-                                <option value="Lab 01">Lab 01</option>
-                                <option value="Lab 02">Lab 02</option>
-                                <option value="Lab 03">Lab 03</option>
-                                <option value="Lab 04">Lab 04</option>
-                                <option value="Lab 05">Lab 05</option>
+                                <!-- Opções serão carregadas dinamicamente -->
                             </select>
                         </div>
                         <div class="mb-3">
@@ -141,11 +145,7 @@
                                     <label for="filtroLaboratorioMobile" class="form-label">Laboratório</label>
                                     <select class="form-select" id="filtroLaboratorioMobile">
                                         <option value="">Todos</option>
-                                        <option value="Lab 01">Lab 01</option>
-                                        <option value="Lab 02">Lab 02</option>
-                                        <option value="Lab 03">Lab 03</option>
-                                        <option value="Lab 04">Lab 04</option>
-                                        <option value="Lab 05">Lab 05</option>
+                                        <!-- Opções serão carregadas dinamicamente -->
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -301,6 +301,10 @@
             // Inicializa o calendário
             atualizarCalendario();
             
+            // Carrega os laboratórios para os filtros
+            carregarLaboratoriosParaFiltro('#filtroLaboratorio');
+            carregarLaboratoriosParaFiltro('#filtroLaboratorioMobile');
+            
             // Event listeners para navegação do calendário
             document.getElementById('btnMesAnterior').addEventListener('click', function() {
                 mesAtual--;
@@ -320,7 +324,7 @@
                 atualizarCalendario();
             });
             
-            // Event listeners para filtros
+            // Event listeners para os formulários de filtro
             document.getElementById('filtrosForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 filtroLaboratorio = document.getElementById('filtroLaboratorio').value;
@@ -333,9 +337,13 @@
                 filtroLaboratorio = document.getElementById('filtroLaboratorioMobile').value;
                 filtroTurno = document.getElementById('filtroTurnoMobile').value;
                 atualizarCalendario();
+                
+                // Sincroniza os filtros entre desktop e mobile
+                document.getElementById('filtroLaboratorio').value = filtroLaboratorio;
+                document.getElementById('filtroTurno').value = filtroTurno;
             });
             
-            // Botões do modal
+            // Event listeners para os botões do modal
             document.getElementById('btnEditarAgendamento').addEventListener('click', function() {
                 if (agendamentoSelecionadoId) {
                     window.location.href = `/novo-agendamento.html?id=${agendamentoSelecionadoId}`;
@@ -360,198 +368,188 @@
                 }
             });
             
-            // Função para obter a classe CSS com base no turno
-            function getClasseTurno(turno) {
-                switch(turno) {
-                    case 'Manhã':
-                        return 'agendamento-manha';
-                    case 'Tarde':
-                        return 'agendamento-tarde';
-                    case 'Noite':
-                        return 'agendamento-noite';
-                    default:
-                        return '';
-                }
-            }
-            
-            // Função para atualizar o calendário
+            /**
+             * Atualiza o calendário com os agendamentos do mês atual
+             */
             async function atualizarCalendario() {
-                // Atualiza o título do mês/ano
-                const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-                document.getElementById('mesAnoAtual').textContent = `${meses[mesAtual]} ${anoAtual}`;
-                
-                // Carrega os agendamentos do mês
                 try {
+                    // Atualiza o título do mês/ano
+                    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                    document.getElementById('mesAnoAtual').textContent = `${meses[mesAtual]} ${anoAtual}`;
+                    
+                    // Carrega os agendamentos do mês
                     agendamentos = await chamarAPI(`/agendamentos/calendario/${mesAtual + 1}/${anoAtual}`);
                     
-                    // Aplica filtros
-                    if (filtroLaboratorio) {
-                        agendamentos = agendamentos.filter(a => a.laboratorio === filtroLaboratorio);
+                    // Aplica filtros se necessário
+                    if (filtroLaboratorio || filtroTurno) {
+                        agendamentos = agendamentos.filter(agendamento => {
+                            let passaFiltro = true;
+                            
+                            if (filtroLaboratorio && agendamento.laboratorio !== filtroLaboratorio) {
+                                passaFiltro = false;
+                            }
+                            
+                            if (filtroTurno && agendamento.turno !== filtroTurno) {
+                                passaFiltro = false;
+                            }
+                            
+                            return passaFiltro;
+                        });
                     }
                     
-                    if (filtroTurno) {
-                        agendamentos = agendamentos.filter(a => a.turno === filtroTurno);
-                    }
+                    // Gera o calendário
+                    gerarCalendario(mesAtual, anoAtual);
                     
-                    // Renderiza o calendário
-                    renderizarCalendario();
+                    // Preenche os agendamentos no calendário
+                    preencherAgendamentos();
                 } catch (error) {
-                    exibirAlerta(`Erro ao carregar agendamentos: ${error.message}`, 'danger');
+                    console.error('Erro ao atualizar calendário:', error);
+                    exibirAlerta('Erro ao carregar agendamentos. Tente novamente mais tarde.', 'danger');
                 }
             }
             
-            // Função para renderizar o calendário
-            function renderizarCalendario() {
+            /**
+             * Gera a estrutura do calendário para o mês e ano especificados
+             * @param {number} mes - Mês (0-11)
+             * @param {number} ano - Ano
+             */
+            function gerarCalendario(mes, ano) {
                 const diasCalendario = document.getElementById('diasCalendario');
                 diasCalendario.innerHTML = '';
                 
                 // Obtém o primeiro dia do mês
-                const primeiroDia = new Date(anoAtual, mesAtual, 1);
-                const diaSemana = primeiroDia.getDay(); // 0 = Domingo, 1 = Segunda, ...
+                const primeiroDia = new Date(ano, mes, 1);
+                const ultimoDia = new Date(ano, mes + 1, 0);
                 
-                // Obtém o último dia do mês
-                const ultimoDia = new Date(anoAtual, mesAtual + 1, 0).getDate();
+                // Obtém o dia da semana do primeiro dia (0 = Domingo, 6 = Sábado)
+                const diaSemana = primeiroDia.getDay();
                 
-                // Obtém o último dia do mês anterior
-                const ultimoDiaMesAnterior = new Date(anoAtual, mesAtual, 0).getDate();
-                
-                // Dias do mês anterior
+                // Adiciona os dias do mês anterior
+                const diasMesAnterior = new Date(ano, mes, 0).getDate();
                 for (let i = diaSemana - 1; i >= 0; i--) {
-                    const dia = ultimoDiaMesAnterior - i;
-                    const dataAnterior = new Date(anoAtual, mesAtual - 1, dia);
-                    
+                    const dia = diasMesAnterior - i;
                     const divDia = document.createElement('div');
                     divDia.className = 'calendario-day other-month';
-                    divDia.innerHTML = `<div class="text-end">${dia}</div>`;
-                    
-                    // Adiciona agendamentos do mês anterior (se houver)
-                    adicionarAgendamentosDia(divDia, dataAnterior);
-                    
+                    divDia.innerHTML = `<div class="day-number">${dia}</div>`;
                     diasCalendario.appendChild(divDia);
                 }
                 
-                // Dias do mês atual
+                // Adiciona os dias do mês atual
                 const hoje = new Date();
-                for (let dia = 1; dia <= ultimoDia; dia++) {
-                    const data = new Date(anoAtual, mesAtual, dia);
-                    
+                const diaAtual = hoje.getDate();
+                const mesAtualHoje = hoje.getMonth();
+                const anoAtualHoje = hoje.getFullYear();
+                
+                for (let i = 1; i <= ultimoDia.getDate(); i++) {
                     const divDia = document.createElement('div');
                     divDia.className = 'calendario-day';
+                    divDia.setAttribute('data-dia', i);
                     
                     // Destaca o dia atual
-                    if (dia === hoje.getDate() && mesAtual === hoje.getMonth() && anoAtual === hoje.getFullYear()) {
+                    if (i === diaAtual && mes === mesAtualHoje && ano === anoAtualHoje) {
                         divDia.classList.add('today');
                     }
                     
-                    divDia.innerHTML = `<div class="text-end">${dia}</div>`;
-                    
-                    // Adiciona agendamentos do dia
-                    adicionarAgendamentosDia(divDia, data);
-                    
+                    divDia.innerHTML = `<div class="day-number">${i}</div><div class="agendamentos-container"></div>`;
                     diasCalendario.appendChild(divDia);
                 }
                 
-                // Dias do próximo mês
-                const totalDias = diasCalendario.childElementCount;
-                const diasRestantes = 42 - totalDias; // 6 semanas * 7 dias = 42
-                
-                for (let dia = 1; dia <= diasRestantes; dia++) {
-                    const dataProxima = new Date(anoAtual, mesAtual + 1, dia);
-                    
+                // Adiciona os dias do próximo mês para completar a grade
+                const diasRestantes = 42 - (diaSemana + ultimoDia.getDate());
+                for (let i = 1; i <= diasRestantes; i++) {
                     const divDia = document.createElement('div');
                     divDia.className = 'calendario-day other-month';
-                    divDia.innerHTML = `<div class="text-end">${dia}</div>`;
-                    
-                    // Adiciona agendamentos do próximo mês (se houver)
-                    adicionarAgendamentosDia(divDia, dataProxima);
-                    
+                    divDia.innerHTML = `<div class="day-number">${i}</div>`;
                     diasCalendario.appendChild(divDia);
                 }
             }
             
-            // Função para adicionar agendamentos a um dia do calendário
-            function adicionarAgendamentosDia(divDia, data) {
-                // Filtra agendamentos do dia
-                const agendamentosDia = agendamentos.filter(a => {
-                    const dataAgendamento = new Date(a.data);
-                    return dataAgendamento.getDate() === data.getDate() &&
-                           dataAgendamento.getMonth() === data.getMonth() &&
-                           dataAgendamento.getFullYear() === data.getFullYear();
+            /**
+             * Preenche os agendamentos no calendário
+             */
+            function preencherAgendamentos() {
+                // Limpa os agendamentos existentes
+                document.querySelectorAll('.agendamentos-container').forEach(container => {
+                    container.innerHTML = '';
                 });
                 
-                // Adiciona os agendamentos ao dia
-                agendamentosDia.forEach(agendamento => {
-                    const divAgendamento = document.createElement('div');
+                // Adiciona os agendamentos ao calendário
+                agendamentos.forEach(agendamento => {
+                    const data = new Date(agendamento.data);
+                    const dia = data.getDate();
                     
-                    // Aplica a classe de cor baseada no turno
-                    const classeTurno = getClasseTurno(agendamento.turno);
-                    divAgendamento.className = `agendamento-item ${classeTurno}`;
+                    // Encontra o container do dia
+                    const diaElement = document.querySelector(`.calendario-day[data-dia="${dia}"]`);
+                    if (!diaElement) return;
                     
-                    divAgendamento.textContent = `${agendamento.laboratorio} - ${agendamento.turma}`;
-                    divAgendamento.setAttribute('data-id', agendamento.id);
+                    const agendamentosContainer = diaElement.querySelector('.agendamentos-container');
                     
-                    // Adiciona tooltip para acessibilidade
-                    divAgendamento.setAttribute('title', `${agendamento.laboratorio} - ${agendamento.turma} (${agendamento.turno})`);
-                    divAgendamento.setAttribute('aria-label', `Agendamento: ${agendamento.laboratorio} para ${agendamento.turma}, turno: ${agendamento.turno}`);
+                    // Cria o elemento do agendamento
+                    const agendamentoElement = document.createElement('div');
+                    agendamentoElement.className = `agendamento-item ${getClasseTurno(agendamento.turno)}`;
+                    agendamentoElement.setAttribute('data-id', agendamento.id);
+                    agendamentoElement.setAttribute('title', `${agendamento.laboratorio} - ${agendamento.turma} - ${agendamento.turno}`);
+                    agendamentoElement.setAttribute('aria-label', `Agendamento: ${agendamento.laboratorio}, Turma: ${agendamento.turma}, Turno: ${agendamento.turno}`);
+                    agendamentoElement.textContent = `${agendamento.laboratorio} - ${agendamento.turma}`;
                     
-                    divAgendamento.addEventListener('click', async function(e) {
-                        e.stopPropagation();
-                        const id = this.getAttribute('data-id');
-                        await mostrarDetalhesAgendamento(id);
-                    });
+                    // Adiciona evento de clique
+                    agendamentoElement.addEventListener('click', () => mostrarDetalhesAgendamento(agendamento));
                     
-                    divDia.appendChild(divAgendamento);
+                    // Adiciona ao container
+                    agendamentosContainer.appendChild(agendamentoElement);
                 });
             }
             
-            // Função para mostrar detalhes de um agendamento
-            async function mostrarDetalhesAgendamento(id) {
+            /**
+             * Mostra os detalhes de um agendamento no modal
+             * @param {Object} agendamento - Objeto com os dados do agendamento
+             */
+            function mostrarDetalhesAgendamento(agendamento) {
+                agendamentoSelecionadoId = agendamento.id;
+                
+                const modalBody = document.getElementById('agendamentoModalBody');
+                
+                // Formata os horários
+                let horariosFormatados = '';
                 try {
-                    const agendamento = await chamarAPI(`/agendamentos/${id}`);
-                    agendamentoSelecionadoId = agendamento.id;
-                    
-                    // Converte os horários de JSON para array
                     const horarios = JSON.parse(agendamento.horarios);
-                    
-                    // Obtém a classe de cor para o turno
-                    const classeTurno = getClasseTurno(agendamento.turno);
-                    
-                    // Preenche o modal com os detalhes
-                    document.getElementById('agendamentoModalLabel').textContent = `Agendamento - ${agendamento.laboratorio}`;
-                    
-                    document.getElementById('agendamentoModalBody').innerHTML = `
-                        <div class="mb-3">
-                            <h6>Data:</h6>
-                            <p>${formatarData(agendamento.data)}</p>
-                        </div>
-                        <div class="mb-3">
-                            <h6>Laboratório:</h6>
-                            <p>${agendamento.laboratorio}</p>
-                        </div>
-                        <div class="mb-3">
-                            <h6>Turma:</h6>
-                            <p>${agendamento.turma}</p>
-                        </div>
-                        <div class="mb-3">
-                            <h6>Turno:</h6>
-                            <p><span class="badge ${classeTurno}">${agendamento.turno}</span></p>
-                        </div>
-                        <div class="mb-3">
-                            <h6>Horários:</h6>
-                            <p>${horarios.join(', ')}</p>
-                        </div>
-                        <div class="mb-3">
-                            <h6>Data de Criação:</h6>
-                            <p>${formatarData(agendamento.data_criacao)}</p>
-                        </div>
-                    `;
-                    
-                    // Exibe o modal
-                    agendamentoModal.show();
-                    
-                } catch (error) {
-                    exibirAlerta(`Erro ao carregar detalhes do agendamento: ${error.message}`, 'danger');
+                    horariosFormatados = horarios.join('<br>');
+                } catch (e) {
+                    horariosFormatados = agendamento.horarios;
                 }
+                
+                // Preenche o modal com os detalhes
+                modalBody.innerHTML = `
+                    <div class="mb-3">
+                        <strong>Laboratório:</strong> ${agendamento.laboratorio}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Turma:</strong> ${agendamento.turma}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Data:</strong> ${formatarData(agendamento.data)}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Turno:</strong> <span class="badge ${getClasseTurno(agendamento.turno)}">${agendamento.turno}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Horários:</strong><br>
+                        ${horariosFormatados}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Agendado por:</strong> ${agendamento.usuario_nome || 'Não informado'}
+                    </div>
+                `;
+                
+                // Verifica se o usuário pode editar/excluir o agendamento
+                const usuario = getUsuarioLogado();
+                const podeEditar = isAdmin() || (usuario && agendamento.usuario_id === usuario.id);
+                
+                document.getElementById('btnEditarAgendamento').style.display = podeEditar ? '' : 'none';
+                document.getElementById('btnExcluirAgendamento').style.display = podeEditar ? '' : 'none';
+                
+                // Exibe o modal
+                agendamentoModal.show();
             }
         });
     </script>
