@@ -265,6 +265,41 @@ def agendamentos_calendario(mes, ano):
     
     return jsonify([a.to_dict() for a in agendamentos])
 
+@agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
+def verificar_disponibilidade():
+    """
+    Verifica a disponibilidade de horários para um laboratório em uma data e turno específicos.
+    Retorna os agendamentos existentes para que o frontend possa determinar quais horários estão ocupados.
+    """
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+    
+    # Obtém os parâmetros da requisição
+    data_str = request.args.get('data')
+    laboratorio = request.args.get('laboratorio')
+    turno = request.args.get('turno')
+    
+    # Validação de parâmetros
+    if not all([data_str, laboratorio, turno]):
+        return jsonify({'erro': 'Parâmetros incompletos. Forneça data, laboratorio e turno.'}), 400
+    
+    # Converte a data para o formato correto
+    try:
+        data = datetime.strptime(data_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'erro': 'Formato de data inválido. Use YYYY-MM-DD'}), 400
+    
+    # Consulta agendamentos existentes para o laboratório, data e turno especificados
+    agendamentos = Agendamento.query.filter(
+        Agendamento.data == data,
+        Agendamento.laboratorio == laboratorio,
+        Agendamento.turno == turno
+    ).all()
+    
+    # Retorna os agendamentos encontrados
+    return jsonify([a.to_dict() for a in agendamentos])
+
 def verificar_conflitos_horarios(data, laboratorio, horarios_json, agendamento_id=None):
     """
     Verifica se há conflitos de horários para um agendamento.

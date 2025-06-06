@@ -43,7 +43,7 @@
                     </li>
                     <li class="nav-item admin-only">
                         <a class="nav-link" href="/laboratorios-turmas.html">
-                            <i class="bi bi-building me-1"></i> Laboratórios e Turmas
+                            <i class="bi bi-building-gear me-1"></i> Laboratórios e Turmas
                         </a>
                     </li>
                 </ul>
@@ -93,7 +93,7 @@
                             <i class="bi bi-people"></i> Usuários
                         </a>
                         <a class="nav-link admin-only" href="/laboratorios-turmas.html">
-                            <i class="bi bi-building"></i> Laboratórios e Turmas
+                            <i class="bi bi-building-gear"></i> Laboratórios e Turmas
                         </a>
                         <a class="nav-link" href="/perfil.html">
                             <i class="bi bi-person"></i> Meu Perfil
@@ -147,6 +147,9 @@
                                 <div class="row" id="horariosContainer">
                                     <!-- Horários serão preenchidos via JavaScript -->
                                 </div>
+                                <div class="form-text text-muted" id="horariosInfo">
+                                    Selecione um laboratório, data e turno para ver os horários disponíveis.
+                                </div>
                             </div>
                             
                             <div class="mb-3 admin-only">
@@ -196,6 +199,7 @@
             // Variáveis para controle do formulário
             let modoEdicao = false;
             let agendamentoId = null;
+            let horariosOcupados = [];
             
             // Horários disponíveis por turno
             const horariosPorTurno = {
@@ -228,15 +232,10 @@
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
             }
             
-            // Event listener para mudança de turno
-            document.getElementById('turno').addEventListener('change', function() {
-                const turno = this.value;
-                if (turno) {
-                    renderizarHorarios(turno);
-                } else {
-                    document.getElementById('horariosContainer').innerHTML = '';
-                }
-            });
+            // Event listeners para campos que afetam os horários disponíveis
+            document.getElementById('data').addEventListener('change', verificarHorariosDisponiveis);
+            document.getElementById('laboratorio').addEventListener('change', verificarHorariosDisponiveis);
+            document.getElementById('turno').addEventListener('change', verificarHorariosDisponiveis);
             
             // Event listener para o formulário
             document.getElementById('agendamentoForm').addEventListener('submit', async function(e) {
@@ -378,6 +377,66 @@
                 }
             }
             
+            // Função para verificar horários disponíveis
+            async function verificarHorariosDisponiveis() {
+                const data = document.getElementById('data').value;
+                const laboratorio = document.getElementById('laboratorio').value;
+                const turno = document.getElementById('turno').value;
+                const horariosInfo = document.getElementById('horariosInfo');
+                
+                // Limpa os horários existentes
+                document.getElementById('horariosContainer').innerHTML = '';
+                
+                // Verifica se todos os campos necessários foram preenchidos
+                if (!data || !laboratorio || !turno) {
+                    horariosInfo.textContent = 'Selecione um laboratório, data e turno para ver os horários disponíveis.';
+                    return;
+                }
+                
+                try {
+                    // Busca os agendamentos existentes para o laboratório, data e turno selecionados
+                    const agendamentosExistentes = await chamarAPI(`/agendamentos/verificar-disponibilidade?data=${data}&laboratorio=${encodeURIComponent(laboratorio)}&turno=${encodeURIComponent(turno)}`);
+                    
+                    // Extrai os horários já ocupados
+                    horariosOcupados = [];
+                    agendamentosExistentes.forEach(agendamento => {
+                        try {
+                            const horarios = JSON.parse(agendamento.horarios);
+                            horariosOcupados = [...horariosOcupados, ...horarios];
+                        } catch (e) {
+                            console.error('Erro ao processar horários:', e);
+                        }
+                    });
+                    
+                    // Se estiver em modo de edição, não considera os horários do próprio agendamento como ocupados
+                    if (modoEdicao && agendamentoId) {
+                        const agendamentoAtual = agendamentosExistentes.find(a => a.id === parseInt(agendamentoId));
+                        if (agendamentoAtual) {
+                            try {
+                                const horariosAtuais = JSON.parse(agendamentoAtual.horarios);
+                                horariosOcupados = horariosOcupados.filter(h => !horariosAtuais.includes(h));
+                            } catch (e) {
+                                console.error('Erro ao processar horários do agendamento atual:', e);
+                            }
+                        }
+                    }
+                    
+                    // Renderiza os horários disponíveis
+                    renderizarHorarios(turno);
+                    
+                    // Atualiza a mensagem informativa
+                    if (horariosOcupados.length > 0) {
+                        horariosInfo.textContent = 'Os horários já reservados estão desabilitados.';
+                    } else {
+                        horariosInfo.textContent = 'Todos os horários estão disponíveis.';
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar disponibilidade:', error);
+                    horariosInfo.textContent = 'Erro ao verificar disponibilidade. Por favor, tente novamente.';
+                    exibirAlerta('Erro ao verificar disponibilidade de horários.', 'danger');
+                }
+            }
+            
             // Função para renderizar os horários disponíveis
             function renderizarHorarios(turno) {
                 const horariosContainer = document.getElementById('horariosContainer');
@@ -399,10 +458,24 @@
                     checkbox.name = 'horarios';
                     checkbox.value = horario;
                     
+                    // Verifica se o horário está ocupado
+                    const horarioOcupado = horariosOcupados.includes(horario);
+                    if (horarioOcupado) {
+                        checkbox.disabled = true;
+                        checkboxDiv.classList.add('text-muted');
+                    }
+                    
                     const label = document.createElement('label');
                     label.className = 'form-check-label';
                     label.htmlFor = `horario${index}`;
                     label.textContent = horario;
+                    
+                    if (horarioOcupado) {
+                        const badgeSpan = document.createElement('span');
+                        badgeSpan.className = 'badge bg-danger ms-2';
+                        badgeSpan.textContent = 'Ocupado';
+                        label.appendChild(badgeSpan);
+                    }
                     
                     checkboxDiv.appendChild(checkbox);
                     checkboxDiv.appendChild(label);
@@ -452,8 +525,8 @@
                         document.getElementById('turma').value = agendamento.turma;
                         document.getElementById('turno').value = agendamento.turno;
                         
-                        // Renderiza os horários do turno
-                        renderizarHorarios(agendamento.turno);
+                        // Verifica horários disponíveis e renderiza os horários do turno
+                        verificarHorariosDisponiveis();
                         
                         // Marca os horários selecionados
                         const horariosSelecionados = JSON.parse(agendamento.horarios);
@@ -463,7 +536,7 @@
                                     checkbox.checked = true;
                                 }
                             });
-                        }, 100);
+                        }, 500);
                         
                         // Se for administrador, seleciona o usuário responsável
                         if (isAdmin() && agendamento.usuario_id) {
