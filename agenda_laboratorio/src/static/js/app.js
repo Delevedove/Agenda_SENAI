@@ -223,11 +223,11 @@ function exibirAlerta(mensagem, tipo = 'info', containerId = 'alertContainer') {
 function getClasseTurno(turno) {
     switch (turno) {
         case 'Manhã':
-            return 'turno-manha';
+            return 'agendamento-manha';
         case 'Tarde':
-            return 'turno-tarde';
+            return 'agendamento-tarde';
         case 'Noite':
-            return 'turno-noite';
+            return 'agendamento-noite';
         default:
             return '';
     }
