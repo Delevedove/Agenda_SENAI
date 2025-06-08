@@ -87,7 +87,9 @@ function isAdmin() {
 function verificarAutenticacao() {
     if (!estaAutenticado()) {
         window.location.href = '/admin-login.html';
+        return false;
     }
+    return true;
 }
 
 /**
@@ -95,10 +97,13 @@ function verificarAutenticacao() {
  * Redireciona para o dashboard se não tiver
  */
 function verificarPermissaoAdmin() {
-    verificarAutenticacao();
+    if (!verificarAutenticacao()) return false;
+    
     if (!isAdmin()) {
         window.location.href = '/index.html';
+        return false;
     }
+    return true;
 }
 
 // Funções para chamadas à API
@@ -112,13 +117,22 @@ function verificarPermissaoAdmin() {
 async function chamarAPI(endpoint, method = 'GET', body = null) {
     const token = localStorage.getItem('token');
     
+    if (!token) {
+        console.error('Token não encontrado. Redirecionando para login...');
+        realizarLogout();
+        throw new Error('Não autenticado');
+    }
+    
     const headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
     };
     
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
+    // Garante que o endpoint comece com /
+    const endpointFormatado = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${API_URL}${endpointFormatado}`;
+    
+    console.log(`Chamando API: ${url}`);
     
     const options = {
         method,
@@ -130,20 +144,24 @@ async function chamarAPI(endpoint, method = 'GET', body = null) {
     }
     
     try {
-        const response = await fetch(`${API_URL}${endpoint}`, options);
+        const response = await fetch(url, options);
+        
+        // Se o erro for de autenticação, faz logout imediatamente
+        if (response.status === 401) {
+            console.error('Erro de autenticação. Redirecionando para login...');
+            realizarLogout();
+            throw new Error('Não autenticado');
+        }
+        
         const data = await response.json();
         
         if (!response.ok) {
-            // Se o erro for de autenticação, faz logout
-            if (response.status === 401) {
-                realizarLogout();
-            }
             throw new Error(data.erro || `Erro ${response.status}`);
         }
         
         return data;
     } catch (error) {
-        console.error(`Erro na chamada à API ${endpoint}:`, error);
+        console.error(`Erro na chamada à API ${url}:`, error);
         throw error;
     }
 }
@@ -198,6 +216,24 @@ function exibirAlerta(mensagem, tipo = 'info', containerId = 'alertContainer') {
 }
 
 /**
+ * Retorna a classe CSS correspondente ao turno
+ * @param {string} turno - Nome do turno (Manhã, Tarde, Noite)
+ * @returns {string} - Nome da classe CSS
+ */
+function getClasseTurno(turno) {
+    switch (turno) {
+        case 'Manhã':
+            return 'turno-manha';
+        case 'Tarde':
+            return 'turno-tarde';
+        case 'Noite':
+            return 'turno-noite';
+        default:
+            return '';
+    }
+}
+
+/**
  * Adiciona o link para a página de Laboratórios e Turmas no menu
  * @param {string} containerSelector - Seletor CSS do container do menu
  * @param {boolean} isNavbar - Indica se é o menu da navbar ou sidebar
@@ -249,34 +285,12 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
 
 // Inicialização da página
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado. Página atual:', window.location.pathname);
+    
     // Verifica autenticação em todas as páginas exceto login e registro
     const paginaAtual = window.location.pathname;
-    if (paginaAtual !== '/admin-login.html' && paginaAtual !== '/register.html' && paginaAtual !== '/selecao-sistema.html') {
-        verificarAutenticacao();
-        
-        // Páginas que requerem permissão de administrador
-        if (paginaAtual === '/usuarios.html' || paginaAtual === '/laboratorios-turmas.html') {
-            verificarPermissaoAdmin();
-        }
-        
-        // Atualiza a interface com os dados do usuário
-        atualizarInterfaceUsuario();
-        
-        // Adiciona o link para Laboratórios e Turmas nos menus se for admin
-        if (isAdmin()) {
-            // Adiciona no menu da navbar
-            adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
-            
-            // Adiciona no menu lateral (sidebar)
-            adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
-        }
-    } else if (paginaAtual === '/selecao-sistema.html') {
-        // Verifica se é admin para a tela de seleção de sistema
-        verificarAutenticacao();
-        verificarPermissaoAdmin();
-    }
     
-    // Configura o botão de logout
+    // Configura o botão de logout em todas as páginas
     const btnLogout = document.getElementById('btnLogout');
     if (btnLogout) {
         btnLogout.addEventListener('click', function(e) {
@@ -284,7 +298,81 @@ document.addEventListener('DOMContentLoaded', function() {
             realizarLogout();
         });
     }
+    
+    if (paginaAtual === '/admin-login.html' || paginaAtual === '/register.html') {
+        console.log('Página de login ou registro. Não verificando autenticação.');
+        return;
+    }
+    
+    // Verifica se o usuário está autenticado
+    if (!verificarAutenticacao()) {
+        console.log('Usuário não autenticado. Redirecionando para login...');
+        return;
+    }
+    
+    // Verifica se é a página de seleção de sistema
+    if (paginaAtual === '/selecao-sistema.html') {
+        console.log('Página de seleção de sistema. Verificando permissão de admin...');
+        if (!verificarPermissaoAdmin()) {
+            console.log('Usuário não é admin. Redirecionando para dashboard...');
+            return;
+        }
+        console.log('Usuário é admin. Permanecendo na página de seleção de sistema.');
+        return;
+    }
+    
+    // Páginas que requerem permissão de administrador
+    if (paginaAtual === '/usuarios.html' || paginaAtual === '/laboratorios-turmas.html') {
+        console.log('Página restrita a administradores. Verificando permissão...');
+        if (!verificarPermissaoAdmin()) {
+            console.log('Usuário não é admin. Redirecionando para dashboard...');
+            return;
+        }
+    }
+    
+    console.log('Atualizando interface do usuário...');
+    // Atualiza a interface com os dados do usuário
+    atualizarInterfaceUsuario();
+    
+    // Adiciona o link para Laboratórios e Turmas nos menus se for admin
+    if (isAdmin()) {
+        console.log('Usuário é admin. Adicionando links para Laboratórios e Turmas...');
+        // Adiciona no menu da navbar
+        adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
+        
+        // Adiciona no menu lateral (sidebar)
+        adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
+        
+        // Configura observadores para garantir que os links sejam adicionados mesmo após modificações no DOM
+        configurarObservadoresMenu();
+    }
 });
+
+/**
+ * Configura observadores de mutação para garantir que os links admin sejam adicionados
+ * mesmo quando o DOM é modificado dinamicamente
+ */
+function configurarObservadoresMenu() {
+    // Configura o observador para a navbar
+    const navbarObserver = new MutationObserver(function(mutations) {
+        adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
+    });
+    
+    const navbar = document.querySelector('.navbar-nav.me-auto');
+    if (navbar) {
+        navbarObserver.observe(navbar, { childList: true, subtree: true });
+    }
+    
+    // Configura o observador para a sidebar
+    const sidebarObserver = new MutationObserver(function(mutations) {
+        adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
+    });
+    
+    const sidebar = document.querySelector('.sidebar .nav.flex-column');
+    if (sidebar) {
+        sidebarObserver.observe(sidebar, { childList: true, subtree: true });
+    }
+}
 
 /**
  * Atualiza elementos da interface com os dados do usuário logado
@@ -391,29 +479,3 @@ async function carregarLaboratoriosParaFiltro(seletorElemento) {
         return [];
     }
 }
-
-// Adiciona um observador de mutação para garantir que os links admin sejam adicionados
-// mesmo quando o DOM é modificado dinamicamente
-document.addEventListener('DOMContentLoaded', function() {
-    if (isAdmin()) {
-        // Configura o observador para a navbar
-        const navbarObserver = new MutationObserver(function(mutations) {
-            adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
-        });
-        
-        const navbar = document.querySelector('.navbar-nav.me-auto');
-        if (navbar) {
-            navbarObserver.observe(navbar, { childList: true, subtree: true });
-        }
-        
-        // Configura o observador para a sidebar
-        const sidebarObserver = new MutationObserver(function(mutations) {
-            adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
-        });
-        
-        const sidebar = document.querySelector('.sidebar .nav.flex-column');
-        if (sidebar) {
-            sidebarObserver.observe(sidebar, { childList: true, subtree: true });
-        }
-    }
-});

@@ -64,7 +64,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Redireciona para o dashboard se já estiver autenticado
             if (estaAutenticado()) {
-                window.location.href = '/index.html';
+                const usuario = getUsuarioLogado();
+                if (usuario && usuario.tipo === 'admin') {
+                    window.location.href = '/selecao-sistema.html';
+                } else {
+                    window.location.href = '/index.html';
+                }
                 return;
             }
             
@@ -77,8 +82,9 @@
                 const senha = document.getElementById('senha').value;
                 
                 try {
+                    // Não é necessário redirecionar aqui, pois a função realizarLogin já faz isso
+                    // baseado no tipo de usuário (admin ou comum)
                     await realizarLogin(username, senha);
-                    window.location.href = '/index.html';
                 } catch (error) {
                     exibirAlerta('Credenciais inválidas. Por favor, tente novamente.', 'danger');
                 }
