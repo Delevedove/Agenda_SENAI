@@ -111,7 +111,6 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 20px;
   max-width: 100%;
-  overflow-x: auto; /* Permite rolagem horizontal em telas muito pequenas */
 }
 
 .calendario-header {
@@ -125,18 +124,18 @@ body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 5px;
-  min-width: 700px; /* Garante tamanho mínimo para evitar compressão excessiva */
-  max-width: 100%;
+  width: 100%;
 }
 
 .calendario-day {
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1.2; /* Ajustado para ser um pouco mais alto que largo */
   border: 1px solid #dee2e6;
   border-radius: 4px;
   padding: 5px;
   min-height: 80px;
   overflow-y: auto; /* Permite rolagem vertical dentro das células */
   max-height: 120px; /* Limita a altura máxima das células */
+  box-sizing: border-box;
 }
 
 .calendario-day-header {
@@ -278,6 +277,18 @@ footer {
   }
 }
 
+/* Media query para telas menores */
+@media (max-width: 575.98px) {
+  .calendario-day {
+    font-size: 0.7rem;
+    min-height: 40px;
+    max-height: 60px;
+  }
+  .agendamento-item {
+    font-size: 0.6rem;
+  }
+}
+
 /* Tela de seleção de sistema */
 .sistema-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -327,3 +338,179 @@ footer {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+
+
+/* Estilos para o módulo de ocupação de salas */
+.calendario-salas {
+    font-size: 0.85rem;
+}
+
+.calendario-salas td {
+    height: 120px;
+    vertical-align: top;
+    padding: 5px;
+    position: relative;
+}
+
+.dia-calendario {
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+}
+
+.dia-vazio {
+    background-color: #f8f9fa;
+}
+
+.numero-dia {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #495057;
+}
+
+.reserva-item {
+    background-color: #e9ecef;
+    border-radius: 3px;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid #6c757d;
+}
+
+.reserva-item:hover {
+    background-color: #dee2e6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.reserva-item.turno-manhã {
+    background-color: #fff3cd;
+    border-left-color: #ffc107;
+}
+
+.reserva-item.turno-tarde {
+    background-color: #d1ecf1;
+    border-left-color: #17a2b8;
+}
+
+.reserva-item.turno-noite {
+    background-color: #d6d8db;
+    border-left-color: #343a40;
+}
+
+.reserva-item small {
+    font-size: 0.7rem;
+    line-height: 1.2;
+}
+
+/* Responsividade para o calendário de salas */
+@media (max-width: 768px) {
+    .calendario-salas {
+        font-size: 0.7rem;
+    }
+    
+    .calendario-salas td {
+        height: 80px;
+        padding: 3px;
+    }
+    
+    .reserva-item {
+        padding: 1px 2px;
+        margin-bottom: 1px;
+    }
+    
+    .reserva-item small {
+        font-size: 0.6rem;
+    }
+}
+
+/* Estilos para as abas do módulo */
+.nav-tabs .nav-link {
+    color: #495057;
+    border: 1px solid transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: #e9ecef #e9ecef #dee2e6;
+    color: #0d6efd;
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+
+/* Estilos para os badges de turno */
+.badge.bg-warning {
+    color: #000;
+}
+
+/* Estilos para alertas flutuantes */
+.alert-flutuante {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para modais */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Estilos para tabelas */
+.table th {
+    background-color: #f8f9fa;
+    border-top: none;
+    font-weight: 600;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Estilos para botões pequenos */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Estilos para cards */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Estilos para formulários */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Estilos para a sidebar */
+.sidebar .nav-link.active {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+

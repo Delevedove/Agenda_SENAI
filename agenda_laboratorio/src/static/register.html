@@ -113,12 +113,12 @@
                 
                 try {
                     // Chama a API para criar o usuário
-                    await chamarAPI('/usuarios', 'POST', {
+                    await chamarAPI("/usuarios", "POST", {
                         nome,
                         email,
                         username,
                         senha,
-                        tipo: 'comum' // Usuários registrados são sempre do tipo comum
+                        tipo: "comum" // Usuários registrados são sempre do tipo comum
                     });
                     
                     exibirAlerta('Registro realizado com sucesso! Redirecionando para o login...', 'success');

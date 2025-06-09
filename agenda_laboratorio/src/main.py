@@ -26,12 +26,14 @@ from src.routes.agendamento import agendamento_bp
 from src.routes.notificacao import notificacao_bp
 from src.routes.laboratorio import laboratorio_bp
 from src.routes.turma import turma_bp
+from src.routes.salas import salas_bp
 
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(agendamento_bp, url_prefix='/api')
 app.register_blueprint(notificacao_bp, url_prefix='/api')
 app.register_blueprint(laboratorio_bp, url_prefix='/api')
 app.register_blueprint(turma_bp, url_prefix='/api')
+app.register_blueprint(salas_bp)
 
 # Rota principal para servir a página inicial
 @app.route('/')

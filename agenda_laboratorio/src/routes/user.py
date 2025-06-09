@@ -203,7 +203,7 @@ def remover_usuario(id):
     try:
         db.session.delete(usuario)
         db.session.commit()
-        return jsonify({'mensagem': 'Usuário removido com sucesso'})
+        return jsonify({'mensagem': 'Usuário removido com sucesso'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': str(e)}), 500
@@ -231,3 +231,4 @@ def login():
         'token': token,
         'usuario': usuario.to_dict()
     })
+

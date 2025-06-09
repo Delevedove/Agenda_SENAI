@@ -117,6 +117,26 @@ function verificarPermissaoAdmin() {
 async function chamarAPI(endpoint, method = 'GET', body = null) {
     const token = localStorage.getItem('token');
     
+    // Para a rota de criação de usuário, não é necessário token
+    if (endpoint === '/usuarios' && method === 'POST') {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        const options = {
+            method,
+            headers
+        };
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+        const response = await fetch(`${API_URL}${endpoint}`, options);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.erro || `Erro ${response.status}`);
+        }
+        return data;
+    }
+
     if (!token) {
         console.error('Token não encontrado. Redirecionando para login...');
         realizarLogout();
@@ -479,3 +499,5 @@ async function carregarLaboratoriosParaFiltro(seletorElemento) {
         return [];
     }
 }
+
+
