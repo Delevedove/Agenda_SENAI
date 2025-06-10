@@ -394,3 +394,10 @@ footer {
   }
 }
 
+/* Permite que as células cresçam proporcionalmente em telas largas */
+@media (min-width: 1200px) {
+  .calendario-day {
+    max-height: none;
+  }
+}
+

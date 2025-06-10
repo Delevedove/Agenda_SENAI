@@ -300,6 +300,7 @@
             
             // Inicializa o calendário
             atualizarCalendario();
+            ajustarAlturaCelulas();
             
             // Carrega os laboratórios para os filtros
             carregarLaboratoriosParaFiltro('#filtroLaboratorio');
@@ -402,6 +403,7 @@
                     
                     // Preenche os agendamentos no calendário
                     preencherAgendamentos();
+                    ajustarAlturaCelulas();
                 } catch (error) {
                     console.error('Erro ao atualizar calendário:', error);
                     exibirAlerta('Erro ao carregar agendamentos. Tente novamente mais tarde.', 'danger');
@@ -551,10 +553,20 @@
                 // Exibe o modal
                 agendamentoModal.show();
             }
+
+            /**
+             * Ajusta a altura das células do calendário para manter proporção quadrada
+             */
+            function ajustarAlturaCelulas() {
+                document.querySelectorAll('.calendario-day').forEach(dia => {
+                    dia.style.height = `${dia.offsetWidth}px`;
+                });
+            }
         });
         
         // Adiciona listener para redimensionamento da janela
         window.addEventListener('resize', function() {
+            ajustarAlturaCelulas();
             // Adiciona classe temporária para transição suave
             const calendarioContainer = document.querySelector('.calendario-container');
             if (calendarioContainer) {
