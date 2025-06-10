@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from datetime import datetime
+from datetime import datetime, date
 import json
 from src.models import db
 from src.models.agendamento import Agendamento
@@ -264,6 +264,64 @@ def agendamentos_calendario(mes, ano):
         ).all()
     
     return jsonify([a.to_dict() for a in agendamentos])
+
+
+@agendamento_bp.route('/agendamentos/calendario', methods=['GET'])
+def agendamentos_calendario_periodo():
+    """Retorna agendamentos formatados para o componente de calendário.
+    Aceita parâmetros de data_inicio e data_fim (YYYY-MM-DD) e filtros opcionais
+    de laboratório e turno."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    data_inicio_str = request.args.get('data_inicio')
+    data_fim_str = request.args.get('data_fim')
+    if not data_inicio_str or not data_fim_str:
+        return jsonify({'erro': 'Parâmetros de data inválidos'}), 400
+    try:
+        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'erro': 'Formato de data inválido'}), 400
+
+    query = Agendamento.query.filter(
+        Agendamento.data >= data_inicio,
+        Agendamento.data <= data_fim
+    )
+
+    laboratorio = request.args.get('laboratorio')
+    turno = request.args.get('turno')
+    if laboratorio:
+        query = query.filter(Agendamento.laboratorio == laboratorio)
+    if turno:
+        query = query.filter(Agendamento.turno == turno)
+
+    if not verificar_admin(user):
+        query = query.filter(Agendamento.usuario_id == user.id)
+
+    agendamentos = query.order_by(Agendamento.data).all()
+
+    def cor_turno(t):
+        cores = {
+            'Manhã': '#F3B54E',
+            'Tarde': '#FFC107',
+            'Noite': '#164194'
+        }
+        return cores.get(t, '#607D8B')
+
+    eventos = []
+    for a in agendamentos:
+        eventos.append({
+            'id': a.id,
+            'title': f"{a.laboratorio} - {a.turma}",
+            'start': a.data.isoformat(),
+            'end': a.data.isoformat(),
+            'backgroundColor': cor_turno(a.turno),
+            'borderColor': cor_turno(a.turno),
+            'extendedProps': a.to_dict()
+        })
+    return jsonify(eventos)
 
 @agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
