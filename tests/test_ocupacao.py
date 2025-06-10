@@ -1,6 +1,7 @@
 import os
 import sys
-from datetime import date
+from datetime import date, datetime, timedelta
+import jwt
 
 import pytest
 from flask import Flask
@@ -47,6 +48,12 @@ def test_verificar_disponibilidade(client, app):
         user = User.query.first()
         sala = Sala.query.first()
         sala_id = sala.id
+    token = jwt.encode({
+        'user_id': user.id,
+        'nome': user.nome,
+        'perfil': user.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
     response = client.get(
         '/api/ocupacoes/verificar-disponibilidade',
         query_string={
@@ -55,7 +62,7 @@ def test_verificar_disponibilidade(client, app):
             'data_fim': date.today().strftime('%Y-%m-%d'),
             'turno': 'Manhã'
         },
-        headers={'Authorization': f'Bearer {user.id}'}
+        headers={'Authorization': f'Bearer {token}'}
     )
     assert response.status_code == 200
     data = response.get_json()
