@@ -355,17 +355,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Atualiza a interface com os dados do usuário
     atualizarInterfaceUsuario();
     
-    // Adiciona o link para Laboratórios e Turmas nos menus se for admin
+    // Adiciona o link para Laboratórios e Turmas somente no módulo de Agenda
     if (isAdmin()) {
-        console.log('Usuário é admin. Adicionando links para Laboratórios e Turmas...');
-        // Adiciona no menu da navbar
-        adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
-        
-        // Adiciona no menu lateral (sidebar)
-        adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
-        
-        // Configura observadores para garantir que os links sejam adicionados mesmo após modificações no DOM
-        configurarObservadoresMenu();
+        const paginasOcupacao = [
+            '/dashboard-salas.html',
+            '/calendario-salas.html',
+            '/gerenciar-salas.html',
+            '/gerenciar-instrutores.html',
+            '/novo-agendamento-sala.html'
+        ];
+
+        if (!paginasOcupacao.includes(paginaAtual)) {
+            console.log('Usuário é admin. Adicionando links para Laboratórios e Turmas...');
+            // Adiciona no menu da navbar
+            adicionarLinkLabTurmas('.navbar-nav.me-auto', true);
+
+            // Adiciona no menu lateral (sidebar)
+            adicionarLinkLabTurmas('.sidebar .nav.flex-column', false);
+
+            // Configura observadores para garantir que os links sejam adicionados mesmo após modificações no DOM
+            configurarObservadoresMenu();
+        }
     }
 });
 
