@@ -2,6 +2,12 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash
 from src.models import db
 from src.models.user import User
+from src.utils.messages import (
+    ERRO_NAO_AUTENTICADO,
+    ERRO_PERMISSAO_NEGADA,
+    ERRO_DADOS_INCOMPLETOS,
+    error_response,
+)
 
 user_bp = Blueprint('user', __name__)
 
@@ -52,10 +58,10 @@ def listar_usuarios():
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     if not verificar_admin(user):
-        return jsonify({'erro': 'Permissão negada'}), 403
+        return error_response(ERRO_PERMISSAO_NEGADA, 403)
     
     usuarios = User.query.all()
     return jsonify([u.to_dict() for u in usuarios])
@@ -69,11 +75,11 @@ def obter_usuario(id):
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     # Verifica permissões
     if not verificar_admin(user) and user.id != id:
-        return jsonify({'erro': 'Permissão negada'}), 403
+        return error_response(ERRO_PERMISSAO_NEGADA, 403)
     
     usuario = User.query.get(id)
     if not usuario:
@@ -92,7 +98,7 @@ def criar_usuario():
     
     # Validação de dados
     if not all(key in data for key in ['nome', 'email', 'username', 'senha']):
-        return jsonify({'erro': 'Dados incompletos'}), 400
+        return error_response(ERRO_DADOS_INCOMPLETOS, 400)
     
     # Verifica se o tipo é válido
     tipo = data.get('tipo', 'comum')
@@ -140,11 +146,11 @@ def atualizar_usuario(id):
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     # Verifica permissões
     if not verificar_admin(user) and user.id != id:
-        return jsonify({'erro': 'Permissão negada'}), 403
+        return error_response(ERRO_PERMISSAO_NEGADA, 403)
     
     usuario = User.query.get(id)
     if not usuario:
@@ -189,11 +195,11 @@ def remover_usuario(id):
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     # Verifica permissões
     if not verificar_admin(user):
-        return jsonify({'erro': 'Permissão negada'}), 403
+        return error_response(ERRO_PERMISSAO_NEGADA, 403)
     
     # Impede que um usuário remova a si mesmo
     if user.id == id:
@@ -219,7 +225,7 @@ def login():
     data = request.json
     
     if not all(key in data for key in ['username', 'senha']):
-        return jsonify({'erro': 'Dados incompletos'}), 400
+        return error_response(ERRO_DADOS_INCOMPLETOS, 400)
     
     usuario = User.query.filter_by(username=data['username']).first()
     

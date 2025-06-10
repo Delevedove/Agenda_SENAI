@@ -29,6 +29,7 @@ from src.routes.turma import turma_bp
 from src.routes.sala import sala_bp
 from src.routes.instrutor import instrutor_bp
 from src.routes.ocupacao import ocupacao_bp
+from src.utils.errors import register_error_handlers
 
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(agendamento_bp, url_prefix='/api')
@@ -38,6 +39,8 @@ app.register_blueprint(turma_bp, url_prefix='/api')
 app.register_blueprint(sala_bp, url_prefix='/api')
 app.register_blueprint(instrutor_bp, url_prefix='/api')
 app.register_blueprint(ocupacao_bp, url_prefix='/api')
+
+register_error_handlers(app)
 
 # Rota principal para servir a página inicial
 @app.route('/')

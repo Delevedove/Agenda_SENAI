@@ -5,6 +5,12 @@ from src.models import db
 from src.models.agendamento import Agendamento
 from src.models.user import User
 from src.routes.user import verificar_autenticacao, verificar_admin
+from src.utils.messages import (
+    ERRO_NAO_AUTENTICADO,
+    ERRO_PERMISSAO_NEGADA,
+    ERRO_DADOS_INCOMPLETOS,
+    error_response,
+)
 
 agendamento_bp = Blueprint('agendamento', __name__)
 
@@ -17,7 +23,7 @@ def listar_agendamentos():
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     if verificar_admin(user):
         # Administradores veem todos os agendamentos
@@ -37,7 +43,7 @@ def obter_agendamento(id):
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     agendamento = Agendamento.query.get(id)
     if not agendamento:
@@ -45,7 +51,7 @@ def obter_agendamento(id):
     
     # Verifica permissões
     if not verificar_admin(user) and agendamento.usuario_id != user.id:
-        return jsonify({'erro': 'Permissão negada'}), 403
+        return error_response(ERRO_PERMISSAO_NEGADA, 403)
     
     return jsonify(agendamento.to_dict())
 
@@ -58,14 +64,14 @@ def criar_agendamento():
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     data = request.json
     
     # Validação de dados
     campos_obrigatorios = ['data', 'laboratorio', 'turma', 'turno', 'horarios']
     if not all(campo in data for campo in campos_obrigatorios):
-        return jsonify({'erro': 'Dados incompletos'}), 400
+        return error_response(ERRO_DADOS_INCOMPLETOS, 400)
     
     # Verifica o formato da data
     try:
@@ -85,7 +91,7 @@ def criar_agendamento():
     
     # Usuários comuns só podem criar agendamentos para si mesmos
     if not verificar_admin(user) and usuario_id != user.id:
-        return jsonify({'erro': 'Permissão negada'}), 403
+        return error_response(ERRO_PERMISSAO_NEGADA, 403)
     
     # Verifica se o usuário existe
     if usuario_id != user.id:
@@ -130,7 +136,7 @@ def atualizar_agendamento(id):
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     agendamento = Agendamento.query.get(id)
     if not agendamento:
@@ -138,7 +144,7 @@ def atualizar_agendamento(id):
     
     # Verifica permissões
     if not verificar_admin(user) and agendamento.usuario_id != user.id:
-        return jsonify({'erro': 'Permissão negada'}), 403
+        return error_response(ERRO_PERMISSAO_NEGADA, 403)
     
     data = request.json
     
@@ -206,7 +212,7 @@ def remover_agendamento(id):
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     agendamento = Agendamento.query.get(id)
     if not agendamento:
@@ -214,7 +220,7 @@ def remover_agendamento(id):
     
     # Verifica permissões
     if not verificar_admin(user) and agendamento.usuario_id != user.id:
-        return jsonify({'erro': 'Permissão negada'}), 403
+        return error_response(ERRO_PERMISSAO_NEGADA, 403)
     
     try:
         db.session.delete(agendamento)
@@ -232,7 +238,7 @@ def agendamentos_calendario(mes, ano):
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     # Valida o mês e ano
     if not (1 <= mes <= 12):
@@ -273,7 +279,7 @@ def agendamentos_calendario_periodo():
     de laboratório e turno."""
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
 
     data_inicio_str = request.args.get('data_inicio')
     data_fim_str = request.args.get('data_fim')
@@ -331,7 +337,7 @@ def verificar_disponibilidade():
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+        return error_response(ERRO_NAO_AUTENTICADO, 401)
     
     # Obtém os parâmetros da requisição
     data_str = request.args.get('data')
@@ -340,7 +346,7 @@ def verificar_disponibilidade():
     
     # Validação de parâmetros
     if not all([data_str, laboratorio, turno]):
-        return jsonify({'erro': 'Parâmetros incompletos. Forneça data, laboratorio e turno.'}), 400
+        return error_response(ERRO_DADOS_INCOMPLETOS, 400)
     
     # Converte a data para o formato correto
     try:
