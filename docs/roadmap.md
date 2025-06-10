@@ -4,7 +4,7 @@ Este roadmap sugere próximos passos para evolução do projeto.
 
 ## Prioridade Alta
 - **Correções de validação**: garantir tratamento uniforme de erros e mensagens nas rotas.
-- **Autenticação JWT**: substituir token numérico por JWT real para aumentar a segurança.
+- **Refresh token**: adicionar mecanismo de renovação e revogação do JWT.
 - **Novos testes**: ampliar cobertura de testes automatizados, incluindo rotas de usuários, salas e agendamentos.
 
 ## Prioridade Média

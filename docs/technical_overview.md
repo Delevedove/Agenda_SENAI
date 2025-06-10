@@ -31,7 +31,7 @@ Cada módulo possui um *Blueprint* Flask registrado em `src/main.py` sob o prefi
 ### Componentes Principais
 - **Dashboards/Consultas**: listam entidades (salas, laboratórios, instrutores, etc.).
 - **Formulários**: usados nas rotas `POST` e `PUT` para envio de dados JSON.
-- **Autenticação**: token simples enviado no cabeçalho `Authorization: Bearer <id>`.
+- **Autenticação**: token JWT assinado enviado no cabeçalho `Authorization: Bearer <token>`.
 
 ## Funcionalidades por Módulo
 ### Usuários
@@ -70,10 +70,10 @@ Cada módulo possui um *Blueprint* Flask registrado em `src/main.py` sob o prefi
 ## Controle de Acesso
 - **Administrador**: acesso total a todos os endpoints, inclusive criação e remoção de registros.
 - **Usuário comum**: pode criar seus próprios agendamentos e visualizar suas notificações e ocupações.
-- Verificação simples via token numérico do usuário. Funções `verificar_autenticacao` e `verificar_admin` garantem as permissões.
+- Autenticação e autorização utilizam JWT. As funções `verificar_autenticacao` e `verificar_admin` validam o token e as permissões do usuário.
 
 ## Recomendações e Possíveis Melhorias
-- Implementar autenticação baseada em JWT para segurança real.
+Aprimorar a autenticação JWT implementando mecanismos de refresh e revogação de tokens.
 - Centralizar mensagens de erro e validações em utilitários para evitar repetição.
 - Adicionar testes de integração para as rotas restantes (hoje apenas `tests/test_ocupacao.py`).
 - Utilizar um cliente SPA ou framework de frontend para melhorar a experiência do usuário.

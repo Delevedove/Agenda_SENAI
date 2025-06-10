@@ -1,5 +1,7 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash
+from datetime import datetime, timedelta
+import jwt
 from src.models import db
 from src.models.user import User
 
@@ -19,17 +21,18 @@ def verificar_autenticacao(request):
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         return False, None
-    
+
     token = auth_header.split(' ')[1]
     try:
-        # Em um sistema real, verificaríamos o token JWT
-        # Aqui, simulamos verificando se o usuário existe pelo ID no token
-        user_id = int(token)
+        dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        user_id = dados.get('user_id')
         user = User.query.get(user_id)
         if user:
             return True, user
         return False, None
-    except:
+    except jwt.ExpiredSignatureError:
+        return False, None
+    except jwt.InvalidTokenError:
         return False, None
 
 # Função auxiliar para verificar permissões de administrador
@@ -222,14 +225,19 @@ def login():
         return jsonify({'erro': 'Dados incompletos'}), 400
     
     usuario = User.query.filter_by(username=data['username']).first()
-    
+
     if not usuario or not usuario.check_senha(data['senha']):
         return jsonify({'erro': 'Credenciais inválidas'}), 401
-    
-    # Em um sistema real, geraria um token JWT
-    # Aqui, simulamos usando o ID do usuário como token
-    token = str(usuario.id)
-    
+
+    payload = {
+        'user_id': usuario.id,
+        'nome': usuario.nome,
+        'perfil': usuario.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }
+
+    token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+
     return jsonify({
         'token': token,
         'usuario': usuario.to_dict()
