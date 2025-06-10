@@ -304,6 +304,35 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
     }
 }
 
+/**
+ * Adiciona ao menu do usuário um botão para retornar à tela de seleção de sistema
+ */
+function adicionarBotaoSelecaoSistema() {
+    if (!isAdmin()) return;
+
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        // Evita duplicação do botão
+        if (menu.querySelector('a[href="/selecao-sistema.html"]')) return;
+
+        const li = document.createElement('li');
+        li.className = 'admin-only';
+
+        const link = document.createElement('a');
+        link.className = 'dropdown-item';
+        link.href = '/selecao-sistema.html';
+        link.innerHTML = '<i class="bi bi-arrow-return-left me-2"></i> Retornar à tela de seleção de sistema';
+
+        li.appendChild(link);
+
+        const logoutLink = menu.querySelector('#btnLogout') || menu.querySelector('a[onclick="realizarLogout()"]');
+        if (logoutLink && logoutLink.parentElement) {
+            menu.insertBefore(li, logoutLink.parentElement);
+        } else {
+            menu.appendChild(li);
+        }
+    });
+}
+
 // Inicialização da página
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM carregado. Página atual:', window.location.pathname);
@@ -352,6 +381,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('Atualizando interface do usuário...');
+    // Adiciona o botão de retorno para admins
+    adicionarBotaoSelecaoSistema();
+
     // Atualiza a interface com os dados do usuário
     atualizarInterfaceUsuario();
     
