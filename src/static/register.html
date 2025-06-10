@@ -112,26 +112,13 @@
                 }
                 
                 try {
-                    // Chamada direta à API sem exigir autenticação
-                    const response = await fetch(`${API_URL}/usuarios`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            nome,
-                            email,
-                            username,
-                            senha,
-                            tipo: 'comum' // Usuários registrados são sempre do tipo comum
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(data.erro || `Erro ${response.status}`);
-                    }
+                    const data = await chamarAPI('/usuarios', 'POST', {
+                        nome,
+                        email,
+                        username,
+                        senha,
+                        tipo: 'comum'
+                    }, false);
                     
                     exibirAlerta('Registro realizado com sucesso! Redirecionando para o login...', 'success');
                     
