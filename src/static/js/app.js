@@ -153,7 +153,7 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
         
         // Se o erro for de autenticação, faz logout imediatamente
         if (response.status === 401) {
-            console.error('Erro de autenticação. Redirecionando para login...');
+            console.error('Usuário não está logado. Redirecionando para login...');
             realizarLogout();
             throw new Error('Não autenticado');
         }
