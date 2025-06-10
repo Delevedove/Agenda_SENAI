@@ -581,10 +581,3 @@ footer {
 .step.completed + .step-line {
   background-color: #28a745;
 }
-
-
-/* Remove navbar superior para consistencia visual */
-.navbar.navbar-expand-lg {
-    display: none;
-}
-
