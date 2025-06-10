@@ -7,6 +7,22 @@ let instrutoresDisponiveis = [];
 let tiposOcupacaoData = [];
 let ocupacaoEditando = null;
 
+// Retorna o turno baseado nos horários
+function obterTurnoPorHorario(inicio, fim) {
+    const mapa = {
+        '07:30': 'Manhã',
+        '13:30': 'Tarde',
+        '18:30': 'Noite'
+    };
+    if (mapa[inicio]) {
+        return mapa[inicio];
+    }
+    // fallback
+    if (inicio < '12:00') return 'Manhã';
+    if (inicio < '18:00') return 'Tarde';
+    return 'Noite';
+}
+
 // Carrega tipos de ocupação
 async function carregarTiposOcupacao() {
     try {
@@ -81,13 +97,9 @@ async function carregarInstrutores() {
 
 // Adiciona listeners de validação
 function adicionarListenersValidacao() {
-    // Validação de horários
-    document.getElementById('horarioInicio').addEventListener('change', validarHorarios);
-    document.getElementById('horarioFim').addEventListener('change', validarHorarios);
-    
-    // Validação de data
-    document.getElementById('dataOcupacao').addEventListener('change', validarData);
-    
+    document.getElementById('dataInicio').addEventListener('change', validarDatas);
+    document.getElementById('dataFim').addEventListener('change', validarDatas);
+
     // Verifica se há parâmetros na URL
     verificarParametrosURL();
 }
@@ -99,7 +111,8 @@ function verificarParametrosURL() {
     // Data pré-selecionada
     const data = urlParams.get('data');
     if (data) {
-        document.getElementById('dataOcupacao').value = data;
+        document.getElementById('dataInicio').value = data;
+        document.getElementById('dataFim').value = data;
     }
     
     // Edição de ocupação
@@ -124,9 +137,9 @@ async function carregarOcupacaoParaEdicao(id) {
             // Preenche o formulário
             document.getElementById('cursoEvento').value = ocupacaoEditando.curso_evento;
             document.getElementById('tipoOcupacao').value = ocupacaoEditando.tipo_ocupacao;
-            document.getElementById('dataOcupacao').value = ocupacaoEditando.data;
-            document.getElementById('horarioInicio').value = ocupacaoEditando.horario_inicio;
-            document.getElementById('horarioFim').value = ocupacaoEditando.horario_fim;
+            document.getElementById('dataInicio').value = ocupacaoEditando.data;
+            document.getElementById('dataFim').value = ocupacaoEditando.data;
+            document.getElementById('turno').value = obterTurnoPorHorario(ocupacaoEditando.horario_inicio, ocupacaoEditando.horario_fim);
             document.getElementById('salaOcupacao').value = ocupacaoEditando.sala_id;
             document.getElementById('instrutorOcupacao').value = ocupacaoEditando.instrutor_id || '';
             document.getElementById('observacoesOcupacao').value = ocupacaoEditando.observacoes || '';
@@ -142,29 +155,22 @@ async function carregarOcupacaoParaEdicao(id) {
     }
 }
 
-// Valida horários
-function validarHorarios() {
-    const inicio = document.getElementById('horarioInicio').value;
-    const fim = document.getElementById('horarioFim').value;
-    
-    if (inicio && fim) {
-        if (inicio >= fim) {
-            document.getElementById('horarioFim').setCustomValidity('Horário de fim deve ser posterior ao horário de início');
-        } else {
-            document.getElementById('horarioFim').setCustomValidity('');
-        }
-    }
-}
-
-// Valida data
-function validarData() {
-    const data = document.getElementById('dataOcupacao').value;
+// Valida datas de início e fim
+function validarDatas() {
+    const inicio = document.getElementById('dataInicio').value;
+    const fim = document.getElementById('dataFim').value;
     const hoje = new Date().toISOString().split('T')[0];
-    
-    if (data && data < hoje) {
-        document.getElementById('dataOcupacao').setCustomValidity('Data não pode ser no passado');
+
+    if (inicio && inicio < hoje) {
+        document.getElementById('dataInicio').setCustomValidity('Data não pode ser no passado');
     } else {
-        document.getElementById('dataOcupacao').setCustomValidity('');
+        document.getElementById('dataInicio').setCustomValidity('');
+    }
+
+    if (inicio && fim && fim < inicio) {
+        document.getElementById('dataFim').setCustomValidity('Data de fim deve ser posterior ou igual à data de início');
+    } else {
+        document.getElementById('dataFim').setCustomValidity('');
     }
 }
 
@@ -186,9 +192,9 @@ async function verificarDisponibilidade() {
     try {
         const params = new URLSearchParams({
             sala_id: document.getElementById('salaOcupacao').value,
-            data: document.getElementById('dataOcupacao').value,
-            horario_inicio: document.getElementById('horarioInicio').value,
-            horario_fim: document.getElementById('horarioFim').value
+            data_inicio: document.getElementById('dataInicio').value,
+            data_fim: document.getElementById('dataFim').value,
+            turno: document.getElementById('turno').value
         });
         
         // Se estiver editando, inclui o ID da ocupação
@@ -234,7 +240,7 @@ function mostrarResultadoVerificacao(resultado) {
                     <i class="bi bi-check-circle-fill text-success me-3" style="font-size: 2rem;"></i>
                     <div>
                         <h5 class="text-success mb-1">Sala Disponível!</h5>
-                        <p class="mb-0">A sala ${resultado.sala.nome} está disponível no horário solicitado.</p>
+                        <p class="mb-0">A sala ${resultado.sala.nome} está disponível no turno solicitado.</p>
                     </div>
                 </div>
                 
@@ -270,7 +276,7 @@ function mostrarResultadoVerificacao(resultado) {
                     <i class="bi bi-x-circle-fill text-danger me-3" style="font-size: 2rem;"></i>
                     <div>
                         <h5 class="text-danger mb-1">Sala Indisponível</h5>
-                        <p class="mb-0">A sala ${resultado.sala.nome} não está disponível no horário solicitado.</p>
+                        <p class="mb-0">A sala ${resultado.sala.nome} não está disponível no turno solicitado.</p>
                     </div>
                 </div>
                 
@@ -290,7 +296,7 @@ function mostrarResultadoVerificacao(resultado) {
                 <div class="mt-3">
                     <p class="mb-2"><strong>Sugestões:</strong></p>
                     <ul class="list-unstyled">
-                        <li><i class="bi bi-arrow-right me-1"></i>Escolha outro horário</li>
+                        <li><i class="bi bi-arrow-right me-1"></i>Escolha outro turno ou data</li>
                         <li><i class="bi bi-arrow-right me-1"></i>Selecione uma sala diferente</li>
                         <li><i class="bi bi-arrow-right me-1"></i>Altere a data da ocupação</li>
                     </ul>
@@ -315,9 +321,9 @@ async function confirmarOcupacao() {
         const formData = {
             curso_evento: document.getElementById('cursoEvento').value,
             tipo_ocupacao: document.getElementById('tipoOcupacao').value,
-            data: document.getElementById('dataOcupacao').value,
-            horario_inicio: document.getElementById('horarioInicio').value,
-            horario_fim: document.getElementById('horarioFim').value,
+            data_inicio: document.getElementById('dataInicio').value,
+            data_fim: document.getElementById('dataFim').value,
+            turno: document.getElementById('turno').value,
             sala_id: parseInt(document.getElementById('salaOcupacao').value),
             observacoes: document.getElementById('observacoesOcupacao').value
         };
@@ -364,9 +370,9 @@ function validarFormulario() {
     const campos = [
         'cursoEvento',
         'tipoOcupacao',
-        'dataOcupacao',
-        'horarioInicio',
-        'horarioFim',
+        'dataInicio',
+        'dataFim',
+        'turno',
         'salaOcupacao'
     ];
     
@@ -382,21 +388,10 @@ function validarFormulario() {
         }
     });
     
-    // Valida horários
-    const inicio = document.getElementById('horarioInicio').value;
-    const fim = document.getElementById('horarioFim').value;
-    
-    if (inicio && fim && inicio >= fim) {
-        document.getElementById('horarioFim').classList.add('is-invalid');
-        valido = false;
-    }
-    
-    // Valida data
-    const data = document.getElementById('dataOcupacao').value;
-    const hoje = new Date().toISOString().split('T')[0];
-    
-    if (data && data < hoje && !ocupacaoEditando) {
-        document.getElementById('dataOcupacao').classList.add('is-invalid');
+    // Valida datas
+    validarDatas();
+
+    if (document.getElementById('dataInicio').validationMessage || document.getElementById('dataFim').validationMessage) {
         valido = false;
     }
     

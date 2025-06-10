@@ -246,20 +246,25 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="mb-3">
-                                            <label for="dataOcupacao" class="form-label">Data *</label>
-                                            <input type="date" class="form-control" id="dataOcupacao" required>
+                                            <label for="dataInicio" class="form-label">Data de Início *</label>
+                                            <input type="date" class="form-control" id="dataInicio" required>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
-                                            <label for="horarioInicio" class="form-label">Horário de Início *</label>
-                                            <input type="time" class="form-control" id="horarioInicio" required>
+                                            <label for="dataFim" class="form-label">Data de Fim *</label>
+                                            <input type="date" class="form-control" id="dataFim" required>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
-                                            <label for="horarioFim" class="form-label">Horário de Fim *</label>
-                                            <input type="time" class="form-control" id="horarioFim" required>
+                                            <label for="turno" class="form-label">Turno *</label>
+                                            <select class="form-select" id="turno" required>
+                                                <option value="">Selecione...</option>
+                                                <option value="Manhã">Manhã</option>
+                                                <option value="Tarde">Tarde</option>
+                                                <option value="Noite">Noite</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -393,7 +398,8 @@
             
             // Define data mínima como hoje
             const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('dataOcupacao').min = hoje;
+            document.getElementById('dataInicio').min = hoje;
+            document.getElementById('dataFim').min = hoje;
             
             // Adiciona listeners para validação em tempo real
             adicionarListenersValidacao();
