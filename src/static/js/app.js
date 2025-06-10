@@ -59,8 +59,12 @@ function realizarLogout() {
  * Verifica se o usuário está autenticado
  * @returns {boolean} - True se autenticado, false caso contrário
  */
+function getToken() {
+    return localStorage.getItem('token');
+}
+
 function estaAutenticado() {
-    return localStorage.getItem('token') !== null;
+    return getToken() !== null;
 }
 
 /**
@@ -115,7 +119,7 @@ function verificarPermissaoAdmin() {
  * @returns {Promise} - Promise com o resultado da chamada
  */
 async function chamarAPI(endpoint, method = 'GET', body = null) {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     
     if (!token) {
         console.error('Token não encontrado. Redirecionando para login...');
