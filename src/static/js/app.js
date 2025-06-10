@@ -184,6 +184,22 @@ function formatarData(dataISO) {
  * @returns {string} - Horário formatado
  */
 function formatarHorario(horario) {
+    if (!horario) return '';
+
+    // Se já estiver no formato correto HH:MM, apenas normaliza zeros à esquerda
+    const partes = horario.split(':');
+    if (partes.length === 2) {
+        const horas = parseInt(partes[0], 10);
+        const minutos = parseInt(partes[1], 10);
+
+        if (!isNaN(horas) && !isNaN(minutos)) {
+            const h = String(horas).padStart(2, '0');
+            const m = String(minutos).padStart(2, '0');
+            return `${h}:${m}`;
+        }
+    }
+
+    // Caso não seja possível formatar, retorna original
     return horario;
 }
 
