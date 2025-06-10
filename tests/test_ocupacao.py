@@ -51,9 +51,9 @@ def test_verificar_disponibilidade(client, app):
         '/api/ocupacoes/verificar-disponibilidade',
         query_string={
             'sala_id': sala_id,
-            'data': date.today().strftime('%Y-%m-%d'),
-            'horario_inicio': '08:00',
-            'horario_fim': '09:00'
+            'data_inicio': date.today().strftime('%Y-%m-%d'),
+            'data_fim': date.today().strftime('%Y-%m-%d'),
+            'turno': 'Manhã'
         },
         headers={'Authorization': f'Bearer {user.id}'}
     )
