@@ -135,7 +135,8 @@ body {
   border-radius: 4px;
   padding: 5px;
   overflow-y: auto; /* Permite rolagem vertical dentro das células */
-  height: calc(12vw); /* Altura responsiva baseada na largura da viewport */
+  aspect-ratio: 1 / 1; /* Mantém as células quadradas ao redimensionar */
+  height: auto;
   min-height: 80px; /* Altura mínima para telas pequenas */
   max-height: 150px; /* Altura máxima para telas muito grandes */
   transition: height 0.3s ease; /* Transição suave ao redimensionar */
@@ -248,21 +249,18 @@ footer {
 /* Responsividade */
 @media (min-width: 1600px) {
   .calendario-day {
-    height: calc(10vw);
     max-height: 180px;
   }
 }
 
 @media (min-width: 1200px) and (max-width: 1599px) {
   .calendario-day {
-    height: calc(11vw);
     max-height: 160px;
   }
 }
 
 @media (min-width: 992px) and (max-width: 1199px) {
   .calendario-day {
-    height: calc(12vw);
     max-height: 140px;
   }
 }
@@ -279,7 +277,6 @@ footer {
   }
   
   .calendario-day {
-    height: calc(13vw);
     min-height: 60px;
     max-height: 120px;
   }
@@ -287,7 +284,6 @@ footer {
 
 @media (max-width: 767.98px) {
   .calendario-day {
-    height: calc(14vw);
     min-height: 50px;
     font-size: 0.8rem;
     max-height: 100px;
@@ -310,7 +306,6 @@ footer {
 
 @media (max-width: 575.98px) {
   .calendario-day {
-    height: calc(15vw);
     min-height: 40px;
     max-height: 80px;
     padding: 2px;
@@ -383,7 +378,6 @@ footer {
 /* Melhorias adicionais para responsividade do calendário */
 @media (min-width: 1400px) {
   .calendario-day {
-    height: calc(9vw);
     max-height: 200px;
   }
 }
@@ -396,7 +390,6 @@ footer {
 /* Ajustes para telas ultrawide */
 @media (min-width: 2000px) {
   .calendario-day {
-    height: calc(8vw);
     max-height: 220px;
   }
 }

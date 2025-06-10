@@ -118,19 +118,20 @@ function verificarPermissaoAdmin() {
  * @param {Object} body - Corpo da requisição (opcional)
  * @returns {Promise} - Promise com o resultado da chamada
  */
-async function chamarAPI(endpoint, method = 'GET', body = null) {
-    const token = getToken();
-    
-    if (!token) {
-        console.error('Token não encontrado. Redirecionando para login...');
-        realizarLogout();
-        throw new Error('Não autenticado');
-    }
-    
+async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = true) {
     const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
     };
+
+    if (requerAuth) {
+        const token = getToken();
+        if (!token) {
+            console.error('Token não encontrado. Redirecionando para login...');
+            realizarLogout();
+            throw new Error('Não autenticado');
+        }
+        headers['Authorization'] = `Bearer ${token}`;
+    }
     
     // Garante que o endpoint comece com /
     const endpointFormatado = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -275,7 +276,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         const link = document.createElement('a');
         link.className = 'nav-link';
         link.href = '/laboratorios-turmas.html';
-        link.innerHTML = '<i class="bi bi-building-gear me-1"></i> Laboratórios e Turmas';
+        link.innerHTML = '<i class="bi bi-building me-1"></i> Laboratórios e Turmas';
         
         navItem.appendChild(link);
         
@@ -291,7 +292,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
         link.href = '/laboratorios-turmas.html';
-        link.innerHTML = '<i class="bi bi-building-gear me-2"></i> Laboratórios e Turmas';
+        link.innerHTML = '<i class="bi bi-building me-2"></i> Laboratórios e Turmas';
         
         // Insere antes do último item (Meu Perfil)
         const lastItem = container.querySelector('a[href="/perfil.html"]');
