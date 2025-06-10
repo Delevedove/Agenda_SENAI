@@ -292,7 +292,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         const link = document.createElement('a');
         link.className = 'nav-link admin-only';
         link.href = '/laboratorios-turmas.html';
-        link.innerHTML = '<i class="bi bi-building me-2"></i> Laboratórios e Turmas';
+        link.innerHTML = '<i class="bi bi-building"></i> Laboratórios e Turmas';
         
         // Insere antes do último item (Meu Perfil)
         const lastItem = container.querySelector('a[href="/perfil.html"]');
