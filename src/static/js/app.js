@@ -295,7 +295,7 @@ function adicionarLinkLabTurmas(containerSelector, isNavbar = false) {
         link.innerHTML = '<i class="bi bi-building"></i> Laboratórios e Turmas';
         
         // Insere antes do último item (Meu Perfil)
-        const lastItem = container.querySelector('a[href="/perfil.html"]');
+        const lastItem = container.querySelector('a[href="/perfil.html"], a[href="/perfil-salas.html"]');
         if (lastItem) {
             container.insertBefore(link, lastItem);
         } else {
@@ -394,7 +394,8 @@ document.addEventListener('DOMContentLoaded', function() {
             '/calendario-salas.html',
             '/gerenciar-salas.html',
             '/gerenciar-instrutores.html',
-            '/novo-agendamento-sala.html'
+            '/novo-agendamento-sala.html',
+            '/perfil-salas.html'
         ];
 
         if (!paginasOcupacao.includes(paginaAtual)) {
