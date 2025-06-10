@@ -9,6 +9,12 @@ from sqlalchemy import and_, or_
 
 ocupacao_bp = Blueprint('ocupacao', __name__)
 
+TURNOS_PADRAO = {
+    'Manhã': (time.fromisoformat('07:30'), time.fromisoformat('12:00')),
+    'Tarde': (time.fromisoformat('13:30'), time.fromisoformat('18:00')),
+    'Noite': (time.fromisoformat('18:30'), time.fromisoformat('22:00'))
+}
+
 @ocupacao_bp.route('/ocupacoes', methods=['GET'])
 def listar_ocupacoes():
     """
@@ -101,9 +107,9 @@ def criar_ocupacao():
     data = request.json
     
     # Validação de dados obrigatórios
-    campos_obrigatorios = ['sala_id', 'curso_evento', 'data', 'horario_inicio', 'horario_fim']
+    campos_obrigatorios = ['sala_id', 'curso_evento', 'data_inicio', 'data_fim', 'turno']
     if not all(key in data for key in campos_obrigatorios):
-        return jsonify({'erro': 'Campos obrigatórios: sala_id, curso_evento, data, horario_inicio, horario_fim'}), 400
+        return jsonify({'erro': 'Campos obrigatórios: sala_id, curso_evento, data_inicio, data_fim, turno'}), 400
     
     # Verifica se a sala existe
     sala = Sala.query.get(data['sala_id'])
@@ -118,43 +124,55 @@ def criar_ocupacao():
             return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
     try:
-        # Converte strings para objetos date e time
-        data_ocupacao = datetime.strptime(data['data'], '%Y-%m-%d').date()
-        horario_inicio = datetime.strptime(data['horario_inicio'], '%H:%M').time()
-        horario_fim = datetime.strptime(data['horario_fim'], '%H:%M').time()
-        
-        # Validação de horários
-        if horario_inicio >= horario_fim:
-            return jsonify({'erro': 'Horário de início deve ser anterior ao horário de fim'}), 400
-        
-        # Verifica se a data não é no passado
-        if data_ocupacao < date.today():
+        data_inicio = datetime.strptime(data['data_inicio'], '%Y-%m-%d').date()
+        data_fim = datetime.strptime(data['data_fim'], '%Y-%m-%d').date()
+
+        if data_inicio > data_fim:
+            return jsonify({'erro': 'Data de início deve ser anterior ou igual à data de fim'}), 400
+
+        if data_inicio < date.today():
             return jsonify({'erro': 'Não é possível agendar para datas passadas'}), 400
-        
-        # Verifica disponibilidade da sala
-        if not sala.is_disponivel(data_ocupacao, horario_inicio, horario_fim):
-            conflitos = Ocupacao.buscar_conflitos(data['sala_id'], data_ocupacao, horario_inicio, horario_fim)
+
+        if data['turno'] not in TURNOS_PADRAO:
+            return jsonify({'erro': 'Turno inválido'}), 400
+
+        horario_inicio, horario_fim = TURNOS_PADRAO[data['turno']]
+
+        conflitos_totais = []
+        dia = data_inicio
+        while dia <= data_fim:
+            if not sala.is_disponivel(dia, horario_inicio, horario_fim):
+                conflitos = Ocupacao.buscar_conflitos(data['sala_id'], dia, horario_inicio, horario_fim)
+                conflitos_totais.extend(conflitos)
+            dia += timedelta(days=1)
+
+        if conflitos_totais:
             return jsonify({
-                'erro': 'Sala não disponível no horário solicitado',
-                'conflitos': [c.to_dict(include_relations=False) for c in conflitos]
+                'erro': 'Sala não disponível no turno solicitado',
+                'conflitos': [c.to_dict(include_relations=False) for c in conflitos_totais]
             }), 409
         
         # Verifica disponibilidade do instrutor (se fornecido)
         if instrutor:
-            ocupacoes_instrutor = Ocupacao.query.filter(
-                Ocupacao.instrutor_id == instrutor.id,
-                Ocupacao.data == data_ocupacao,
-                Ocupacao.status.in_(['confirmado', 'pendente']),
-                or_(
-                    and_(Ocupacao.horario_inicio <= horario_inicio, Ocupacao.horario_fim > horario_inicio),
-                    and_(Ocupacao.horario_inicio < horario_fim, Ocupacao.horario_fim >= horario_fim),
-                    and_(Ocupacao.horario_inicio >= horario_inicio, Ocupacao.horario_fim <= horario_fim)
-                )
-            ).all()
-            
+            ocupacoes_instrutor = []
+            dia = data_inicio
+            while dia <= data_fim:
+                ocorrencias = Ocupacao.query.filter(
+                    Ocupacao.instrutor_id == instrutor.id,
+                    Ocupacao.data == dia,
+                    Ocupacao.status.in_(['confirmado', 'pendente']),
+                    or_(
+                        and_(Ocupacao.horario_inicio <= horario_inicio, Ocupacao.horario_fim > horario_inicio),
+                        and_(Ocupacao.horario_inicio < horario_fim, Ocupacao.horario_fim >= horario_fim),
+                        and_(Ocupacao.horario_inicio >= horario_inicio, Ocupacao.horario_fim <= horario_fim)
+                    )
+                ).all()
+                ocupacoes_instrutor.extend(ocorrencias)
+                dia += timedelta(days=1)
+
             if ocupacoes_instrutor:
                 return jsonify({
-                    'erro': 'Instrutor não disponível no horário solicitado',
+                    'erro': 'Instrutor não disponível no turno solicitado',
                     'conflitos': [c.to_dict(include_relations=False) for c in ocupacoes_instrutor]
                 }), 409
         
@@ -170,25 +188,29 @@ def criar_ocupacao():
         if recorrencia not in recorrencias_validas:
             return jsonify({'erro': f'Recorrência deve ser uma das seguintes: {", ".join(recorrencias_validas)}'}), 400
         
-        # Cria a ocupação
-        nova_ocupacao = Ocupacao(
-            sala_id=data['sala_id'],
-            instrutor_id=data.get('instrutor_id'),
-            usuario_id=user.id,
-            curso_evento=data['curso_evento'],
-            data=data_ocupacao,
-            horario_inicio=horario_inicio,
-            horario_fim=horario_fim,
-            tipo_ocupacao=tipo_ocupacao,
-            recorrencia=recorrencia,
-            status=data.get('status', 'confirmado'),
-            observacoes=data.get('observacoes')
-        )
-        
-        db.session.add(nova_ocupacao)
+        ocupacoes_criadas = []
+        dia = data_inicio
+        while dia <= data_fim:
+            nova_ocupacao = Ocupacao(
+                sala_id=data['sala_id'],
+                instrutor_id=data.get('instrutor_id'),
+                usuario_id=user.id,
+                curso_evento=data['curso_evento'],
+                data=dia,
+                horario_inicio=horario_inicio,
+                horario_fim=horario_fim,
+                tipo_ocupacao=tipo_ocupacao,
+                recorrencia=recorrencia,
+                status=data.get('status', 'confirmado'),
+                observacoes=data.get('observacoes')
+            )
+            db.session.add(nova_ocupacao)
+            ocupacoes_criadas.append(nova_ocupacao)
+            dia += timedelta(days=1)
+
         db.session.commit()
-        
-        return jsonify(nova_ocupacao.to_dict()), 201
+
+        return jsonify([o.to_dict() for o in ocupacoes_criadas]), 201
         
     except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
@@ -235,20 +257,31 @@ def atualizar_ocupacao(id):
         data_ocupacao = ocupacao.data
         horario_inicio = ocupacao.horario_inicio
         horario_fim = ocupacao.horario_fim
-        
-        if 'data' in data:
+
+        if 'data_inicio' in data:
+            data_ocupacao = datetime.strptime(data['data_inicio'], '%Y-%m-%d').date()
+            if data_ocupacao < date.today():
+                return jsonify({'erro': 'Não é possível agendar para datas passadas'}), 400
+            ocupacao.data = data_ocupacao
+        elif 'data' in data:
             data_ocupacao = datetime.strptime(data['data'], '%Y-%m-%d').date()
             if data_ocupacao < date.today():
                 return jsonify({'erro': 'Não é possível agendar para datas passadas'}), 400
             ocupacao.data = data_ocupacao
-        
-        if 'horario_inicio' in data:
-            horario_inicio = datetime.strptime(data['horario_inicio'], '%H:%M').time()
+
+        if 'turno' in data:
+            if data['turno'] not in TURNOS_PADRAO:
+                return jsonify({'erro': 'Turno inválido'}), 400
+            horario_inicio, horario_fim = TURNOS_PADRAO[data['turno']]
             ocupacao.horario_inicio = horario_inicio
-        
-        if 'horario_fim' in data:
-            horario_fim = datetime.strptime(data['horario_fim'], '%H:%M').time()
             ocupacao.horario_fim = horario_fim
+        else:
+            if 'horario_inicio' in data:
+                horario_inicio = datetime.strptime(data['horario_inicio'], '%H:%M').time()
+                ocupacao.horario_inicio = horario_inicio
+            if 'horario_fim' in data:
+                horario_fim = datetime.strptime(data['horario_fim'], '%H:%M').time()
+                ocupacao.horario_fim = horario_fim
         
         # Validação de horários
         if horario_inicio >= horario_fim:
@@ -327,13 +360,13 @@ def verificar_disponibilidade():
     
     # Parâmetros obrigatórios
     sala_id = request.args.get('sala_id', type=int)
-    data_str = request.args.get('data')
-    horario_inicio_str = request.args.get('horario_inicio')
-    horario_fim_str = request.args.get('horario_fim')
+    data_inicio_str = request.args.get('data_inicio')
+    data_fim_str = request.args.get('data_fim')
+    turno = request.args.get('turno')
     ocupacao_id = request.args.get('ocupacao_id', type=int)  # Para edição
-    
-    if not all([sala_id, data_str, horario_inicio_str, horario_fim_str]):
-        return jsonify({'erro': 'Parâmetros obrigatórios: sala_id, data, horario_inicio, horario_fim'}), 400
+
+    if not all([sala_id, data_inicio_str, data_fim_str, turno]):
+        return jsonify({'erro': 'Parâmetros obrigatórios: sala_id, data_inicio, data_fim, turno'}), 400
     
     # Verifica se a sala existe
     sala = Sala.query.get(sala_id)
@@ -341,25 +374,25 @@ def verificar_disponibilidade():
         return jsonify({'erro': 'Sala não encontrada'}), 404
     
     try:
-        # Converte strings para objetos date e time
-        data_verificacao = datetime.strptime(data_str, '%Y-%m-%d').date()
-        horario_inicio = datetime.strptime(horario_inicio_str, '%H:%M').time()
-        horario_fim = datetime.strptime(horario_fim_str, '%H:%M').time()
-        
-        # Validação de horários
-        if horario_inicio >= horario_fim:
-            return jsonify({'erro': 'Horário de início deve ser anterior ao horário de fim'}), 400
-        
-        # Verifica disponibilidade
-        disponivel = sala.is_disponivel(data_verificacao, horario_inicio, horario_fim, ocupacao_id)
-        
-        # Se não estiver disponível, busca os conflitos
+        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+
+        if data_inicio > data_fim:
+            return jsonify({'erro': 'Data de início deve ser anterior ou igual à data de fim'}), 400
+
+        if turno not in TURNOS_PADRAO:
+            return jsonify({'erro': 'Turno inválido'}), 400
+
+        horario_inicio, horario_fim = TURNOS_PADRAO[turno]
+
+        disponivel = True
         conflitos = []
-        if not disponivel:
-            ocupacoes_conflitantes = Ocupacao.buscar_conflitos(
-                sala_id, data_verificacao, horario_inicio, horario_fim, ocupacao_id
-            )
-            conflitos = [ocupacao.to_dict() for ocupacao in ocupacoes_conflitantes]
+        dia = data_inicio
+        while dia <= data_fim:
+            if not sala.is_disponivel(dia, horario_inicio, horario_fim, ocupacao_id):
+                disponivel = False
+                conflitos.extend(Ocupacao.buscar_conflitos(sala_id, dia, horario_inicio, horario_fim, ocupacao_id))
+            dia += timedelta(days=1)
         
         return jsonify({
             'disponivel': disponivel,
