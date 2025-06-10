@@ -1,4 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50">
-  <rect width="200" height="50" fill="#164194" rx="5"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Exo 2, Calibri, sans-serif" font-size="32" fill="white" font-weight="600">SENAI</text>
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="100%" viewBox="0 0 610 230" enable-background="new 0 0 610 230" xml:space="preserve">
+<path fill="#FFFFFF" opacity="1.000000" stroke="none" 
+	d="
+M561.000000,231.000000 
+	C374.000031,231.000000 187.500046,231.000000 1.000050,231.000000 
+	C1.000033,154.333359 1.000033,77.666733 1.000017,1.000071 
+	C204.333267,1.000047 407.666534,1.000047 610.999878,1.000024 
+	C610.999878,77.666603 610.999878,154.333206 610.999939,230.999908 
+	C594.500000,231.000000 578.000000,231.000000 561.000000,231.000000 
+z"/>
 </svg>
