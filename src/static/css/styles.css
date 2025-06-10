@@ -581,3 +581,8 @@ footer {
 .step.completed + .step-line {
   background-color: #28a745;
 }
+
+/* Oculta o footer escuro inferior para alinhar com o Sistema de Controle */
+footer.bg-dark {
+    display: none;
+}
