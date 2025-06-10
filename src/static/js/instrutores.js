@@ -148,7 +148,7 @@ function limparDisponibilidade(dia) {
     document.getElementById(`fim_${dia}`).value = '';
 }
 
-// Carrega lista de instrutores
+// Carrega lista de instrutores disponíveis
 async function carregarInstrutores() {
     try {
         document.getElementById('loadingInstrutores').style.display = 'block';
