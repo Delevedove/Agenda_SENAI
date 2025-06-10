@@ -396,7 +396,9 @@ document.addEventListener('DOMContentLoaded', function() {
             '/gerenciar-salas.html',
             '/gerenciar-instrutores.html',
             '/novo-agendamento-sala.html',
-            '/perfil-salas.html'
+            '/perfil-salas.html',
+            '/usuarios.html',
+            '/perfil.html'
         ];
 
         if (!paginasOcupacao.includes(paginaAtual)) {
