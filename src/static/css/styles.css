@@ -35,6 +35,17 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Padroniza cor da navbar com azul institucional SENAI */
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.navbar-dark .navbar-brand,
+.navbar-dark .navbar-nav .nav-link,
+.navbar-dark .navbar-text {
+  color: #ffffff;
+}
+
 .navbar-brand img {
   height: 30px;
   margin-right: 10px;
