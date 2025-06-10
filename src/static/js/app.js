@@ -102,8 +102,9 @@ function verificarAutenticacao() {
  */
 function verificarPermissaoAdmin() {
     if (!verificarAutenticacao()) return false;
-    
+
     if (!isAdmin()) {
+        alert('Acesso não autorizado');
         window.location.href = '/index.html';
         return false;
     }

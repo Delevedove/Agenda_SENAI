@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciamento de Usuários - Sistema de Agenda de Laboratório</title>
+    <title>Gerenciamento de Usuários</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
@@ -14,9 +14,9 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="/index.html">
+            <a class="navbar-brand d-flex align-items-center" href="/usuarios.html">
                 <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
-                Sistema de Agenda de Laboratório
+                Gerenciamento de Usuários
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -24,18 +24,8 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/index.html">
-                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/calendario.html">
-                            <i class="bi bi-calendar3 me-1"></i> Calendário
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/novo-agendamento.html">
-                            <i class="bi bi-plus-circle me-1"></i> Novo Agendamento
+                        <a class="nav-link active" href="/usuarios.html">
+                            <i class="bi bi-people-fill me-1"></i> Lista de Usuários
                         </a>
                     </li>
                 </ul>
@@ -67,30 +57,9 @@
     <!-- Conteúdo principal -->
     <div class="container-fluid py-4">
         <div class="row">
-            <!-- Sidebar em telas maiores -->
-            <div class="col-lg-3 d-none d-lg-block">
-                <div class="sidebar rounded shadow-sm">
-                    <h5 class="mb-3">Menu Principal</h5>
-                    <div class="nav flex-column">
-                        <a class="nav-link" href="/index.html">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                        <a class="nav-link" href="/calendario.html">
-                            <i class="bi bi-calendar3"></i> Calendário
-                        </a>
-                        <a class="nav-link" href="/novo-agendamento.html">
-                            <i class="bi bi-plus-circle"></i> Novo Agendamento
-                        </a>
-                        <a class="nav-link" href="/perfil.html">
-                            <i class="bi bi-person"></i> Meu Perfil
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Conteúdo principal -->
-            <div class="col-lg-9">
-                <h2 class="mb-4">Gerenciamento de Usuários</h2>
+            <div class="col-12">
+                <h2 class="mb-4 text-center">Gerenciamento de Usuários</h2>
                 
                 <div id="alertContainer"></div>
                 
@@ -136,7 +105,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-0">&copy; 2025 Sistema de Agenda de Laboratório</p>
+                    <p class="mb-0">&copy; 2025 Gerenciamento de Usuários</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="mb-0">Versão 1.0</p>
