@@ -244,7 +244,7 @@ def verificar_disponibilidade_sala(id):
             'conflitos': conflitos
         })
         
-    except ValueError as e:
+    except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
     except Exception as e:
         return jsonify({'erro': str(e)}), 500

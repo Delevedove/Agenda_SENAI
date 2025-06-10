@@ -232,7 +232,9 @@ def verificar_disponibilidade_instrutor(id):
         dia_semana = dias[data_verificacao.weekday()]
         
         # Verifica disponibilidade geral do instrutor
-        disponivel_horario = instrutor.is_disponivel_horario(dia_semana, horario_str)
+        # Usa o horário formatado para garantir comparação correta
+        horario_formatado = horario.strftime('%H:%M')
+        disponivel_horario = instrutor.is_disponivel_horario(dia_semana, horario_formatado)
         
         # Verifica se há ocupações conflitantes
         ocupacoes_dia = Ocupacao.query.filter(
@@ -255,7 +257,7 @@ def verificar_disponibilidade_instrutor(id):
             'conflitos': conflitos
         })
         
-    except ValueError as e:
+    except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
     except Exception as e:
         return jsonify({'erro': str(e)}), 500

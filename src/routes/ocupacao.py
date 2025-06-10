@@ -190,7 +190,7 @@ def criar_ocupacao():
         
         return jsonify(nova_ocupacao.to_dict()), 201
         
-    except ValueError as e:
+    except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
     except Exception as e:
         db.session.rollback()
@@ -285,7 +285,7 @@ def atualizar_ocupacao(id):
         db.session.commit()
         return jsonify(ocupacao.to_dict())
         
-    except ValueError as e:
+    except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
     except Exception as e:
         db.session.rollback()
@@ -367,7 +367,7 @@ def verificar_disponibilidade():
             'conflitos': conflitos
         })
         
-    except ValueError as e:
+    except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
