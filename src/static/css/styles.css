@@ -134,7 +134,8 @@ body {
   border: 1px solid #dee2e6;
   border-radius: 4px;
   padding: 5px;
-  overflow-y: auto; /* Permite rolagem vertical dentro das células */
+  /* Remove rolagem do contêiner principal para evitar barras desnecessárias */
+  overflow-y: hidden;
   aspect-ratio: 1 / 1; /* Mantém as células quadradas ao redimensionar */
   height: auto;
   min-height: 80px; /* Altura mínima para telas pequenas */
