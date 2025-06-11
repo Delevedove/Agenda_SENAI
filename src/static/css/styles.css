@@ -586,3 +586,28 @@ footer {
 footer.bg-dark {
     display: none;
 }
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Touch-friendly buttons */
+button:not(.navbar-toggler), .btn {
+  padding: 12px;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  button:not(.navbar-toggler), .btn {
+    width: 100%;
+  }
+}
+
+/* Responsive form fields */
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  box-sizing: border-box;
+}
