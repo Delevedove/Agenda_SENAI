@@ -547,3 +547,27 @@ async function carregarLaboratoriosParaFiltro(seletorElemento) {
         return [];
     }
 }
+
+// Exporta dados genéricos (CSV ou PDF)
+async function exportarDados(endpoint, formato, nomeArquivo) {
+    try {
+        const response = await fetch(`${API_URL}${endpoint}?formato=${formato}`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao exportar dados');
+        }
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${nomeArquivo}.${formato}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Erro ao exportar dados:', error);
+        exibirAlerta('Falha ao exportar dados', 'danger');
+    }
+}

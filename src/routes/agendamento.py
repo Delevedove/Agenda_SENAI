@@ -1,6 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response, send_file
 from datetime import datetime, date
 import json
+import csv
+from io import StringIO, BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from src.models import db
 from src.models.agendamento import Agendamento
 from src.models.user import User
@@ -354,9 +358,54 @@ def verificar_disponibilidade():
         Agendamento.laboratorio == laboratorio,
         Agendamento.turno == turno
     ).all()
-    
+
     # Retorna os agendamentos encontrados
     return jsonify([a.to_dict() for a in agendamentos])
+
+
+@agendamento_bp.route('/agendamentos/export', methods=['GET'])
+def exportar_agendamentos():
+    """Exporta agendamentos em CSV ou PDF."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    formato = request.args.get('formato', 'csv').lower()
+
+    if verificar_admin(user):
+        agendamentos = Agendamento.query.all()
+    else:
+        agendamentos = Agendamento.query.filter_by(usuario_id=user.id).all()
+
+    if formato == 'pdf':
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        c.drawString(50, 750, "Relatório de Agendamentos")
+        y = 730
+        c.drawString(50, y, "ID  Usuário  Data  Laboratório  Turma  Turno")
+        y -= 20
+        for ag in agendamentos:
+            nome = ag.usuario.nome if ag.usuario else ''
+            c.drawString(50, y, f"{ag.id}  {nome}  {ag.data}  {ag.laboratorio}  {ag.turma}  {ag.turno}")
+            y -= 20
+            if y < 50:
+                c.showPage()
+                y = 750
+        c.save()
+        buffer.seek(0)
+        return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name='agendamentos.pdf')
+
+    # CSV como padrão
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(["ID", "Nome do Usuário", "Data", "Laboratório", "Turma", "Turno"])
+    for ag in agendamentos:
+        nome = ag.usuario.nome if ag.usuario else ''
+        writer.writerow([ag.id, nome, ag.data, ag.laboratorio, ag.turma, ag.turno])
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=agendamentos.csv"
+    output.headers["Content-Type"] = "text/csv"
+    return output
 
 def verificar_conflitos_horarios(data, laboratorio, horarios_json, agendamento_id=None):
     """
