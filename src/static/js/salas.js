@@ -93,7 +93,7 @@ async function carregarSalas() {
                 'Authorization': `Bearer ${getToken()}`
             }
         });
-        
+
         if (response.ok) {
             salasData = await response.json();
             
@@ -110,11 +110,18 @@ async function carregarSalas() {
             
             renderizarTabelaSalas(salasFiltradas);
         } else {
-            throw new Error('Erro ao carregar salas');
+            const erro = await response.json().catch(() => ({}));
+            throw new Error(erro.erro || `Erro ${response.status}`);
         }
     } catch (error) {
         console.error('Erro ao carregar salas:', error);
-        exibirAlerta('Erro ao carregar salas. Tente novamente.', 'danger');
+        let mensagem = 'Erro ao carregar salas.';
+        if (error.message.includes('Failed to fetch')) {
+            mensagem += ' Verifique sua conexão e tente novamente.';
+        } else {
+            mensagem += ` ${error.message}`;
+        }
+        exibirAlerta(mensagem, 'danger');
     } finally {
         document.getElementById('loadingSalas').style.display = 'none';
     }

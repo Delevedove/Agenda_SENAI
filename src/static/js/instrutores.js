@@ -171,7 +171,7 @@ async function carregarInstrutores() {
                 'Authorization': `Bearer ${getToken()}`
             }
         });
-        
+
         if (response.ok) {
             instrutoresData = await response.json();
             
@@ -188,11 +188,18 @@ async function carregarInstrutores() {
             
             renderizarTabelaInstrutores(instrutoresFiltrados);
         } else {
-            throw new Error('Erro ao carregar instrutores');
+            const erro = await response.json().catch(() => ({}));
+            throw new Error(erro.erro || `Erro ${response.status}`);
         }
     } catch (error) {
         console.error('Erro ao carregar instrutores:', error);
-        exibirAlerta('Erro ao carregar instrutores. Tente novamente.', 'danger');
+        let mensagem = 'Erro ao carregar instrutores.';
+        if (error.message.includes('Failed to fetch')) {
+            mensagem += ' Verifique sua conexão e tente novamente.';
+        } else {
+            mensagem += ` ${error.message}`;
+        }
+        exibirAlerta(mensagem, 'danger');
     } finally {
         document.getElementById('loadingInstrutores').style.display = 'none';
     }
