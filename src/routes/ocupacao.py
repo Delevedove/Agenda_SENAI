@@ -1,10 +1,14 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response, send_file
 from src.models import db
 from src.models.ocupacao import Ocupacao
 from src.models.sala import Sala
 from src.models.instrutor import Instrutor
 from src.routes.user import verificar_autenticacao, verificar_admin
 from datetime import datetime, date, time, timedelta
+import csv
+from io import StringIO, BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from sqlalchemy import and_, or_
 
 ocupacao_bp = Blueprint('ocupacao', __name__)
@@ -73,8 +77,53 @@ def listar_ocupacoes():
     
     # Ordena por data e horário
     ocupacoes = query.order_by(Ocupacao.data, Ocupacao.horario_inicio).all()
-    
+
     return jsonify([ocupacao.to_dict() for ocupacao in ocupacoes])
+
+
+@ocupacao_bp.route('/ocupacoes/export', methods=['GET'])
+def exportar_ocupacoes():
+    """Exporta ocupações em CSV ou PDF."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    formato = request.args.get('formato', 'csv').lower()
+
+    if verificar_admin(user):
+        ocupacoes = Ocupacao.query.all()
+    else:
+        ocupacoes = Ocupacao.query.filter_by(usuario_id=user.id).all()
+
+    if formato == 'pdf':
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        c.drawString(50, 750, "Relatório de Ocupações")
+        y = 730
+        c.drawString(50, y, "ID  Sala  Data  Início  Fim  Status")
+        y -= 20
+        for oc in ocupacoes:
+            sala = oc.sala.nome if oc.sala else oc.sala_id
+            c.drawString(50, y, f"{oc.id}  {sala}  {oc.data}  {oc.horario_inicio}  {oc.horario_fim}  {oc.status}")
+            y -= 20
+            if y < 50:
+                c.showPage()
+                y = 750
+        c.save()
+        buffer.seek(0)
+        return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name='ocupacoes.pdf')
+
+    # CSV padrão
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(["ID", "Sala", "Data", "Início", "Fim", "Status"])
+    for oc in ocupacoes:
+        sala = oc.sala.nome if oc.sala else oc.sala_id
+        writer.writerow([oc.id, sala, oc.data, oc.horario_inicio, oc.horario_fim, oc.status])
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=ocupacoes.csv"
+    output.headers["Content-Type"] = "text/csv"
+    return output
 
 @ocupacao_bp.route('/ocupacoes/<int:id>', methods=['GET'])
 def obter_ocupacao(id):
