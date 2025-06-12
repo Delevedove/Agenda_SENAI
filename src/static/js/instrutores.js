@@ -37,9 +37,11 @@ async function carregarAreasAtuacao() {
 }
 
 // Carrega capacidades sugeridas
-async function carregarCapacidadesSugeridas() {
+async function carregarCapacidadesSugeridas(area='') {
     try {
-        const response = await fetch(`${API_URL}/instrutores/capacidades-sugeridas`, {
+        const url = area ? `${API_URL}/instrutores/capacidades-sugeridas?area=${area}`
+                         : `${API_URL}/instrutores/capacidades-sugeridas`;
+        const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${getToken()}`
             }
@@ -107,45 +109,20 @@ function adicionarCapacidadeSugerida(capacidade) {
 // Configura interface de disponibilidade
 function configurarDisponibilidade() {
     const container = document.getElementById('disponibilidadeContainer');
-    const diasSemana = [
-        { valor: 'segunda', nome: 'Segunda-feira' },
-        { valor: 'terca', nome: 'Terça-feira' },
-        { valor: 'quarta', nome: 'Quarta-feira' },
-        { valor: 'quinta', nome: 'Quinta-feira' },
-        { valor: 'sexta', nome: 'Sexta-feira' },
-        { valor: 'sabado', nome: 'Sábado' },
-        { valor: 'domingo', nome: 'Domingo' }
-    ];
-    
-    container.innerHTML = '';
-    
-    diasSemana.forEach(dia => {
-        const row = document.createElement('div');
-        row.className = 'row mb-2 align-items-center';
-        row.innerHTML = `
-            <div class="col-md-3">
-                <label class="form-label">${dia.nome}</label>
-            </div>
-            <div class="col-md-4">
-                <input type="time" class="form-control" id="inicio_${dia.valor}" placeholder="Início">
-            </div>
-            <div class="col-md-4">
-                <input type="time" class="form-control" id="fim_${dia.valor}" placeholder="Fim">
-            </div>
-            <div class="col-md-1">
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="limparDisponibilidade('${dia.valor}')" title="Limpar">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-        `;
-        container.appendChild(row);
-    });
-}
-
-// Limpa disponibilidade de um dia
-function limparDisponibilidade(dia) {
-    document.getElementById(`inicio_${dia}`).value = '';
-    document.getElementById(`fim_${dia}`).value = '';
+    container.innerHTML = `
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="dispManha" value="manha">
+            <label class="form-check-label" for="dispManha">Manhã</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="dispTarde" value="tarde">
+            <label class="form-check-label" for="dispTarde">Tarde</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="dispNoite" value="noite">
+            <label class="form-check-label" for="dispNoite">Noite</label>
+        </div>
+    `;
 }
 
 // Carrega lista de instrutores disponíveis
@@ -333,15 +310,16 @@ function novoInstrutor() {
     document.getElementById('btnSalvarTexto').textContent = 'Salvar';
     document.getElementById('formInstrutor').reset();
     document.getElementById('instrutorId').value = '';
-    
+
     renderizarCapacidades();
     limparDisponibilidadeTodos();
 }
 
-// Limpa disponibilidade de todos os dias
+// Limpa disponibilidade (desmarca todos os turnos)
 function limparDisponibilidadeTodos() {
-    const dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
-    dias.forEach(dia => limparDisponibilidade(dia));
+    document.getElementById('dispManha').checked = false;
+    document.getElementById('dispTarde').checked = false;
+    document.getElementById('dispNoite').checked = false;
 }
 
 // Edita um instrutor existente
@@ -364,8 +342,8 @@ async function editarInstrutor(id) {
             document.getElementById('instrutorId').value = instrutor.id;
             document.getElementById('instrutorNome').value = instrutor.nome;
             document.getElementById('instrutorEmail').value = instrutor.email || '';
-            document.getElementById('instrutorTelefone').value = instrutor.telefone || '';
             document.getElementById('instrutorAreaAtuacao').value = instrutor.area_atuacao || '';
+            carregarCapacidadesSugeridas(instrutor.area_atuacao || '');
             document.getElementById('instrutorStatus').value = instrutor.status;
             document.getElementById('instrutorObservacoes').value = instrutor.observacoes || '';
             
@@ -373,18 +351,10 @@ async function editarInstrutor(id) {
             renderizarCapacidades();
             
             // Preenche disponibilidade
-            const disponibilidade = instrutor.disponibilidade || {};
-            Object.keys(disponibilidade).forEach(dia => {
-                const horarios = disponibilidade[dia];
-                if (horarios && horarios.length > 0) {
-                    const periodo = horarios[0]; // Pega o primeiro período
-                    if (periodo.includes('-')) {
-                        const [inicio, fim] = periodo.split('-');
-                        document.getElementById(`inicio_${dia}`).value = inicio;
-                        document.getElementById(`fim_${dia}`).value = fim;
-                    }
-                }
-            });
+            const disponibilidade = instrutor.disponibilidade || [];
+            document.getElementById('dispManha').checked = disponibilidade.includes('manha');
+            document.getElementById('dispTarde').checked = disponibilidade.includes('tarde');
+            document.getElementById('dispNoite').checked = disponibilidade.includes('noite');
             
             // Abre o modal
             const modal = new bootstrap.Modal(document.getElementById('modalInstrutor'));
@@ -404,12 +374,11 @@ async function salvarInstrutor() {
         const formData = {
             nome: document.getElementById('instrutorNome').value.trim(),
             email: document.getElementById('instrutorEmail').value.trim(),
-            telefone: document.getElementById('instrutorTelefone').value.trim(),
             area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
             status: document.getElementById('instrutorStatus').value,
             observacoes: document.getElementById('instrutorObservacoes').value.trim(),
             capacidades: capacidadesInstrutor,
-            disponibilidade: {}
+            disponibilidade: []
         };
         
         // Validações
@@ -419,15 +388,9 @@ async function salvarInstrutor() {
         }
         
         // Coleta disponibilidade
-        const dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
-        dias.forEach(dia => {
-            const inicio = document.getElementById(`inicio_${dia}`).value;
-            const fim = document.getElementById(`fim_${dia}`).value;
-            
-            if (inicio && fim) {
-                formData.disponibilidade[dia] = [`${inicio}-${fim}`];
-            }
-        });
+        if (document.getElementById('dispManha').checked) formData.disponibilidade.push('manha');
+        if (document.getElementById('dispTarde').checked) formData.disponibilidade.push('tarde');
+        if (document.getElementById('dispNoite').checked) formData.disponibilidade.push('noite');
         
         const instrutorId = document.getElementById('instrutorId').value;
         const isEdicao = instrutorId !== '';

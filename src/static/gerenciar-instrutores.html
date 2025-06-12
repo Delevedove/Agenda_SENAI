@@ -248,12 +248,6 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="instrutorTelefone" class="form-label">Telefone</label>
-                                    <input type="tel" class="form-control" id="instrutorTelefone" placeholder="(11) 99999-9999">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
                                     <label for="instrutorStatus" class="form-label">Status</label>
                                     <select class="form-select" id="instrutorStatus">
                                         <option value="ativo">Ativo</option>
@@ -303,13 +297,8 @@
                         
                         <!-- Disponibilidade -->
                         <h6 class="mb-3 mt-4"><i class="bi bi-clock me-2"></i>Disponibilidade (Opcional)</h6>
-                        <div class="row">
-                            <div class="col-12">
-                                <small class="text-muted">Configure os horários preferenciais do instrutor para cada dia da semana:</small>
-                            </div>
-                        </div>
-                        <div id="disponibilidadeContainer" class="mt-3">
-                            <!-- Disponibilidade será configurada aqui -->
+                        <div id="disponibilidadeContainer" class="mb-3">
+                            <!-- Checkboxes de turnos serão inseridos via JS -->
                         </div>
                         
                         <!-- Observações -->
@@ -379,13 +368,17 @@
             carregarCapacidadesSugeridas();
             configurarDisponibilidade();
             carregarInstrutores();
-            
+
             // Configura evento para adicionar capacidade com Enter
             document.getElementById('novaCapacidade').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     adicionarCapacidade();
                 }
+            });
+
+            document.getElementById('instrutorAreaAtuacao').addEventListener('change', function() {
+                carregarCapacidadesSugeridas(this.value);
             });
         });
     </script>

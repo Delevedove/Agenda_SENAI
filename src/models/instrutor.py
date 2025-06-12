@@ -30,7 +30,7 @@ class Instrutor(db.Model):
         self.telefone = telefone
         self.capacidades = json.dumps(capacidades) if capacidades else json.dumps([])
         self.area_atuacao = area_atuacao
-        self.disponibilidade = json.dumps(disponibilidade) if disponibilidade else json.dumps({})
+        self.disponibilidade = json.dumps(disponibilidade) if disponibilidade else json.dumps([])
         self.status = status
         self.observacoes = observacoes
     
@@ -51,23 +51,19 @@ class Instrutor(db.Model):
     
     def get_disponibilidade(self):
         """
-        Retorna o dicionário de disponibilidade do instrutor.
-        Formato esperado: {
-            'segunda': ['08:00-12:00', '13:30-17:30'],
-            'terca': ['08:00-12:00'],
-            ...
-        }
+        Retorna a lista de turnos disponíveis do instrutor.
+        Exemplo: ['manha', 'tarde']
         """
         try:
-            return json.loads(self.disponibilidade) if self.disponibilidade else {}
+            return json.loads(self.disponibilidade) if self.disponibilidade else []
         except (json.JSONDecodeError, TypeError):
-            return {}
+            return []
     
-    def set_disponibilidade(self, disponibilidade_dict):
+    def set_disponibilidade(self, disponibilidade_list):
         """
         Define a disponibilidade do instrutor.
         """
-        self.disponibilidade = json.dumps(disponibilidade_dict) if disponibilidade_dict else json.dumps({})
+        self.disponibilidade = json.dumps(disponibilidade_list) if disponibilidade_list else json.dumps([])
     
     def pode_ministrar_curso(self, curso):
         """
@@ -97,21 +93,20 @@ class Instrutor(db.Model):
             return False
         
         disponibilidade = self.get_disponibilidade()
-        if dia_semana not in disponibilidade:
-            return True  # Se não há restrição, considera disponível
-        
-        horarios_disponiveis = disponibilidade[dia_semana]
-        if not horarios_disponiveis:
-            return False
-        
-        # Verifica se o horário está dentro dos períodos disponíveis
-        for periodo in horarios_disponiveis:
-            if '-' in periodo:
-                inicio, fim = periodo.split('-')
-                if inicio <= horario <= fim:
-                    return True
-        
-        return False
+        if not disponibilidade:
+            return True
+
+        turno_horarios = {
+            'manha': ('06:00', '12:00'),
+            'tarde': ('12:00', '18:00'),
+            'noite': ('18:00', '23:59')
+        }
+
+        for turno, (inicio, fim) in turno_horarios.items():
+            if inicio <= horario <= fim:
+                return turno in disponibilidade
+
+        return True
     
     def get_ocupacoes_periodo(self, data_inicio, data_fim):
         """
