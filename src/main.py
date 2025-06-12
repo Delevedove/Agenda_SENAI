@@ -13,7 +13,13 @@ from src.models import db
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 # Configuração do banco de dados
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///agenda_laboratorio.db'
+db_uri = os.getenv('DATABASE_URL', 'sqlite:///agenda_laboratorio.db')
+# Railway pode fornecer URLs iniciando com 'postgres://',
+# enquanto o SQLAlchemy espera 'postgresql://'
+if db_uri.startswith('postgres://'):
+    db_uri = db_uri.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'chave-secreta-do-sistema-de-agenda'
 
