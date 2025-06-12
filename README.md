@@ -28,3 +28,13 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
    ```bash
    pytest
    ```
+
+4. Para iniciar a aplicação em modo de desenvolvimento, execute:
+
+   ```bash
+   flask --app src.main run
+   ```
+
+   As tabelas do banco são criadas automaticamente na primeira execução e um
+   usuário administrador padrão (`admin` / `admin123`) é gerado se ainda não
+   existir.
