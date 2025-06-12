@@ -14,9 +14,9 @@ from sqlalchemy import and_, or_
 ocupacao_bp = Blueprint('ocupacao', __name__)
 
 TURNOS_PADRAO = {
-    'Manhã': (time.fromisoformat('07:30'), time.fromisoformat('12:00')),
-    'Tarde': (time.fromisoformat('13:30'), time.fromisoformat('18:00')),
-    'Noite': (time.fromisoformat('18:30'), time.fromisoformat('22:00'))
+    'Manhã': (time.fromisoformat('08:00'), time.fromisoformat('12:00')),
+    'Tarde': (time.fromisoformat('13:30'), time.fromisoformat('17:30')),
+    'Noite': (time.fromisoformat('18:30'), time.fromisoformat('22:30'))
 }
 
 @ocupacao_bp.route('/ocupacoes', methods=['GET'])
