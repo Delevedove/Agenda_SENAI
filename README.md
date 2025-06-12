@@ -19,6 +19,8 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
    export SECRET_KEY="sua-chave-secreta"
    ```
 
+   A aplicação também reconhece a variável `FLASK_SECRET_KEY`. Caso nenhuma das duas esteja definida, é usado o valor padrão `chave-secreta-do-sistema-de-agenda`.
+
    Se `DATABASE_URL` não for informado ou estiver vazio, o sistema utiliza por padrão um banco SQLite local (`agenda_laboratorio.db`).
 
 3. Execute a suíte de testes para verificar se tudo está funcionando:
