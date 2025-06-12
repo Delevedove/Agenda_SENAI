@@ -13,7 +13,9 @@ from src.models import db
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 # Configuração do banco de dados
-db_uri = os.getenv('postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@postgres.railway.internal:5432/railway')
+db_uri = os.getenv("DATABASE_URL", "").strip()
+if not db_uri:
+    db_uri = 'sqlite:///agenda_laboratorio.db'
 
 if db_uri.startswith('postgres://'):
     db_uri = db_uri.replace('postgres://', 'postgresql://', 1)
