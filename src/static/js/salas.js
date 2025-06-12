@@ -18,16 +18,24 @@ async function carregarTiposSala() {
         if (response.ok) {
             tiposSala = await response.json();
             
-            // Preenche os selects de tipo
             const selectTipo = document.getElementById('salaTipo');
             const filtroTipo = document.getElementById('filtroTipo');
-            
-            selectTipo.innerHTML = '<option value="">Selecione...</option>';
-            filtroTipo.innerHTML = '<option value="">Todos</option>';
-            
+
+            if (selectTipo) {
+                selectTipo.innerHTML = '<option value="">Selecione...</option>';
+            }
+
+            if (filtroTipo) {
+                filtroTipo.innerHTML = '<option value="">Todos</option>';
+            }
+
             tiposSala.forEach(tipo => {
-                selectTipo.innerHTML += `<option value="${tipo.valor}">${tipo.nome}</option>`;
-                filtroTipo.innerHTML += `<option value="${tipo.valor}">${tipo.nome}</option>`;
+                if (selectTipo) {
+                    selectTipo.innerHTML += `<option value="${tipo.valor}">${tipo.nome}</option>`;
+                }
+                if (filtroTipo) {
+                    filtroTipo.innerHTML += `<option value="${tipo.valor}">${tipo.nome}</option>`;
+                }
             });
         }
     } catch (error) {
@@ -243,7 +251,6 @@ async function editarSala(id) {
             document.getElementById('salaId').value = sala.id;
             document.getElementById('salaNome').value = sala.nome;
             document.getElementById('salaCapacidade').value = sala.capacidade;
-            document.getElementById('salaTipo').value = sala.tipo || '';
             document.getElementById('salaLocalizacao').value = sala.localizacao || '';
             document.getElementById('salaStatus').value = sala.status;
             document.getElementById('salaObservacoes').value = sala.observacoes || '';
@@ -274,8 +281,7 @@ async function salvarSala() {
         const formData = {
             nome: document.getElementById('salaNome').value.trim(),
             capacidade: parseInt(document.getElementById('salaCapacidade').value),
-            tipo: document.getElementById('salaTipo').value,
-            localizacao: document.getElementById('salaLocalizacao').value.trim(),
+            localizacao: document.getElementById('salaLocalizacao').value,
             status: document.getElementById('salaStatus').value,
             observacoes: document.getElementById('salaObservacoes').value.trim(),
             recursos: []
