@@ -13,9 +13,8 @@ from src.models import db
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 # Configuração do banco de dados
-db_uri = os.getenv('postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@postgres.railway.internal:5432/railway', 'sqlite:///agenda_laboratorio.db')
-# Railway pode fornecer URLs iniciando com 'postgres://',
-# enquanto o SQLAlchemy espera 'postgresql://'
+db_uri = os.getenv('postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@postgres.railway.internal:5432/railway')
+
 if db_uri.startswith('postgres://'):
     db_uri = db_uri.replace('postgres://', 'postgresql://', 1)
 
