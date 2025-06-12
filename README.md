@@ -12,11 +12,10 @@ A documentação detalhada com descrição dos módulos e controle de acesso est
 Ao realizar o deploy no Railway, defina a variável de ambiente `DATABASE_URL` com a URL fornecida pela plataforma. Um exemplo real é:
 
 ```
-postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@shuttle.proxy.rlwy.net:46850/railway
+postgresql://postgres:BRtaZKVMSNj8DMiBMqPlzOcBsZDEsUjb@monorail.proxy.rlwy.net:5432/railway
 ```
 
-Essa variável já está configurada automaticamente no deploy do Railway e pode ser
-usada localmente adicionando-a ao seu `.env`.
+Essa URL já está automaticamente configurada no Railway, portanto não é necessário copiá-la para o `.env` quando a aplicação estiver rodando em produção. Para testes locais, você pode adicioná-la manualmente ao seu arquivo `.env`.
 
 O arquivo `src/main.py` detecta automaticamente essa variável e utiliza o banco PostgreSQL. Para criar as tabelas diretamente no banco você pode executar a aplicação ou rodar manualmente:
 
