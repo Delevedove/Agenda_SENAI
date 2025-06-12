@@ -10,7 +10,7 @@ let ocupacaoEditando = null;
 // Retorna o turno baseado nos horários
 function obterTurnoPorHorario(inicio, fim) {
     const mapa = {
-        '07:30': 'Manhã',
+        '08:00': 'Manhã',
         '13:30': 'Tarde',
         '18:30': 'Noite'
     };
@@ -19,7 +19,7 @@ function obterTurnoPorHorario(inicio, fim) {
     }
     // fallback
     if (inicio < '12:00') return 'Manhã';
-    if (inicio < '18:00') return 'Tarde';
+    if (inicio < '18:30') return 'Tarde';
     return 'Noite';
 }
 

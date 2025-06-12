@@ -53,7 +53,7 @@ class Instrutor(db.Model):
         """
         Retorna o dicionário de disponibilidade do instrutor.
         Formato esperado: {
-            'segunda': ['08:00-12:00', '14:00-18:00'],
+            'segunda': ['08:00-12:00', '13:30-17:30'],
             'terca': ['08:00-12:00'],
             ...
         }
