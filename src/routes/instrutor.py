@@ -49,7 +49,7 @@ def obter_instrutor(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    instrutor = Instrutor.query.get(id)
+    instrutor = db.session.get(Instrutor, id)
     if not instrutor:
         return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
@@ -118,7 +118,7 @@ def atualizar_instrutor(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    instrutor = Instrutor.query.get(id)
+    instrutor = db.session.get(Instrutor, id)
     if not instrutor:
         return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
@@ -180,7 +180,7 @@ def remover_instrutor(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    instrutor = Instrutor.query.get(id)
+    instrutor = db.session.get(Instrutor, id)
     if not instrutor:
         return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
@@ -211,7 +211,7 @@ def verificar_disponibilidade_instrutor(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    instrutor = Instrutor.query.get(id)
+    instrutor = db.session.get(Instrutor, id)
     if not instrutor:
         return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
@@ -271,7 +271,7 @@ def listar_ocupacoes_instrutor(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    instrutor = Instrutor.query.get(id)
+    instrutor = db.session.get(Instrutor, id)
     if not instrutor:
         return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
@@ -323,7 +323,7 @@ def atualizar_capacidades_instrutor(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    instrutor = Instrutor.query.get(id)
+    instrutor = db.session.get(Instrutor, id)
     if not instrutor:
         return jsonify({'erro': 'Instrutor não encontrado'}), 404
     

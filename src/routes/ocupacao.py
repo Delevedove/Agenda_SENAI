@@ -134,7 +134,7 @@ def obter_ocupacao(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    ocupacao = Ocupacao.query.get(id)
+    ocupacao = db.session.get(Ocupacao, id)
     if not ocupacao:
         return jsonify({'erro': 'Ocupação não encontrada'}), 404
     
@@ -161,14 +161,14 @@ def criar_ocupacao():
         return jsonify({'erro': 'Campos obrigatórios: sala_id, curso_evento, data_inicio, data_fim, turno'}), 400
     
     # Verifica se a sala existe
-    sala = Sala.query.get(data['sala_id'])
+    sala = db.session.get(Sala, data['sala_id'])
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
     
     # Verifica se o instrutor existe (se fornecido)
     instrutor = None
     if data.get('instrutor_id'):
-        instrutor = Instrutor.query.get(data['instrutor_id'])
+        instrutor = db.session.get(Instrutor, data['instrutor_id'])
         if not instrutor:
             return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
@@ -276,7 +276,7 @@ def atualizar_ocupacao(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    ocupacao = Ocupacao.query.get(id)
+    ocupacao = db.session.get(Ocupacao, id)
     if not ocupacao:
         return jsonify({'erro': 'Ocupação não encontrada'}), 404
     
@@ -289,7 +289,7 @@ def atualizar_ocupacao(id):
     try:
         # Atualiza sala se fornecida
         if 'sala_id' in data:
-            sala = Sala.query.get(data['sala_id'])
+            sala = db.session.get(Sala, data['sala_id'])
             if not sala:
                 return jsonify({'erro': 'Sala não encontrada'}), 404
             ocupacao.sala_id = data['sala_id']
@@ -297,7 +297,7 @@ def atualizar_ocupacao(id):
         # Atualiza instrutor se fornecido
         if 'instrutor_id' in data:
             if data['instrutor_id']:
-                instrutor = Instrutor.query.get(data['instrutor_id'])
+                instrutor = db.session.get(Instrutor, data['instrutor_id'])
                 if not instrutor:
                     return jsonify({'erro': 'Instrutor não encontrado'}), 404
             ocupacao.instrutor_id = data['instrutor_id']
@@ -337,7 +337,7 @@ def atualizar_ocupacao(id):
             return jsonify({'erro': 'Horário de início deve ser anterior ao horário de fim'}), 400
         
         # Verifica disponibilidade da sala (excluindo a ocupação atual)
-        sala = Sala.query.get(ocupacao.sala_id)
+        sala = db.session.get(Sala, ocupacao.sala_id)
         if not sala.is_disponivel(data_ocupacao, horario_inicio, horario_fim, ocupacao.id):
             conflitos = Ocupacao.buscar_conflitos(ocupacao.sala_id, data_ocupacao, horario_inicio, horario_fim, ocupacao.id)
             return jsonify({
@@ -382,7 +382,7 @@ def remover_ocupacao(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    ocupacao = Ocupacao.query.get(id)
+    ocupacao = db.session.get(Ocupacao, id)
     if not ocupacao:
         return jsonify({'erro': 'Ocupação não encontrada'}), 404
     
@@ -418,7 +418,7 @@ def verificar_disponibilidade():
         return jsonify({'erro': 'Parâmetros obrigatórios: sala_id, data_inicio, data_fim, turno'}), 400
     
     # Verifica se a sala existe
-    sala = Sala.query.get(sala_id)
+    sala = db.session.get(Sala, sala_id)
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
     
