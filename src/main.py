@@ -1,13 +1,15 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 import os
-import sys
 
-# Configuração do caminho para importações
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-# Importação dos modelos
 from src.models import db
+from src.routes.agendamento import agendamento_bp
+from src.routes.instrutor import instrutor_bp
+from src.routes.laboratorio import laboratorio_bp
+from src.routes.notificacao import notificacao_bp
+from src.routes.ocupacao import ocupacao_bp
+from src.routes.sala import sala_bp
+from src.routes.turma import turma_bp
+from src.routes.user import user_bp
 
 # Criação da aplicação Flask
 app = Flask(__name__, static_url_path='', static_folder='static')
@@ -27,15 +29,7 @@ app.config['SECRET_KEY'] = 'chave-secreta-do-sistema-de-agenda'
 # Inicialização do banco de dados
 db.init_app(app)
 
-# Importação e registro dos blueprints
-from src.routes.user import user_bp
-from src.routes.agendamento import agendamento_bp
-from src.routes.notificacao import notificacao_bp
-from src.routes.laboratorio import laboratorio_bp
-from src.routes.turma import turma_bp
-from src.routes.sala import sala_bp
-from src.routes.instrutor import instrutor_bp
-from src.routes.ocupacao import ocupacao_bp
+# Registro dos blueprints
 
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(agendamento_bp, url_prefix='/api')
