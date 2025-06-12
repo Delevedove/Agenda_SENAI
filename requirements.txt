@@ -4,6 +4,7 @@ SQLAlchemy==2.0.23
 Werkzeug==2.3.7
 python-dotenv==1.0.0
 pymysql==1.1.0
+psycopg2-binary
 cryptography==41.0.4
 gunicorn
 pytest
