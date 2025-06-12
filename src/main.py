@@ -15,7 +15,7 @@ from src.routes.user import user_bp
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 # Configuração do banco de dados
-db_uri = os.getenv( export DATABASE_URL="postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@postgres.railway.internal:5432/railway").strip()
+db_uri = os.getenv("DATABASE_URL", "").strip()
 if not db_uri:
     db_uri = 'sqlite:///agenda_laboratorio.db'
 
@@ -24,7 +24,9 @@ if db_uri.startswith('postgres://'):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'chave-secreta-do-sistema-de-agenda'
+
+secret_key = os.getenv('SECRET_KEY') or os.getenv('FLASK_SECRET_KEY') or 'chave-secreta-do-sistema-de-agenda'
+app.config['SECRET_KEY'] = secret_key
 
 # Inicialização do banco de dados
 db.init_app(app)
