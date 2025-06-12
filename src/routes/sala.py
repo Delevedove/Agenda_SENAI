@@ -48,7 +48,7 @@ def obter_sala(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    sala = Sala.query.get(id)
+    sala = db.session.get(Sala, id)
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
     
@@ -119,7 +119,7 @@ def atualizar_sala(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    sala = Sala.query.get(id)
+    sala = db.session.get(Sala, id)
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
     
@@ -177,7 +177,7 @@ def remover_sala(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    sala = Sala.query.get(id)
+    sala = db.session.get(Sala, id)
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
     
@@ -208,7 +208,7 @@ def verificar_disponibilidade_sala(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    sala = Sala.query.get(id)
+    sala = db.session.get(Sala, id)
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
     
@@ -258,7 +258,7 @@ def listar_ocupacoes_sala(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    sala = Sala.query.get(id)
+    sala = db.session.get(Sala, id)
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
     

@@ -43,7 +43,7 @@ def obter_agendamento(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    agendamento = Agendamento.query.get(id)
+    agendamento = db.session.get(Agendamento, id)
     if not agendamento:
         return jsonify({'erro': 'Agendamento não encontrado'}), 404
     
@@ -93,7 +93,7 @@ def criar_agendamento():
     
     # Verifica se o usuário existe
     if usuario_id != user.id:
-        usuario_destino = User.query.get(usuario_id)
+        usuario_destino = db.session.get(User, usuario_id)
         if not usuario_destino:
             return jsonify({'erro': 'Usuário não encontrado'}), 404
     
@@ -136,7 +136,7 @@ def atualizar_agendamento(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    agendamento = Agendamento.query.get(id)
+    agendamento = db.session.get(Agendamento, id)
     if not agendamento:
         return jsonify({'erro': 'Agendamento não encontrado'}), 404
     
@@ -189,7 +189,7 @@ def atualizar_agendamento(id):
     
     # Apenas administradores podem alterar o usuário responsável
     if 'usuario_id' in data and verificar_admin(user):
-        usuario_destino = User.query.get(data['usuario_id'])
+        usuario_destino = db.session.get(User, data['usuario_id'])
         if not usuario_destino:
             return jsonify({'erro': 'Usuário não encontrado'}), 404
         agendamento.usuario_id = data['usuario_id']
@@ -212,7 +212,7 @@ def remover_agendamento(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    agendamento = Agendamento.query.get(id)
+    agendamento = db.session.get(Agendamento, id)
     if not agendamento:
         return jsonify({'erro': 'Agendamento não encontrado'}), 404
     

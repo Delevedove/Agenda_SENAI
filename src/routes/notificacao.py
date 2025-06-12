@@ -36,7 +36,7 @@ def marcar_notificacao_lida(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    notificacao = Notificacao.query.get(id)
+    notificacao = db.session.get(Notificacao, id)
     if not notificacao:
         return jsonify({'erro': 'Notificação não encontrada'}), 404
     

@@ -28,7 +28,7 @@ def obter_turma(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    turma = Turma.query.get(id)
+    turma = db.session.get(Turma, id)
     if not turma:
         return jsonify({'erro': 'Turma não encontrada'}), 404
     
@@ -82,7 +82,7 @@ def atualizar_turma(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    turma = Turma.query.get(id)
+    turma = db.session.get(Turma, id)
     if not turma:
         return jsonify({'erro': 'Turma não encontrada'}), 404
     
@@ -120,7 +120,7 @@ def remover_turma(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    turma = Turma.query.get(id)
+    turma = db.session.get(Turma, id)
     if not turma:
         return jsonify({'erro': 'Turma não encontrada'}), 404
     

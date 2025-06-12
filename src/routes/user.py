@@ -26,7 +26,7 @@ def verificar_autenticacao(request):
     try:
         dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
         user_id = dados.get('user_id')
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             return True, user
         return False, None
@@ -78,7 +78,7 @@ def obter_usuario(id):
     if not verificar_admin(user) and user.id != id:
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    usuario = User.query.get(id)
+    usuario = db.session.get(User, id)
     if not usuario:
         return jsonify({'erro': 'Usuário não encontrado'}), 404
     
@@ -149,7 +149,7 @@ def atualizar_usuario(id):
     if not verificar_admin(user) and user.id != id:
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    usuario = User.query.get(id)
+    usuario = db.session.get(User, id)
     if not usuario:
         return jsonify({'erro': 'Usuário não encontrado'}), 404
     
@@ -202,7 +202,7 @@ def remover_usuario(id):
     if user.id == id:
         return jsonify({'erro': 'Não é possível remover o próprio usuário'}), 400
     
-    usuario = User.query.get(id)
+    usuario = db.session.get(User, id)
     if not usuario:
         return jsonify({'erro': 'Usuário não encontrado'}), 404
     

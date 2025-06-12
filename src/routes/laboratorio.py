@@ -28,7 +28,7 @@ def obter_laboratorio(id):
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    laboratorio = Laboratorio.query.get(id)
+    laboratorio = db.session.get(Laboratorio, id)
     if not laboratorio:
         return jsonify({'erro': 'Laboratório não encontrado'}), 404
     
@@ -82,7 +82,7 @@ def atualizar_laboratorio(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    laboratorio = Laboratorio.query.get(id)
+    laboratorio = db.session.get(Laboratorio, id)
     if not laboratorio:
         return jsonify({'erro': 'Laboratório não encontrado'}), 404
     
@@ -120,7 +120,7 @@ def remover_laboratorio(id):
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    laboratorio = Laboratorio.query.get(id)
+    laboratorio = db.session.get(Laboratorio, id)
     if not laboratorio:
         return jsonify({'erro': 'Laboratório não encontrado'}), 404
     
