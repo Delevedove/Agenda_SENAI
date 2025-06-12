@@ -331,12 +331,9 @@ def listar_recursos_disponiveis():
         {'valor': 'tv', 'nome': 'TV/Monitor'},
         {'valor': 'projetor', 'nome': 'Projetor'},
         {'valor': 'quadro_branco', 'nome': 'Quadro Branco'},
-        {'valor': 'quadro_negro', 'nome': 'Quadro Negro'},
         {'valor': 'climatizacao', 'nome': 'Climatização'},
         {'valor': 'computadores', 'nome': 'Computadores'},
         {'valor': 'wifi', 'nome': 'Wi-Fi'},
-        {'valor': 'som', 'nome': 'Sistema de Som'},
-        {'valor': 'microfone', 'nome': 'Microfone'},
         {'valor': 'bancadas', 'nome': 'Bancadas'},
         {'valor': 'armarios', 'nome': 'Armários'},
         {'valor': 'tomadas', 'nome': 'Tomadas Extras'}
