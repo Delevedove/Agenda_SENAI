@@ -92,7 +92,7 @@ def criar_instrutor():
             telefone=data.get('telefone'),
             capacidades=data.get('capacidades', []),
             area_atuacao=data.get('area_atuacao'),
-            disponibilidade=data.get('disponibilidade', {}),
+            disponibilidade=data.get('disponibilidade', []),
             status=status,
             observacoes=data.get('observacoes')
         )
@@ -357,20 +357,17 @@ def listar_areas_atuacao():
         return jsonify({'erro': 'Não autenticado'}), 401
     
     areas = [
+        {'valor': 'automacao_industrial', 'nome': 'Automação Industrial'},
+        {'valor': 'eletromecanica', 'nome': 'Eletromecânica'},
+        {'valor': 'eletrotecnica', 'nome': 'Eletrotécnica'},
+        {'valor': 'mecanica', 'nome': 'Mecânica'},
+        {'valor': 'metalurgia', 'nome': 'Metalurgia'},
+        {'valor': 'mineracao', 'nome': 'Mineração'},
         {'valor': 'informatica', 'nome': 'Informática'},
-        {'valor': 'administracao', 'nome': 'Administração'},
-        {'valor': 'contabilidade', 'nome': 'Contabilidade'},
-        {'valor': 'marketing', 'nome': 'Marketing'},
-        {'valor': 'recursos_humanos', 'nome': 'Recursos Humanos'},
         {'valor': 'logistica', 'nome': 'Logística'},
-        {'valor': 'vendas', 'nome': 'Vendas'},
-        {'valor': 'financeiro', 'nome': 'Financeiro'},
-        {'valor': 'juridico', 'nome': 'Jurídico'},
-        {'valor': 'engenharia', 'nome': 'Engenharia'},
-        {'valor': 'design', 'nome': 'Design'},
-        {'valor': 'idiomas', 'nome': 'Idiomas'},
-        {'valor': 'saude', 'nome': 'Saúde'},
-        {'valor': 'educacao', 'nome': 'Educação'},
+        {'valor': 'administracao', 'nome': 'Administração'},
+        {'valor': 'seguranca_trabalho', 'nome': 'Segurança do Trabalho'},
+        {'valor': 'meio_ambiente', 'nome': 'Meio Ambiente'},
         {'valor': 'outros', 'nome': 'Outros'}
     ]
     
@@ -380,31 +377,58 @@ def listar_areas_atuacao():
 def listar_capacidades_sugeridas():
     """
     Lista capacidades técnicas sugeridas para instrutores.
+    Retorna capacidades gerais se nenhuma área for informada.
     """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
-    
-    capacidades = [
-        # Informática
-        'Microsoft Office', 'Excel Avançado', 'PowerPoint', 'Word',
-        'Programação Python', 'Programação Java', 'JavaScript', 'HTML/CSS',
-        'Banco de Dados', 'SQL', 'Redes de Computadores', 'Segurança da Informação',
-        
-        # Administração e Negócios
-        'Gestão de Projetos', 'Liderança', 'Planejamento Estratégico',
-        'Gestão de Pessoas', 'Administração Financeira', 'Contabilidade Básica',
-        'Marketing Digital', 'Vendas', 'Atendimento ao Cliente',
-        
-        # Idiomas
-        'Inglês Básico', 'Inglês Intermediário', 'Inglês Avançado',
-        'Espanhol Básico', 'Espanhol Intermediário', 'Espanhol Avançado',
-        
-        # Outros
-        'Comunicação', 'Apresentações', 'Oratória', 'Redação',
-        'Matemática Financeira', 'Estatística', 'Logística',
-        'Qualidade e Processos', 'Empreendedorismo'
-    ]
-    
-    return jsonify(sorted(capacidades))
+
+    area = request.args.get('area')
+
+    capacidades_por_area = {
+        'automacao_industrial': [
+            'Programação de CLP', 'Instrumentação Industrial', 'Controle de Processos'
+        ],
+        'eletromecanica': [
+            'Manutenção Eletromecânica', 'Comandos Elétricos', 'Desenho Mecânico'
+        ],
+        'eletrotecnica': [
+            'Instalações Elétricas', 'Projetos Elétricos', 'NR10'
+        ],
+        'mecanica': [
+            'Usinagem', 'Metrologia', 'Desenho Técnico'
+        ],
+        'metalurgia': [
+            'Soldagem', 'Processos de Fundição', 'Tratamento Térmico'
+        ],
+        'mineracao': [
+            'Operação de Mina', 'Beneficiamento Mineral', 'Segurança em Mineração'
+        ],
+        'informatica': [
+            'Desenvolvimento de Sistemas', 'Redes de Computadores', 'Suporte e Manutenção'
+        ],
+        'logistica': [
+            'Gestão de Estoques', 'Transporte e Distribuição', 'Logística Reversa'
+        ],
+        'administracao': [
+            'Gestão Empresarial', 'Recursos Humanos', 'Planejamento Financeiro'
+        ],
+        'seguranca_trabalho': [
+            'Normas Regulamentadoras', 'Higiene Ocupacional', 'Prevenção de Riscos'
+        ],
+        'meio_ambiente': [
+            'Gestão Ambiental', 'Sustentabilidade', 'Tratamento de Resíduos'
+        ],
+        'outros': [
+            'Comunicação', 'Empreendedorismo'
+        ]
+    }
+
+    if area and area in capacidades_por_area:
+        capacidades = capacidades_por_area[area]
+    else:
+        # Junta todas as capacidades disponíveis
+        capacidades = sorted({c for lista in capacidades_por_area.values() for c in lista})
+
+    return jsonify(capacidades)
 
