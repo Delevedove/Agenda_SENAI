@@ -143,12 +143,6 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="filtroTipo" class="form-label">Tipo</label>
-                                <select class="form-select" id="filtroTipo">
-                                    <option value="">Todos</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
                                 <label for="filtroCapacidade" class="form-label">Capacidade Mínima</label>
                                 <input type="number" class="form-control" id="filtroCapacidade" min="1" placeholder="Ex: 20">
                             </div>
@@ -191,7 +185,6 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Nome</th>
-                                            <th>Tipo</th>
                                             <th>Capacidade</th>
                                             <th>Localização</th>
                                             <th>Status</th>
@@ -339,7 +332,6 @@
             document.getElementById('nomeUsuarioNav').textContent = usuario.nome;
             
             // Carrega dados iniciais
-            carregarTiposSala();
             carregarRecursosSala();
             carregarSalas();
 
