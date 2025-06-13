@@ -40,7 +40,7 @@ def create_app():
     """Application factory used by Flask."""
     app = Flask(__name__, static_url_path='', static_folder='static')
 
-    db_uri = os.getenv("DATABASE_URL", "postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@shuttle.proxy.rlwy.net:46850/railway").strip()
+    db_uri = os.getenv("postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@shuttle.proxy.rlwy.net:46850/railway", "").strip()
     if not db_uri:
         db_uri = 'sqlite:///agenda_laboratorio.db'
     if db_uri.startswith('postgres://'):
