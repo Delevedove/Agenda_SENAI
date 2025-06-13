@@ -3,6 +3,7 @@
 // Variáveis globais
 let passoAtual = 1;
 let salasDisponiveis = [];
+let turmasDisponiveis = [];
 let instrutoresDisponiveis = [];
 let tiposOcupacaoData = [];
 let ocupacaoEditando = null;
@@ -92,6 +93,27 @@ async function carregarInstrutores() {
         }
     } catch (error) {
         console.error('Erro ao carregar instrutores:', error);
+    }
+}
+
+
+async function carregarTurmasSelect() {
+    try {
+        const response = await fetch(`${API_URL}/turmas`, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        if (response.ok) {
+            turmasDisponiveis = await response.json();
+            const select = document.getElementById('cursoEvento');
+            select.innerHTML = '<option value="">Selecione...</option>';
+            turmasDisponiveis.forEach(t => {
+                select.innerHTML += `<option value="${t.nome}">${t.nome}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar turmas:', error);
     }
 }
 
