@@ -322,11 +322,15 @@ async function salvarSala() {
         
         if (response.ok) {
             exibirAlerta(`Sala ${isEdicao ? 'atualizada' : 'criada'} com sucesso!`, 'success');
-            
+
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalSala'));
             modal.hide();
-            
+
+            // Reseta o formulário e o estado de edição para evitar
+            // que uma nova criação seja tratada como atualização
+            novaSala();
+
             // Recarrega a lista
             carregarSalas();
         } else {
