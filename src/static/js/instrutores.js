@@ -408,11 +408,15 @@ async function salvarInstrutor() {
         
         if (response.ok) {
             exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
-            
+
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrutor'));
             modal.hide();
-            
+
+            // Reseta o formulário e o estado de edição para evitar
+            // que uma nova criação seja tratada como atualização
+            novoInstrutor();
+
             // Recarrega a lista
             carregarInstrutores();
         } else {
