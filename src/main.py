@@ -42,7 +42,7 @@ def create_app():
 
     db_uri = os.getenv(
         "DATABASE_URL",
-        "postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@shuttle.proxy.rlwy.net:46850/railway",
+        "Postgres.postgresql://postgres:BRtaZKVMSNjBDMiBMqPIzOcBSzDEsUjb@shuttle.proxy.rlwy.net:46850/railway",
     ).strip()
     if not db_uri:
         db_uri = 'sqlite:///agenda_laboratorio.db'
