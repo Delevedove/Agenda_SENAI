@@ -44,6 +44,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/gerenciar-turmas.html">
+                            <i class="bi bi-building me-1"></i> Gerenciar Turmas
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/novo-agendamento-sala.html">
                             <i class="bi bi-plus-circle me-1"></i> Nova Ocupação
                         </a>
@@ -84,6 +89,9 @@
                         </a>
                         <a class="nav-link" href="/gerenciar-instrutores.html">
                             <i class="bi bi-person-badge"></i> Gerenciar Instrutores
+                        </a>
+                        <a class="nav-link" href="/gerenciar-turmas.html">
+                            <i class="bi bi-building"></i> Gerenciar Turmas
                         </a>
                         <a class="nav-link" href="/novo-agendamento-sala.html">
                             <i class="bi bi-plus-circle"></i> Nova Ocupação
@@ -203,6 +211,14 @@
                                             <button type="button" class="btn btn-outline-warning quick-action" onclick="window.location.href='/gerenciar-instrutores.html'">
                                                 <i class="bi bi-person-badge d-block mb-2" style="font-size: 2rem;"></i>
                                                 Gerenciar Instrutores
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3" id="acaoGerenciarTurmas" style="display: none;">
+                                        <div class="d-grid">
+                                            <button type="button" class="btn btn-outline-secondary quick-action" onclick="window.location.href='/gerenciar-turmas.html'">
+                                                <i class="bi bi-building d-block mb-2" style="font-size: 2rem;"></i>
+                                                Gerenciar Turmas
                                             </button>
                                         </div>
                                     </div>
@@ -329,6 +345,7 @@
             if (isAdmin()) {
                 document.getElementById('acaoGerenciarSalas').style.display = 'block';
                 document.getElementById('acaoGerenciarInstrutores').style.display = 'block';
+                document.getElementById('acaoGerenciarTurmas').style.display = 'block';
             }
             
             // Carrega dados do dashboard
