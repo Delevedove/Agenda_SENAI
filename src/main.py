@@ -2,6 +2,7 @@ from flask import Flask
 import os
 
 from src.models import db
+from sqlalchemy import text, inspect
 from src.routes.agendamento import agendamento_bp
 from src.routes.instrutor import instrutor_bp
 from src.routes.laboratorio import laboratorio_bp
@@ -34,6 +35,21 @@ def create_admin(app):
         except SQLAlchemyError as e:
             db.session.rollback()
             print(f"Erro ao criar usuário administrador: {str(e)}")
+
+
+def ensure_grupo_ocupacao_column(app):
+    """Add grupo_ocupacao_id column to ocupacoes table if it doesn't exist."""
+    with app.app_context():
+        inspector = inspect(db.engine)
+        columns = [c.get("name") for c in inspector.get_columns("ocupacoes")]
+        if "grupo_ocupacao_id" not in columns:
+            with db.engine.connect() as conn:
+                conn.execute(text("ALTER TABLE ocupacoes ADD COLUMN grupo_ocupacao_id VARCHAR(36)"))
+                try:
+                    conn.execute(text("CREATE INDEX ix_ocupacoes_grupo_ocupacao_id ON ocupacoes (grupo_ocupacao_id)"))
+                except Exception:
+                    pass
+                conn.commit()
 
 
 def create_app():
@@ -76,6 +92,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        ensure_grupo_ocupacao_column(app)
         create_admin(app)
 
     return app
