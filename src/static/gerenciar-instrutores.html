@@ -68,52 +68,35 @@
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dashboard-salas.html">
-                                <i class="bi bi-speedometer2 me-2"></i>
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/calendario-salas.html">
-                                <i class="bi bi-calendar3 me-2"></i>
-                                Calendário
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/gerenciar-salas.html">
-                                <i class="bi bi-building me-2"></i>
-                                Gerenciar Salas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/gerenciar-instrutores.html">
-                                <i class="bi bi-person-badge me-2"></i>
-                                Gerenciar Instrutores
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/novo-agendamento-sala.html">
-                                <i class="bi bi-plus-circle me-2"></i>
-                                Nova Ocupação
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/perfil-salas.html">
-                                <i class="bi bi-person me-2"></i>
-                                Meu Perfil
-                            </a>
-                        </li>
-                    </ul>
+            <!-- Sidebar em telas maiores -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="sidebar rounded shadow-sm">
+                    <h5 class="mb-3">Menu Principal</h5>
+                    <div class="nav flex-column">
+                        <a class="nav-link" href="/dashboard-salas.html">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="/calendario-salas.html">
+                            <i class="bi bi-calendar3"></i> Calendário
+                        </a>
+                        <a class="nav-link" href="/gerenciar-salas.html">
+                            <i class="bi bi-building"></i> Gerenciar Salas
+                        </a>
+                        <a class="nav-link active" href="/gerenciar-instrutores.html">
+                            <i class="bi bi-person-badge"></i> Gerenciar Instrutores
+                        </a>
+                        <a class="nav-link" href="/novo-agendamento-sala.html">
+                            <i class="bi bi-plus-circle"></i> Nova Ocupação
+                        </a>
+                        <a class="nav-link" href="/perfil-salas.html">
+                            <i class="bi bi-person"></i> Meu Perfil
+                        </a>
+                    </div>
                 </div>
-            </nav>
+            </div>
 
             <!-- Conteúdo Principal -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <main class="col-lg-9">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Gerenciar Instrutores</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
