@@ -86,9 +86,7 @@ async function carregarOcupacoes(dataInicio, dataFim) {
                 title: evento.title,
                 start: evento.start,
                 end: evento.end,
-                backgroundColor: evento.backgroundColor,
-                borderColor: evento.borderColor,
-                className: `ocupacao-${evento.extendedProps.tipo_ocupacao}`,
+                className: getClasseTurno(evento.extendedProps.turno),
                 extendedProps: evento.extendedProps
             }));
         } else {
@@ -176,6 +174,32 @@ async function carregarTiposOcupacao() {
 function aplicarFiltrosCalendario() {
     if (calendar) {
         calendar.refetchEvents();
+    }
+}
+
+// Configura formulários de filtros (desktop e mobile)
+function configurarFiltros() {
+    const form = document.getElementById('filtrosForm');
+    const formMobile = document.getElementById('filtrosMobileForm');
+
+    if (form) {
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            document.getElementById('filtroSalaMobile').value = document.getElementById('filtroSala').value;
+            document.getElementById('filtroInstrutorMobile').value = document.getElementById('filtroInstrutor').value;
+            document.getElementById('filtroTipoOcupacaoMobile').value = document.getElementById('filtroTipoOcupacao').value;
+            aplicarFiltrosCalendario();
+        });
+    }
+
+    if (formMobile) {
+        formMobile.addEventListener('submit', e => {
+            e.preventDefault();
+            document.getElementById('filtroSala').value = document.getElementById('filtroSalaMobile').value;
+            document.getElementById('filtroInstrutor').value = document.getElementById('filtroInstrutorMobile').value;
+            document.getElementById('filtroTipoOcupacao').value = document.getElementById('filtroTipoOcupacaoMobile').value;
+            aplicarFiltrosCalendario();
+        });
     }
 }
 
