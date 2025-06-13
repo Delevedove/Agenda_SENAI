@@ -19,6 +19,7 @@ class Ocupacao(db.Model):
     data = db.Column(db.Date, nullable=False)
     horario_inicio = db.Column(db.Time, nullable=False)
     horario_fim = db.Column(db.Time, nullable=False)
+    grupo_ocupacao_id = db.Column(db.String(36), index=True)
     tipo_ocupacao = db.Column(db.String(50))  # aula_regular, evento_especial, reuniao, etc.
     recorrencia = db.Column(db.String(20), default='unica')  # unica, semanal, mensal
     status = db.Column(db.String(20), default='confirmado')  # confirmado, pendente, cancelado
@@ -30,7 +31,8 @@ class Ocupacao(db.Model):
     usuario = db.relationship('User', backref='ocupacoes_salas', lazy=True)
     
     def __init__(self, sala_id, usuario_id, curso_evento, data, horario_inicio, horario_fim,
-                 instrutor_id=None, tipo_ocupacao=None, recorrencia='unica', status='confirmado', observacoes=None):
+                 instrutor_id=None, tipo_ocupacao=None, recorrencia='unica', status='confirmado', observacoes=None,
+                 grupo_ocupacao_id=None):
         self.sala_id = sala_id
         self.instrutor_id = instrutor_id
         self.usuario_id = usuario_id
@@ -42,6 +44,7 @@ class Ocupacao(db.Model):
         self.recorrencia = recorrencia
         self.status = status
         self.observacoes = observacoes
+        self.grupo_ocupacao_id = grupo_ocupacao_id
     
     def get_duracao_minutos(self):
         """
@@ -135,6 +138,7 @@ class Ocupacao(db.Model):
             'data': self.data.isoformat() if self.data else None,
             'horario_inicio': self.horario_inicio.strftime('%H:%M') if self.horario_inicio else None,
             'horario_fim': self.horario_fim.strftime('%H:%M') if self.horario_fim else None,
+            'grupo_ocupacao_id': self.grupo_ocupacao_id,
             'tipo_ocupacao': self.tipo_ocupacao,
             'recorrencia': self.recorrencia,
             'status': self.status,

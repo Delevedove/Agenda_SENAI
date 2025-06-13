@@ -237,6 +237,9 @@ def criar_ocupacao():
         if recorrencia not in recorrencias_validas:
             return jsonify({'erro': f'Recorrência deve ser uma das seguintes: {", ".join(recorrencias_validas)}'}), 400
         
+        import uuid
+        grupo_id = uuid.uuid4().hex
+
         ocupacoes_criadas = []
         dia = data_inicio
         while dia <= data_fim:
@@ -251,7 +254,8 @@ def criar_ocupacao():
                 tipo_ocupacao=tipo_ocupacao,
                 recorrencia=recorrencia,
                 status=data.get('status', 'confirmado'),
-                observacoes=data.get('observacoes')
+                observacoes=data.get('observacoes'),
+                grupo_ocupacao_id=grupo_id
             )
             db.session.add(nova_ocupacao)
             ocupacoes_criadas.append(nova_ocupacao)
@@ -391,9 +395,17 @@ def remover_ocupacao(id):
         return jsonify({'erro': 'Permissão negada'}), 403
     
     try:
-        db.session.delete(ocupacao)
+        grupo_id = ocupacao.grupo_ocupacao_id
+        if grupo_id:
+            ocupacoes = Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).all()
+        else:
+            ocupacoes = [ocupacao]
+
+        for oc in ocupacoes:
+            db.session.delete(oc)
+
         db.session.commit()
-        return jsonify({'mensagem': 'Ocupação removida com sucesso'})
+        return jsonify({'mensagem': 'Ocupação removida com sucesso', 'removidas': len(ocupacoes)})
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': str(e)}), 500

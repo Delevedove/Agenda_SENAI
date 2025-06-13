@@ -295,7 +295,7 @@ function mostrarDetalhesOcupacao(ocupacao) {
             <button type="button" class="btn btn-primary me-2" onclick="editarOcupacao(${ocupacao.id})">
                 <i class="bi bi-pencil me-1"></i>Editar
             </button>
-            <button type="button" class="btn btn-danger" onclick="excluirOcupacao(${ocupacao.id}, '${ocupacao.curso_evento}')">
+            <button type="button" class="btn btn-danger" onclick="excluirOcupacao(${ocupacao.id}, '${ocupacao.curso_evento}', '${ocupacao.grupo_ocupacao_id || ''}')">
                 <i class="bi bi-trash me-1"></i>Excluir
             </button>
         `;
@@ -352,15 +352,23 @@ function editarOcupacao(id) {
 }
 
 // Exclui ocupação
-function excluirOcupacao(id, nome) {
+function excluirOcupacao(id, nome, grupoId) {
     // Fecha modal atual
     const modal = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesOcupacao'));
     modal.hide();
-    
+
     // Configura modal de exclusão
-    document.getElementById('resumoOcupacaoExcluir').innerHTML = `
-        <strong>${nome}</strong>
-    `;
+    let resumo = `<strong>${nome}</strong>`;
+    if (grupoId) {
+        const eventosGrupo = calendar.getEvents().filter(ev => ev.extendedProps.grupo_ocupacao_id === grupoId);
+        const datas = eventosGrupo.map(ev => ev.extendedProps.data).sort();
+        if (datas.length) {
+            const inicio = formatarDataCurta(datas[0]);
+            const fim = formatarDataCurta(datas[datas.length - 1]);
+            resumo += `<br><small>${inicio} a ${fim}</small>`;
+        }
+    }
+    document.getElementById('resumoOcupacaoExcluir').innerHTML = resumo;
     document.getElementById('modalExcluirOcupacao').setAttribute('data-ocupacao-id', id);
     
     // Mostra modal de confirmação
@@ -424,5 +432,13 @@ function exibirAlerta(mensagem, tipo) {
             alerta.remove();
         }
     }, 5000);
+}
+
+function formatarDataCurta(dataStr) {
+    const data = new Date(dataStr + 'T00:00:00');
+    return data.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit'
+    });
 }
 
