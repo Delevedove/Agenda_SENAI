@@ -401,11 +401,12 @@ def remover_ocupacao(id):
         else:
             ocupacoes = [ocupacao]
 
+        quantidade = len(ocupacoes)
         for oc in ocupacoes:
             db.session.delete(oc)
 
         db.session.commit()
-        return jsonify({'mensagem': 'Ocupação removida com sucesso', 'removidas': len(ocupacoes)})
+        return jsonify({'mensagem': 'Ocupação removida com sucesso', 'removidas': quantidade})
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': str(e)}), 500

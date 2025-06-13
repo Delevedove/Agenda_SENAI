@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from src.models import db
 from src.models.sala import Sala
 from src.models.user import User
+from src.models.ocupacao import Ocupacao
 from src.routes.ocupacao import ocupacao_bp
 
 @pytest.fixture
@@ -70,3 +71,42 @@ def test_verificar_disponibilidade(client, app):
     assert data['disponivel'] is True
     assert data['conflitos'] == []
     assert data['sala']['id'] == sala_id
+
+
+def test_excluir_ocupacao_periodo(client, app):
+    with app.app_context():
+        user = User.query.first()
+        sala = Sala.query.first()
+
+    token = jwt.encode({
+        'user_id': user.id,
+        'nome': user.nome,
+        'perfil': user.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+
+    data_inicio = date.today()
+    data_fim = data_inicio + timedelta(days=2)
+
+    resp = client.post('/api/ocupacoes', json={
+        'sala_id': sala.id,
+        'curso_evento': 'Curso Teste',
+        'data_inicio': data_inicio.isoformat(),
+        'data_fim': data_fim.isoformat(),
+        'turno': 'Manhã'
+    }, headers={'Authorization': f'Bearer {token}'})
+    assert resp.status_code == 201
+    ocupacoes = resp.get_json()
+    assert len(ocupacoes) == 3
+
+    primeiro_id = ocupacoes[0]['id']
+    grupo_id = ocupacoes[0]['grupo_ocupacao_id']
+
+    resp_del = client.delete(f'/api/ocupacoes/{primeiro_id}', headers={'Authorization': f'Bearer {token}'})
+    assert resp_del.status_code == 200
+    resultado = resp_del.get_json()
+    assert resultado['removidas'] == 3
+
+    with app.app_context():
+        restantes = Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).all()
+        assert restantes == []
