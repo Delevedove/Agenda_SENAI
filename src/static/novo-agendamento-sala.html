@@ -154,7 +154,7 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="cursoEvento" class="form-label">Curso/Evento *</label>
-                                            <input type="text" class="form-control" id="cursoEvento" required placeholder="Ex: Curso de Excel Avançado">
+                                            <select class="form-select" id="cursoEvento" required></select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -319,6 +319,7 @@
             carregarTiposOcupacao();
             carregarSalas();
             carregarInstrutores();
+            carregarTurmasSelect();
             
             // Define data mínima como hoje
             const hoje = new Date().toISOString().split('T')[0];
