@@ -3,45 +3,8 @@
 // Variáveis globais
 let salasData = [];
 let salaEditando = null;
-let tiposSala = [];
 let recursosSala = [];
 
-// Carrega tipos de sala disponíveis
-async function carregarTiposSala() {
-    try {
-        const response = await fetch(`${API_URL}/salas/tipos`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-        
-        if (response.ok) {
-            tiposSala = await response.json();
-            
-            const selectTipo = document.getElementById('salaTipo');
-            const filtroTipo = document.getElementById('filtroTipo');
-
-            if (selectTipo) {
-                selectTipo.innerHTML = '<option value="">Selecione...</option>';
-            }
-
-            if (filtroTipo) {
-                filtroTipo.innerHTML = '<option value="">Todos</option>';
-            }
-
-            tiposSala.forEach(tipo => {
-                if (selectTipo) {
-                    selectTipo.innerHTML += `<option value="${tipo.valor}">${tipo.nome}</option>`;
-                }
-                if (filtroTipo) {
-                    filtroTipo.innerHTML += `<option value="${tipo.valor}">${tipo.nome}</option>`;
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Erro ao carregar tipos de sala:', error);
-    }
-}
 
 // Carrega recursos disponíveis para salas
 async function carregarRecursosSala() {
@@ -89,11 +52,9 @@ async function carregarSalas() {
         const params = new URLSearchParams();
         
         const status = document.getElementById('filtroStatus').value;
-        const tipo = document.getElementById('filtroTipo').value;
         const capacidade = document.getElementById('filtroCapacidade').value;
-        
+
         if (status) params.append('status', status);
-        if (tipo) params.append('tipo', tipo);
         if (capacidade) params.append('capacidade_min', capacidade);
         
         const response = await fetch(`${API_URL}/salas?${params.toString()}`, {
@@ -160,7 +121,6 @@ function renderizarTabelaSalas(salas) {
                 <strong>${sala.nome}</strong>
                 ${sala.localizacao ? `<br><small class="text-muted">${sala.localizacao}</small>` : ''}
             </td>
-            <td>${getTipoNome(sala.tipo)}</td>
             <td>
                 <span class="badge bg-info">${sala.capacidade} pessoas</span>
             </td>
@@ -187,12 +147,6 @@ function renderizarTabelaSalas(salas) {
     });
 }
 
-// Retorna o nome do tipo de sala
-function getTipoNome(valor) {
-    const tipo = tiposSala.find(t => t.valor === valor);
-    return tipo ? tipo.nome : valor || '-';
-}
-
 // Retorna badge de status
 function getStatusBadge(status) {
     const badges = {
@@ -211,7 +165,6 @@ function aplicarFiltros() {
 // Limpa filtros
 function limparFiltros() {
     document.getElementById('filtroStatus').value = '';
-    document.getElementById('filtroTipo').value = '';
     document.getElementById('filtroCapacidade').value = '';
     document.getElementById('filtroBusca').value = '';
     carregarSalas();

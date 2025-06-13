@@ -67,11 +67,11 @@ async function carregarOcupacoes(dataInicio, dataFim) {
         // Aplica filtros ativos
         const salaId = document.getElementById('filtroSala').value;
         const instrutorId = document.getElementById('filtroInstrutor').value;
-        const tipoOcupacao = document.getElementById('filtroTipoOcupacao').value;
+        const turno = document.getElementById('filtroTurno').value;
         
         if (salaId) params.append('sala_id', salaId);
         if (instrutorId) params.append('instrutor_id', instrutorId);
-        if (tipoOcupacao) params.append('tipo_ocupacao', tipoOcupacao);
+        if (turno) params.append('turno', turno);
         
         const response = await fetch(`${API_URL}/ocupacoes/calendario?${params.toString()}`, {
             headers: {
@@ -157,13 +157,6 @@ async function carregarTiposOcupacao() {
         
         if (response.ok) {
             tiposOcupacao = await response.json();
-            
-            const select = document.getElementById('filtroTipoOcupacao');
-            select.innerHTML = '<option value="">Todos os tipos</option>';
-            
-            tiposOcupacao.forEach(tipo => {
-                select.innerHTML += `<option value="${tipo.valor}">${tipo.nome}</option>`;
-            });
         }
     } catch (error) {
         console.error('Erro ao carregar tipos de ocupação:', error);
@@ -187,7 +180,7 @@ function configurarFiltros() {
             e.preventDefault();
             document.getElementById('filtroSalaMobile').value = document.getElementById('filtroSala').value;
             document.getElementById('filtroInstrutorMobile').value = document.getElementById('filtroInstrutor').value;
-            document.getElementById('filtroTipoOcupacaoMobile').value = document.getElementById('filtroTipoOcupacao').value;
+            document.getElementById('filtroTurnoMobile').value = document.getElementById('filtroTurno').value;
             aplicarFiltrosCalendario();
         });
     }
@@ -197,7 +190,7 @@ function configurarFiltros() {
             e.preventDefault();
             document.getElementById('filtroSala').value = document.getElementById('filtroSalaMobile').value;
             document.getElementById('filtroInstrutor').value = document.getElementById('filtroInstrutorMobile').value;
-            document.getElementById('filtroTipoOcupacao').value = document.getElementById('filtroTipoOcupacaoMobile').value;
+            document.getElementById('filtroTurno').value = document.getElementById('filtroTurnoMobile').value;
             aplicarFiltrosCalendario();
         });
     }
