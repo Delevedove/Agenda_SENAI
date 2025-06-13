@@ -291,14 +291,20 @@ function mostrarDetalhesOcupacao(ocupacao) {
     acoes.innerHTML = '';
     
     if (podeEditar) {
-        acoes.innerHTML = `
-            <button type="button" class="btn btn-primary me-2" onclick="editarOcupacao(${ocupacao.id})">
-                <i class="bi bi-pencil me-1"></i>Editar
-            </button>
-            <button type="button" class="btn btn-danger" onclick="excluirOcupacao(${ocupacao.id}, '${ocupacao.curso_evento}', '${ocupacao.grupo_ocupacao_id || ''}')">
-                <i class="bi bi-trash me-1"></i>Excluir
-            </button>
-        `;
+        const btnEditar = document.createElement('button');
+        btnEditar.type = 'button';
+        btnEditar.className = 'btn btn-primary me-2';
+        btnEditar.innerHTML = '<i class="bi bi-pencil me-1"></i>Editar';
+        btnEditar.addEventListener('click', () => editarOcupacao(ocupacao.id));
+
+        const btnExcluir = document.createElement('button');
+        btnExcluir.type = 'button';
+        btnExcluir.className = 'btn btn-danger';
+        btnExcluir.innerHTML = '<i class="bi bi-trash me-1"></i>Excluir';
+        btnExcluir.addEventListener('click', () => excluirOcupacao(ocupacao.id, ocupacao.curso_evento, ocupacao.grupo_ocupacao_id || ''));
+
+        acoes.appendChild(btnEditar);
+        acoes.appendChild(btnExcluir);
     }
     
     modal.show();
