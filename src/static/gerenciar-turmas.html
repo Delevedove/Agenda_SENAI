@@ -16,7 +16,7 @@
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="/selecao-sistema.html">
                 <img src="/img/senai-logo.png" alt="SENAI" height="28" class="me-2">
-                Sistema de Agenda de Laboratório
+                Sistema de Controle de Ocupação
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -24,23 +24,33 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/index.html">
+                        <a class="nav-link" href="/dashboard-salas.html">
                             <i class="bi bi-speedometer2 me-1"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/calendario.html">
+                        <a class="nav-link" href="/calendario-salas.html">
                             <i class="bi bi-calendar3 me-1"></i> Calendário
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/novo-agendamento.html">
-                            <i class="bi bi-plus-circle me-1"></i> Novo Agendamento
+                        <a class="nav-link" href="/gerenciar-salas.html">
+                            <i class="bi bi-building me-1"></i> Gerenciar Salas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/gerenciar-instrutores.html">
+                            <i class="bi bi-person-badge me-1"></i> Gerenciar Instrutores
                         </a>
                     </li>
                     <li class="nav-item admin-only">
                         <a class="nav-link active" href="/gerenciar-turmas.html">
                             <i class="bi bi-building me-1"></i> Gerenciar Turmas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/novo-agendamento-sala.html">
+                            <i class="bi bi-plus-circle me-1"></i> Nova Ocupação
                         </a>
                     </li>
                 </ul>
@@ -52,7 +62,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
-                                <a class="dropdown-item" href="/perfil.html">
+                                <a class="dropdown-item" href="/perfil-salas.html">
                                     <i class="bi bi-person me-2"></i> Meu Perfil
                                 </a>
                             </li>
@@ -77,19 +87,25 @@
                 <div class="sidebar rounded shadow-sm">
                     <h5 class="mb-3">Menu Principal</h5>
                     <div class="nav flex-column">
-                        <a class="nav-link" href="/index.html">
+                        <a class="nav-link" href="/dashboard-salas.html">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
-                        <a class="nav-link" href="/calendario.html">
+                        <a class="nav-link" href="/calendario-salas.html">
                             <i class="bi bi-calendar3"></i> Calendário
                         </a>
-                        <a class="nav-link" href="/novo-agendamento.html">
-                            <i class="bi bi-plus-circle"></i> Novo Agendamento
+                        <a class="nav-link" href="/gerenciar-salas.html">
+                            <i class="bi bi-building"></i> Gerenciar Salas
+                        </a>
+                        <a class="nav-link" href="/gerenciar-instrutores.html">
+                            <i class="bi bi-person-badge"></i> Gerenciar Instrutores
                         </a>
                         <a class="nav-link active admin-only" href="/gerenciar-turmas.html">
                             <i class="bi bi-building"></i> Gerenciar Turmas
                         </a>
-                        <a class="nav-link" href="/perfil.html">
+                        <a class="nav-link" href="/novo-agendamento-sala.html">
+                            <i class="bi bi-plus-circle"></i> Nova Ocupação
+                        </a>
+                        <a class="nav-link" href="/perfil-salas.html">
                             <i class="bi bi-person"></i> Meu Perfil
                         </a>
                     </div>
@@ -154,7 +170,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-0">&copy; 2025 Sistema de Agenda de Laboratório</p>
+                    <p class="mb-0">&copy; 2025 Sistema de Controle de Ocupação</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="mb-0">Versão 1.0</p>
