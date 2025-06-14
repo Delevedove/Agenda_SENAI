@@ -399,7 +399,8 @@ document.addEventListener('DOMContentLoaded', function() {
             '/perfil-salas.html',
             '/usuarios.html',
             '/perfil.html',
-            '/perfil-usuarios.html'
+            '/perfil-usuarios.html',
+            '/gerenciar-turmas.html'
         ];
 
         if (!paginasOcupacao.includes(paginaAtual)) {

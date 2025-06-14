@@ -211,7 +211,7 @@
     <script src="/js/app.js"></script>
     <script src="/js/nova-ocupacao.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Verifica autenticação
             if (!estaAutenticado()) {
                 window.location.href = '/admin-login.html';
@@ -223,10 +223,10 @@
             document.getElementById('nomeUsuarioNav').textContent = usuario.nome;
             
             // Carrega dados iniciais
-            carregarTiposOcupacao();
-            carregarSalas();
-            carregarInstrutores();
-            carregarTurmasSelect();
+            await carregarTiposOcupacao();
+            await carregarSalas();
+            await carregarInstrutores();
+            await carregarTurmasSelect();
             
             // Define data mínima como hoje
             const hoje = new Date().toISOString().split('T')[0];
