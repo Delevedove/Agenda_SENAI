@@ -145,3 +145,43 @@ def test_obter_ocupacao_periodo_completo(client, app):
     dados = resp_get.get_json()
     assert dados['data_inicio'] == data_inicio.isoformat()
     assert dados['data_fim'] == data_fim.isoformat()
+
+
+def test_verificar_disponibilidade_edicao_ignora_registro(client, app):
+    """Ao editar uma ocupação, a verificação deve ignorar o próprio grupo."""
+    with app.app_context():
+        user = User.query.first()
+        sala = Sala.query.first()
+
+    token = jwt.encode({
+        'user_id': user.id,
+        'nome': user.nome,
+        'perfil': user.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+
+    data_inicio = date.today()
+    data_fim = data_inicio + timedelta(days=2)
+
+    resp = client.post('/api/ocupacoes', json={
+        'sala_id': sala.id,
+        'curso_evento': 'Curso Teste',
+        'data_inicio': data_inicio.isoformat(),
+        'data_fim': data_fim.isoformat(),
+        'turno': 'Manhã'
+    }, headers={'Authorization': f'Bearer {token}'})
+    assert resp.status_code == 201
+    ocupacoes = resp.get_json()
+    ocupacao_id = ocupacoes[1]['id']
+
+    resp_check = client.get('/api/ocupacoes/verificar-disponibilidade', query_string={
+        'sala_id': sala.id,
+        'data_inicio': data_inicio.isoformat(),
+        'data_fim': data_fim.isoformat(),
+        'turno': 'Manhã',
+        'ocupacao_id': ocupacao_id
+    }, headers={'Authorization': f'Bearer {token}'})
+
+    assert resp_check.status_code == 200
+    resultado = resp_check.get_json()
+    assert resultado['disponivel'] is True

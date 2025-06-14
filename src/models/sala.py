@@ -46,7 +46,7 @@ class Sala(db.Model):
         """
         self.recursos = json.dumps(recursos_list) if recursos_list else json.dumps([])
     
-    def is_disponivel(self, data, horario_inicio, horario_fim, ocupacao_id=None):
+    def is_disponivel(self, data, horario_inicio, horario_fim, ocupacao_id=None, grupo_ocupacao_id=None):
         """
         Verifica se a sala está disponível em um determinado período.
         
@@ -55,6 +55,7 @@ class Sala(db.Model):
             horario_inicio: Horário de início
             horario_fim: Horário de fim
             ocupacao_id: ID da ocupação a ser excluída da verificação (para edição)
+            grupo_ocupacao_id: Grupo de ocupações a ser ignorado (edição de período)
         
         Returns:
             bool: True se disponível, False caso contrário
@@ -80,6 +81,9 @@ class Sala(db.Model):
         # Exclui a ocupação atual se estiver editando
         if ocupacao_id:
             query = query.filter(Ocupacao.id != ocupacao_id)
+
+        if grupo_ocupacao_id:
+            query = query.filter(Ocupacao.grupo_ocupacao_id != grupo_ocupacao_id)
         
         conflitos = query.all()
         return len(conflitos) == 0
