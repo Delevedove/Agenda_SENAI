@@ -165,8 +165,8 @@ async function carregarOcupacaoParaEdicao(id) {
             // Preenche o formulário
             document.getElementById('cursoEvento').value = ocupacaoEditando.curso_evento;
             document.getElementById('tipoOcupacao').value = ocupacaoEditando.tipo_ocupacao;
-            document.getElementById('dataInicio').value = ocupacaoEditando.data;
-            document.getElementById('dataFim').value = ocupacaoEditando.data;
+            document.getElementById('dataInicio').value = ocupacaoEditando.data_inicio || ocupacaoEditando.data;
+            document.getElementById('dataFim').value = ocupacaoEditando.data_fim || ocupacaoEditando.data;
             document.getElementById('turno').value = obterTurnoPorHorario(ocupacaoEditando.horario_inicio, ocupacaoEditando.horario_fim);
             document.getElementById('salaOcupacao').value = ocupacaoEditando.sala_id;
             document.getElementById('instrutorOcupacao').value = ocupacaoEditando.instrutor_id || '';

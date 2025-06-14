@@ -110,3 +110,38 @@ def test_excluir_ocupacao_periodo(client, app):
     with app.app_context():
         restantes = Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).all()
         assert restantes == []
+
+
+def test_obter_ocupacao_periodo_completo(client, app):
+    with app.app_context():
+        user = User.query.first()
+        sala = Sala.query.first()
+
+    token = jwt.encode({
+        'user_id': user.id,
+        'nome': user.nome,
+        'perfil': user.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+
+    data_inicio = date.today()
+    data_fim = data_inicio + timedelta(days=2)
+
+    resp = client.post('/api/ocupacoes', json={
+        'sala_id': sala.id,
+        'curso_evento': 'Curso Teste',
+        'data_inicio': data_inicio.isoformat(),
+        'data_fim': data_fim.isoformat(),
+        'turno': 'Manhã'
+    }, headers={'Authorization': f'Bearer {token}'})
+    assert resp.status_code == 201
+    ocupacoes = resp.get_json()
+    assert len(ocupacoes) == 3
+
+    qualquer_id = ocupacoes[1]['id']
+
+    resp_get = client.get(f'/api/ocupacoes/{qualquer_id}', headers={'Authorization': f'Bearer {token}'})
+    assert resp_get.status_code == 200
+    dados = resp_get.get_json()
+    assert dados['data_inicio'] == data_inicio.isoformat()
+    assert dados['data_fim'] == data_fim.isoformat()
