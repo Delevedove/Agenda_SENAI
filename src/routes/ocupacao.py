@@ -127,22 +127,35 @@ def exportar_ocupacoes():
 
 @ocupacao_bp.route('/ocupacoes/<int:id>', methods=['GET'])
 def obter_ocupacao(id):
-    """
-    Obtém detalhes de uma ocupação específica.
-    """
+    """Obtém detalhes de uma ocupação específica incluindo o período completo."""
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
-    
+
     ocupacao = db.session.get(Ocupacao, id)
     if not ocupacao:
         return jsonify({'erro': 'Ocupação não encontrada'}), 404
-    
+
     # Controle de acesso: usuários comuns só podem ver suas próprias ocupações
     if not verificar_admin(user) and ocupacao.usuario_id != user.id:
         return jsonify({'erro': 'Permissão negada'}), 403
-    
-    return jsonify(ocupacao.to_dict())
+
+    dados = ocupacao.to_dict()
+
+    # Calcula o período completo da reserva
+    data_inicio = ocupacao.data
+    data_fim = ocupacao.data
+    if ocupacao.grupo_ocupacao_id:
+        grupo_ocupacoes = Ocupacao.query.filter_by(grupo_ocupacao_id=ocupacao.grupo_ocupacao_id).all()
+        if grupo_ocupacoes:
+            datas = [oc.data for oc in grupo_ocupacoes]
+            data_inicio = min(datas)
+            data_fim = max(datas)
+
+    dados['data_inicio'] = data_inicio.isoformat()
+    dados['data_fim'] = data_fim.isoformat()
+
+    return jsonify(dados)
 
 @ocupacao_bp.route('/ocupacoes', methods=['POST'])
 def criar_ocupacao():
