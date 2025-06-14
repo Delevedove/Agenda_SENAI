@@ -115,30 +115,13 @@
                     </div>
                 </div>
 
-                <!-- Indicador de Passos -->
-                <div class="step-indicator">
-                    <div class="step active" id="step1">
-                        <div class="step-number">1</div>
-                        <span>Dados Básicos</span>
-                    </div>
-                    <div class="step-line"></div>
-                    <div class="step" id="step2">
-                        <div class="step-number">2</div>
-                        <span>Verificação</span>
-                    </div>
-                    <div class="step-line"></div>
-                    <div class="step" id="step3">
-                        <div class="step-number">3</div>
-                        <span>Confirmação</span>
-                    </div>
-                </div>
+                <!-- Indicador de Passos removido para fluxo em tela única -->
 
                 <!-- Formulário -->
                 <div class="card">
                     <div class="card-body">
                         <form id="formNovaOcupacao">
-                            <!-- Passo 1: Dados Básicos -->
-                            <div id="passo1" class="passo-form">
+                            <div>
                                 <h5 class="mb-4">Dados da Ocupação</h5>
                                 
                                 <div class="row">
@@ -208,80 +191,13 @@
                                     <textarea class="form-control" id="observacoesOcupacao" rows="3" placeholder="Informações adicionais sobre a ocupação..."></textarea>
                                 </div>
                                 
+                                <div id="statusDisponibilidade" class="mb-3"></div>
+
                                 <div class="d-flex justify-content-end">
-                                    <button type="button" class="btn btn-primary" onclick="verificarDisponibilidade()">
-                                        <i class="bi bi-search me-1"></i>
-                                        Verificar Disponibilidade
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Passo 2: Verificação de Disponibilidade -->
-                            <div id="passo2" class="passo-form" style="display: none;">
-                                <h5 class="mb-4">Verificação de Disponibilidade</h5>
-                                
-                                <div id="verificandoDisponibilidade" class="text-center py-4">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Verificando...</span>
-                                    </div>
-                                    <p class="mt-2">Verificando disponibilidade...</p>
-                                </div>
-                                
-                                <div id="resultadoVerificacao" style="display: none;">
-                                    <!-- Resultado será preenchido via JavaScript -->
-                                </div>
-                                
-                                <div class="d-flex justify-content-between mt-4" id="botoesVerificacao" style="display: none;">
-                                    <button type="button" class="btn btn-secondary" onclick="voltarPasso1()">
-                                        <i class="bi bi-arrow-left me-1"></i>
-                                        Voltar
-                                    </button>
-                                    <button type="button" class="btn btn-success" id="btnConfirmarOcupacao" onclick="confirmarOcupacao()" disabled>
+                                    <button type="button" class="btn btn-primary" onclick="salvarOcupacao()">
                                         <i class="bi bi-check-circle me-1"></i>
-                                        Confirmar Ocupação
+                                        Salvar Ocupação
                                     </button>
-                                </div>
-                            </div>
-
-                            <!-- Passo 3: Confirmação -->
-                            <div id="passo3" class="passo-form" style="display: none;">
-                                <div class="text-center py-4">
-                                    <div id="salvandoOcupacao">
-                                        <div class="spinner-border text-success" role="status">
-                                            <span class="visually-hidden">Salvando...</span>
-                                        </div>
-                                        <p class="mt-2">Salvando ocupação...</p>
-                                    </div>
-                                    
-                                    <div id="ocupacaoSalva" style="display: none;">
-                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
-                                        <h4 class="text-success mt-3">Ocupação Criada com Sucesso!</h4>
-                                        <p class="text-muted">A ocupação foi registrada no sistema.</p>
-                                        
-                                        <div class="mt-4">
-                                            <a href="/calendario-salas.html" class="btn btn-primary me-2">
-                                                <i class="bi bi-calendar3 me-1"></i>
-                                                Ver no Calendário
-                                            </a>
-                                            <button type="button" class="btn btn-outline-primary" onclick="novaOcupacao()">
-                                                <i class="bi bi-plus-circle me-1"></i>
-                                                Nova Ocupação
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div id="erroSalvarOcupacao" style="display: none;">
-                                        <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
-                                        <h4 class="text-danger mt-3">Erro ao Criar Ocupação</h4>
-                                        <p class="text-muted" id="mensagemErro">Ocorreu um erro inesperado.</p>
-                                        
-                                        <div class="mt-4">
-                                            <button type="button" class="btn btn-primary" onclick="voltarPasso1()">
-                                                <i class="bi bi-arrow-left me-1"></i>
-                                                Tentar Novamente
-                                            </button>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </form>
