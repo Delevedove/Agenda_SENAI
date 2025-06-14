@@ -169,7 +169,7 @@ class Ocupacao(db.Model):
         return result
     
     @staticmethod
-    def buscar_conflitos(sala_id, data, horario_inicio, horario_fim, ocupacao_id=None):
+    def buscar_conflitos(sala_id, data, horario_inicio, horario_fim, ocupacao_id=None, grupo_ocupacao_id=None):
         """
         Busca ocupações que conflitam com os parâmetros fornecidos.
         
@@ -179,6 +179,7 @@ class Ocupacao(db.Model):
             horario_inicio: Horário de início
             horario_fim: Horário de fim
             ocupacao_id: ID da ocupação a ser excluída (para edição)
+            grupo_ocupacao_id: Grupo de ocupações a ser ignorado (edição de período)
         
         Returns:
             list: Lista de ocupações conflitantes
@@ -196,6 +197,9 @@ class Ocupacao(db.Model):
         
         if ocupacao_id:
             query = query.filter(Ocupacao.id != ocupacao_id)
+
+        if grupo_ocupacao_id:
+            query = query.filter(Ocupacao.grupo_ocupacao_id != grupo_ocupacao_id)
         
         return query.all()
     

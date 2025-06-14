@@ -439,6 +439,11 @@ def verificar_disponibilidade():
     data_fim_str = request.args.get('data_fim')
     turno = request.args.get('turno')
     ocupacao_id = request.args.get('ocupacao_id', type=int)  # Para edição
+    grupo_ocupacao_id = None
+    if ocupacao_id:
+        ocup = db.session.get(Ocupacao, ocupacao_id)
+        if ocup:
+            grupo_ocupacao_id = ocup.grupo_ocupacao_id
 
     if not all([sala_id, data_inicio_str, data_fim_str, turno]):
         return jsonify({'erro': 'Parâmetros obrigatórios: sala_id, data_inicio, data_fim, turno'}), 400
@@ -464,9 +469,9 @@ def verificar_disponibilidade():
         conflitos = []
         dia = data_inicio
         while dia <= data_fim:
-            if not sala.is_disponivel(dia, horario_inicio, horario_fim, ocupacao_id):
+            if not sala.is_disponivel(dia, horario_inicio, horario_fim, ocupacao_id, grupo_ocupacao_id):
                 disponivel = False
-                conflitos.extend(Ocupacao.buscar_conflitos(sala_id, dia, horario_inicio, horario_fim, ocupacao_id))
+                conflitos.extend(Ocupacao.buscar_conflitos(sala_id, dia, horario_inicio, horario_fim, ocupacao_id, grupo_ocupacao_id))
             dia += timedelta(days=1)
         
         return jsonify({
