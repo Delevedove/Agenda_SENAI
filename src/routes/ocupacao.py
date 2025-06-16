@@ -573,7 +573,8 @@ def obter_ocupacoes_calendario():
         cor = cor_turno(turno_evento)
         evento = {
             'id': ocupacao.id,
-            'title': f"{ocupacao.curso_evento}",
+            # Exibe apenas o turno no calendário mensal para evitar poluição visual
+            'title': turno_evento,
             'start': f"{ocupacao.data}T{ocupacao.horario_inicio}",
             'end': f"{ocupacao.data}T{ocupacao.horario_fim}",
             'backgroundColor': cor,
