@@ -6,6 +6,7 @@ let ocupacoesData = [];
 let salasData = [];
 let instrutoresData = [];
 let tiposOcupacao = [];
+let resumoOcupacoes = {};
 
 // Inicializa o calendário
 function inicializarCalendario() {
@@ -35,8 +36,10 @@ function inicializarCalendario() {
             mostrarDetalhesOcupacao(info.event.extendedProps);
         },
         dateClick: function(info) {
-            // Redireciona para nova ocupação com data pré-selecionada
-            window.location.href = `/novo-agendamento-sala.html?data=${info.dateStr}`;
+            mostrarResumoDia(info.dateStr);
+        },
+        datesSet: function(info) {
+            carregarResumoPeriodo(info.startStr, info.endStr);
         },
         events: function(fetchInfo, successCallback, failureCallback) {
             carregarOcupacoes(fetchInfo.startStr, fetchInfo.endStr)
@@ -96,6 +99,87 @@ async function carregarOcupacoes(dataInicio, dataFim) {
         console.error('Erro ao carregar ocupações:', error);
         return [];
     }
+}
+
+// Carrega resumo de ocupações por período
+async function carregarResumoPeriodo(dataInicio, dataFim) {
+    try {
+        const params = new URLSearchParams({
+            data_inicio: dataInicio.split('T')[0],
+            data_fim: dataFim.split('T')[0]
+        });
+
+        const salaId = document.getElementById('filtroSala').value;
+        const instrutorId = document.getElementById('filtroInstrutor').value;
+        const turno = document.getElementById('filtroTurno').value;
+
+        if (salaId) params.append('sala_id', salaId);
+        if (instrutorId) params.append('instrutor_id', instrutorId);
+        if (turno) params.append('turno', turno);
+
+        const response = await fetch(`${API_URL}/ocupacoes/resumo-periodo?${params.toString()}`, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+
+        if (response.ok) {
+            resumoOcupacoes = await response.json();
+            atualizarResumoNoCalendario();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar resumo:', error);
+    }
+}
+
+function atualizarResumoNoCalendario() {
+    document.querySelectorAll('.fc-daygrid-day').forEach(cell => {
+        const dateStr = cell.getAttribute('data-date');
+        cell.querySelectorAll('.resumo-turno').forEach(e => e.remove());
+        const resumoDia = resumoOcupacoes[dateStr];
+        if (resumoDia) {
+            ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+                const info = resumoDia[turno];
+                if (!info) return;
+                const div = document.createElement('div');
+                div.className = `resumo-turno resumo-${turno.toLowerCase()}`;
+                div.textContent = `${turno}: ${info.ocupadas}/${info.total_salas}`;
+                cell.appendChild(div);
+            });
+        }
+    });
+}
+
+function mostrarResumoDia(dataStr) {
+    const resumoDia = resumoOcupacoes[dataStr];
+    if (!resumoDia) return;
+
+    const modal = new bootstrap.Modal(document.getElementById('modalResumoDia'));
+    const container = document.getElementById('conteudoResumoDia');
+
+    container.innerHTML = `<h5 class="mb-3">${formatarData(dataStr)}</h5>`;
+
+    ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+        const info = resumoDia[turno];
+        if (!info) return;
+        let html = `<h6 class="mt-3">${turno} (${info.ocupadas}/${info.total_salas} ocupadas)</h6>`;
+        if (info.salas_ocupadas.length) {
+            html += '<p><strong>Salas Ocupadas:</strong></p><ul>';
+            info.salas_ocupadas.forEach(s => {
+                const instr = s.instrutor_nome ? ` - ${s.instrutor_nome}` : '';
+                html += `<li>${s.sala_nome} - ${s.curso_evento}${instr}</li>`;
+            });
+            html += '</ul>';
+        } else {
+            html += '<p><em>Sem ocupações.</em></p>';
+        }
+        if (info.salas_livres.length) {
+            html += `<p><strong>Salas Livres:</strong> ${info.salas_livres.join(', ')}</p>`;
+        }
+        container.innerHTML += html;
+    });
+
+    modal.show();
 }
 
 // Carrega salas para filtro

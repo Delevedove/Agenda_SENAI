@@ -303,6 +303,28 @@ small, .small {
   border-left: 3px solid #512DA8;
 }
 
+/* Resumo de ocupações por turno no calendário */
+.resumo-turno {
+  font-size: 0.7rem;
+  margin-top: 2px;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.resumo-manha {
+  background-color: var(--turno-manha-color);
+}
+
+.resumo-tarde {
+  background-color: var(--turno-tarde-color);
+  color: #fff;
+}
+
+.resumo-noite {
+  background-color: var(--turno-noite-color);
+  color: #fff;
+}
+
 /* Notificações */
 .notificacao-badge {
   position: absolute;

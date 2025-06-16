@@ -581,8 +581,103 @@ def obter_ocupacoes_calendario():
             'extendedProps': ocupacao.to_dict()
         }
         eventos_calendario.append(evento)
-    
+
     return jsonify(eventos_calendario)
+
+
+@ocupacao_bp.route('/ocupacoes/resumo-periodo', methods=['GET'])
+def obter_resumo_periodo():
+    """Retorna resumo de salas ocupadas e livres por dia e turno."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    data_inicio_str = request.args.get('data_inicio')
+    data_fim_str = request.args.get('data_fim')
+    sala_id = request.args.get('sala_id', type=int)
+    instrutor_id = request.args.get('instrutor_id', type=int)
+    turno_filtro = request.args.get('turno')
+
+    if not data_inicio_str or not data_fim_str:
+        hoje = date.today()
+        primeiro_dia = hoje.replace(day=1)
+        if hoje.month == 12:
+            ultimo_dia = date(hoje.year + 1, 1, 1) - timedelta(days=1)
+        else:
+            ultimo_dia = date(hoje.year, hoje.month + 1, 1) - timedelta(days=1)
+
+        data_inicio = primeiro_dia
+        data_fim = ultimo_dia
+    else:
+        try:
+            data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+            data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'erro': 'Formato de data inválido (YYYY-MM-DD)'}), 400
+
+    salas_ativas = Sala.query.filter_by(status='ativa').all()
+    total_salas = len(salas_ativas)
+    salas_dict = {s.id: s.nome for s in salas_ativas}
+
+    query = Ocupacao.query.filter(
+        Ocupacao.data >= data_inicio,
+        Ocupacao.data <= data_fim,
+        Ocupacao.status.in_(['confirmado', 'pendente'])
+    )
+
+    if sala_id:
+        query = query.filter(Ocupacao.sala_id == sala_id)
+
+    if instrutor_id:
+        query = query.filter(Ocupacao.instrutor_id == instrutor_id)
+
+    if turno_filtro:
+        if turno_filtro not in TURNOS_PADRAO:
+            return jsonify({'erro': 'Turno inválido'}), 400
+        inicio, fim = TURNOS_PADRAO[turno_filtro]
+        query = query.filter(
+            Ocupacao.horario_inicio == inicio,
+            Ocupacao.horario_fim == fim
+        )
+
+    if not verificar_admin(user):
+        query = query.filter(Ocupacao.usuario_id == user.id)
+
+    ocupacoes = query.all()
+
+    resumo = {}
+    dia = data_inicio
+    while dia <= data_fim:
+        resumo[dia.isoformat()] = {
+            turno: {
+                'ocupadas': 0,
+                'salas_ocupadas': [],
+                'salas_livres': [],
+                'total_salas': total_salas
+            } for turno in TURNOS_PADRAO
+        }
+        dia += timedelta(days=1)
+
+    for oc in ocupacoes:
+        turno = oc.get_turno()
+        if not turno:
+            continue
+        info = resumo[oc.data.isoformat()][turno]
+        info['ocupadas'] += 1
+        info['salas_ocupadas'].append({
+            'sala_id': oc.sala_id,
+            'sala_nome': salas_dict.get(oc.sala_id, str(oc.sala_id)),
+            'curso_evento': oc.curso_evento,
+            'instrutor_nome': oc.instrutor.nome if oc.instrutor else None
+        })
+
+    for dia_key, turnos in resumo.items():
+        for turno, info in turnos.items():
+            ocupadas_ids = [s['sala_id'] for s in info['salas_ocupadas']]
+            info['salas_livres'] = [nome for sid, nome in salas_dict.items() if sid not in ocupadas_ids]
+            info['livres'] = info['total_salas'] - info['ocupadas']
+
+    return jsonify(resumo)
 
 @ocupacao_bp.route('/ocupacoes/tipos', methods=['GET'])
 def listar_tipos_ocupacao():
