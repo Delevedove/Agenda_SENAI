@@ -17,9 +17,9 @@
   --background-color: #f7f9fc;
 
   /* Cores específicas para turnos */
-  --turno-manha-color: #FFE066;
-  --turno-tarde-color: #FFA94D;
-  --turno-noite-color: #748FFC;
+  --turno-manha-color: #FFEB3B;
+  --turno-tarde-color: #03A9F4;
+  --turno-noite-color: #673AB7;
 }
 
 /* Estilos gerais */
@@ -246,20 +246,23 @@ small, .small {
 }
 
 /* Cores específicas para cada turno */
+
 .agendamento-manha {
   background-color: var(--turno-manha-color);
-  border-left: 3px solid #E6C458;
+  border-left: 3px solid #FDD835;
 }
+
 
 .agendamento-tarde {
   background-color: var(--turno-tarde-color);
-  border-left: 3px solid #E69138;
+  border-left: 3px solid #0288D1;
   color: #fff;
 }
 
+
 .agendamento-noite {
   background-color: var(--turno-noite-color);
-  border-left: 3px solid #5C73CC;
+  border-left: 3px solid #512DA8;
   color: #fff;
 }
 
@@ -287,17 +290,17 @@ small, .small {
 
 .legenda-cor-manha {
   background-color: var(--turno-manha-color);
-  border-left: 3px solid #E6C458;
+  border-left: 3px solid #FDD835;
 }
 
 .legenda-cor-tarde {
   background-color: var(--turno-tarde-color);
-  border-left: 3px solid #E69138;
+  border-left: 3px solid #0288D1;
 }
 
 .legenda-cor-noite {
   background-color: var(--turno-noite-color);
-  border-left: 3px solid #5C73CC;
+  border-left: 3px solid #512DA8;
 }
 
 /* Notificações */

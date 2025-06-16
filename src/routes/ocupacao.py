@@ -33,6 +33,7 @@ def listar_ocupacoes():
     data_inicio_str = request.args.get('data_inicio')
     data_fim_str = request.args.get('data_fim')
     sala_id = request.args.get('sala_id', type=int)
+    turno = request.args.get('turno')
     instrutor_id = request.args.get('instrutor_id', type=int)
     status = request.args.get('status')
     tipo_ocupacao = request.args.get('tipo_ocupacao')
@@ -545,6 +546,16 @@ def obter_ocupacoes_calendario():
     # Aplica filtro de sala se fornecido
     if sala_id:
         query = query.filter(Ocupacao.sala_id == sala_id)
+
+    # Aplica filtro de turno se fornecido
+    if turno:
+        if turno not in TURNOS_PADRAO:
+            return jsonify({'erro': 'Turno inválido'}), 400
+        inicio, fim = TURNOS_PADRAO[turno]
+        query = query.filter(
+            Ocupacao.horario_inicio == inicio,
+            Ocupacao.horario_fim == fim
+        )
     
     # Controle de acesso: usuários comuns só veem suas próprias ocupações
     if not verificar_admin(user):
@@ -553,15 +564,25 @@ def obter_ocupacoes_calendario():
     ocupacoes = query.order_by(Ocupacao.data, Ocupacao.horario_inicio).all()
     
     # Formata para o calendário
+    def cor_turno(t):
+        cores = {
+            'Manhã': '#FFEB3B',
+            'Tarde': '#03A9F4',
+            'Noite': '#673AB7'
+        }
+        return cores.get(t, '#607D8B')
+
     eventos_calendario = []
     for ocupacao in ocupacoes:
+        turno_evento = ocupacao.get_turno()
+        cor = cor_turno(turno_evento)
         evento = {
             'id': ocupacao.id,
             'title': f"{ocupacao.curso_evento}",
             'start': f"{ocupacao.data}T{ocupacao.horario_inicio}",
             'end': f"{ocupacao.data}T{ocupacao.horario_fim}",
-            'backgroundColor': ocupacao.get_cor_tipo(),
-            'borderColor': ocupacao.get_cor_tipo(),
+            'backgroundColor': cor,
+            'borderColor': cor,
             'extendedProps': ocupacao.to_dict()
         }
         eventos_calendario.append(evento)

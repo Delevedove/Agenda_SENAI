@@ -5,6 +5,49 @@ let estatisticasGerais = {};
 let proximasOcupacoes = [];
 let relatorioMensal = {};
 
+// Carrega indicadores de salas por mês
+async function carregarIndicadoresMensais() {
+    try {
+        const salasResp = await fetch(`${API_URL}/salas?status=ativa`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const salas = salasResp.ok ? await salasResp.json() : [];
+        const totalSalas = salas.length;
+
+        async function obterDados(mesOffset) {
+            const ref = new Date();
+            ref.setMonth(ref.getMonth() + mesOffset, 1);
+            const inicio = new Date(ref.getFullYear(), ref.getMonth(), 1);
+            const fim = new Date(ref.getFullYear(), ref.getMonth() + 1, 0);
+            const iniStr = inicio.toISOString().split('T')[0];
+            const fimStr = fim.toISOString().split('T')[0];
+            const resp = await fetch(`${API_URL}/ocupacoes?data_inicio=${iniStr}&data_fim=${fimStr}&status=confirmado`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            const ocup = resp.ok ? await resp.json() : [];
+            const salasOcupadas = new Set(ocup.map(o => o.sala_id)).size;
+            return { iniStr, totalSalas, salasOcupadas };
+        }
+
+        const anterior = await obterDados(-1);
+        const atual = await obterDados(0);
+        const seguinte = await obterDados(1);
+
+        function preencher(prefixo, dados, linkEl) {
+            document.getElementById(`totalSalasMes${prefixo}`).textContent = dados.totalSalas;
+            document.getElementById(`salasOcupadasMes${prefixo}`).textContent = dados.salasOcupadas;
+            document.getElementById(`salasLivresMes${prefixo}`).textContent = dados.totalSalas - dados.salasOcupadas;
+            document.getElementById(linkEl).href = `/calendario-salas.html?mes=${dados.iniStr.substring(0,7)}`;
+        }
+
+        preencher('Anterior', anterior, 'linkMesAnterior');
+        preencher('Atual', atual, 'linkMesAtual');
+        preencher('Seguinte', seguinte, 'linkMesSeguinte');
+    } catch (error) {
+        console.error('Erro ao carregar indicadores mensais:', error);
+    }
+}
+
 // Carrega estatísticas gerais
 async function carregarEstatisticasGerais() {
     try {

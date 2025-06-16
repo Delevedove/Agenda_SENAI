@@ -5,6 +5,13 @@ from src.models.instrutor import Instrutor
 from datetime import datetime, date, time, timedelta
 import json
 
+# Mapeamento padrão de turnos utilizado em diversos pontos do sistema
+TURNOS_PADRAO = {
+    'Manhã': (time.fromisoformat('08:00'), time.fromisoformat('12:00')),
+    'Tarde': (time.fromisoformat('13:30'), time.fromisoformat('17:30')),
+    'Noite': (time.fromisoformat('18:30'), time.fromisoformat('22:30')),
+}
+
 class Ocupacao(db.Model):
     """
     Modelo para representar as ocupações/agendamentos das salas de aula.
@@ -66,6 +73,13 @@ class Ocupacao(db.Model):
         """
         dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo']
         return dias[self.data.weekday()]
+
+    def get_turno(self):
+        """Retorna o nome do turno baseado nos horários padrão."""
+        for nome, (inicio, fim) in TURNOS_PADRAO.items():
+            if self.horario_inicio == inicio and self.horario_fim == fim:
+                return nome
+        return None
     
     def is_conflito_com(self, outra_ocupacao):
         """
@@ -145,6 +159,7 @@ class Ocupacao(db.Model):
             'observacoes': self.observacoes,
             'duracao_minutos': self.get_duracao_minutos(),
             'dia_semana': self.get_dia_semana(),
+            'turno': self.get_turno(),
             'cor_tipo': self.get_cor_tipo(),
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
