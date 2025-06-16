@@ -28,6 +28,11 @@ function inicializarCalendario() {
         },
         height: 'auto',
         eventDisplay: 'block',
+        views: {
+            dayGridMonth: {
+                eventDisplay: 'none'
+            }
+        },
         dayMaxEvents: 3,
         moreLinkText: function(num) {
             return `+${num} mais`;
