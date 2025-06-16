@@ -168,11 +168,54 @@
                                 </div>
                             </div>
                         </div>
+                </div>
+            </div>
+
+            <!-- Indicadores Mensais de Salas -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Salas - Mês Anterior</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1">Total de Salas: <span id="totalSalasMesAnterior">-</span></p>
+                            <p class="mb-1">Salas Ocupadas: <span id="salasOcupadasMesAnterior">-</span></p>
+                            <p class="mb-3">Salas Livres: <span id="salasLivresMesAnterior">-</span></p>
+                            <a id="linkMesAnterior" href="#">Ver Detalhes</a>
+                        </div>
                     </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Salas - Mês Atual</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1">Total de Salas: <span id="totalSalasMesAtual">-</span></p>
+                            <p class="mb-1">Salas Ocupadas: <span id="salasOcupadasMesAtual">-</span></p>
+                            <p class="mb-3">Salas Livres: <span id="salasLivresMesAtual">-</span></p>
+                            <a id="linkMesAtual" href="#">Ver Detalhes</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Salas - Mês Seguinte</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1">Total de Salas: <span id="totalSalasMesSeguinte">-</span></p>
+                            <p class="mb-1">Salas Reservadas: <span id="salasOcupadasMesSeguinte">-</span></p>
+                            <p class="mb-3">Salas Livres: <span id="salasLivresMesSeguinte">-</span></p>
+                            <a id="linkMesSeguinte" href="#">Ver Detalhes</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <!-- Ações Rápidas -->
-                <div class="row mb-4">
+            <!-- Ações Rápidas -->
+            <div class="row mb-4">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
@@ -367,6 +410,7 @@
             
             // Carrega dados do dashboard
             carregarEstatisticasGerais();
+            carregarIndicadoresMensais();
             carregarProximasOcupacoes();
             carregarRelatorioMensal();
             carregarTendenciaMensal();

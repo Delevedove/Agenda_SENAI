@@ -202,6 +202,8 @@ function aplicarFiltrosURL() {
     
     const salaId = urlParams.get('sala_id');
     const instrutorId = urlParams.get('instrutor_id');
+    const turnoParam = urlParams.get('turno');
+    const mesParam = urlParams.get('mes');
     
     if (salaId) {
         document.getElementById('filtroSala').value = salaId;
@@ -210,9 +212,18 @@ function aplicarFiltrosURL() {
     if (instrutorId) {
         document.getElementById('filtroInstrutor').value = instrutorId;
     }
-    
+
+    if (turnoParam) {
+        document.getElementById('filtroTurno').value = turnoParam;
+    }
+
+    if (mesParam && calendar) {
+        const dataMes = new Date(mesParam + '-01');
+        calendar.gotoDate(dataMes);
+    }
+
     // Aplica filtros se houver
-    if (salaId || instrutorId) {
+    if (salaId || instrutorId || turnoParam) {
         setTimeout(() => aplicarFiltrosCalendario(), 1000);
     }
 }
