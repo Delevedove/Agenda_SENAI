@@ -68,6 +68,14 @@ def test_export_agendamentos_pdf(client_ag):
     assert 'application/pdf' in resp.content_type
 
 
+def test_export_agendamentos_xlsx(client_ag):
+    token = login_admin(client_ag)
+    headers = {'Authorization': f'Bearer {token}'}
+    resp = client_ag.get('/api/agendamentos/export?formato=xlsx', headers=headers)
+    assert resp.status_code == 200
+    assert 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in resp.content_type
+
+
 @pytest.fixture
 def app_ocupacoes():
     app = Flask(__name__)
@@ -125,4 +133,12 @@ def test_export_ocupacoes_pdf(client_oc, app_ocupacoes):
     resp = client_oc.get('/api/ocupacoes/export?formato=pdf', headers=headers)
     assert resp.status_code == 200
     assert 'application/pdf' in resp.content_type
+
+
+def test_export_ocupacoes_xlsx(client_oc, app_ocupacoes):
+    token = gerar_token(app_ocupacoes)
+    headers = {'Authorization': f'Bearer {token}'}
+    resp = client_oc.get('/api/ocupacoes/export?formato=xlsx', headers=headers)
+    assert resp.status_code == 200
+    assert 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in resp.content_type
 

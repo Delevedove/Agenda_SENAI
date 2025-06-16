@@ -3,6 +3,7 @@ from datetime import datetime, date
 import json
 import csv
 from io import StringIO, BytesIO
+from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from src.models import db
@@ -365,7 +366,7 @@ def verificar_disponibilidade():
 
 @agendamento_bp.route('/agendamentos/export', methods=['GET'])
 def exportar_agendamentos():
-    """Exporta agendamentos em CSV ou PDF."""
+    """Exporta agendamentos em CSV, PDF ou XLSX."""
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
@@ -394,6 +395,23 @@ def exportar_agendamentos():
         c.save()
         buffer.seek(0)
         return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name='agendamentos.pdf')
+
+    if formato == 'xlsx':
+        wb = Workbook()
+        ws = wb.active
+        ws.append(["ID", "Nome do Usuário", "Data", "Laboratório", "Turma", "Turno"])
+        for ag in agendamentos:
+            nome = ag.usuario.nome if ag.usuario else ''
+            ws.append([ag.id, nome, ag.data, ag.laboratorio, ag.turma, ag.turno])
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='agendamentos.xlsx'
+        )
 
     # CSV como padrão
     si = StringIO()
