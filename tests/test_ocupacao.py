@@ -247,3 +247,38 @@ def test_calendario_ocupacoes_cor_por_turno(client, app):
     assert evento['backgroundColor'] == '#673AB7'
     assert evento['borderColor'] == '#673AB7'
     assert evento['extendedProps']['turno'] == 'Noite'
+
+
+def test_resumo_periodo_endpoint(client, app):
+    with app.app_context():
+        user = User.query.first()
+        sala = Sala.query.first()
+
+    token = jwt.encode({
+        'user_id': user.id,
+        'nome': user.nome,
+        'perfil': user.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+
+    hoje = date.today()
+
+    client.post('/api/ocupacoes', json={
+        'sala_id': sala.id,
+        'curso_evento': 'Resumo',
+        'data_inicio': hoje.isoformat(),
+        'data_fim': hoje.isoformat(),
+        'turno': 'Manhã'
+    }, headers={'Authorization': f'Bearer {token}'})
+
+    resp = client.get('/api/ocupacoes/resumo-periodo', query_string={
+        'data_inicio': hoje.isoformat(),
+        'data_fim': hoje.isoformat()
+    }, headers={'Authorization': f'Bearer {token}'})
+
+    assert resp.status_code == 200
+    resumo = resp.get_json()
+    assert hoje.isoformat() in resumo
+    dia = resumo[hoje.isoformat()]
+    assert 'Manhã' in dia
+    assert dia['Manhã']['ocupadas'] == 1
