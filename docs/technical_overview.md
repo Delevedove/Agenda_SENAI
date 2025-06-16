@@ -119,6 +119,15 @@ Aprimorar a autenticação JWT implementando mecanismos de refresh e revogação
 - Adicionar testes de integração para as rotas restantes (hoje apenas `tests/test_ocupacao.py`).
 - Utilizar um cliente SPA ou framework de frontend para melhorar a experiência do usuário.
 
+## Cores por Turno
+Os calendários destacam os eventos conforme o turno selecionado para facilitar a visualização:
+
+- **Manhã**: `#FFEB3B`
+- **Tarde**: `#03A9F4`
+- **Noite**: `#673AB7`
+
+A mesma paleta é aplicada a agendamentos de laboratório e ocupações de sala por meio das classes CSS `agendamento-manha`, `agendamento-tarde` e `agendamento-noite`.
+
 ## Glossário Básico
 - **Rotas**: URLs definidas no backend que respondem a requisições (ex.: `/api/salas`).
 - **Componentes**: partes reutilizáveis da interface ou código (tabelas, formulários).

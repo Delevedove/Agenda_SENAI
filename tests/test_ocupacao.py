@@ -210,3 +210,40 @@ def test_tendencia_ocupacoes_endpoint(client, app):
     assert resp.status_code == 200
     dados = resp.get_json()
     assert isinstance(dados, list)
+
+
+def test_calendario_ocupacoes_cor_por_turno(client, app):
+    """Verifica se o endpoint de calendário colore conforme o turno."""
+    with app.app_context():
+        user = User.query.first()
+        sala = Sala.query.first()
+
+    token = jwt.encode({
+        'user_id': user.id,
+        'nome': user.nome,
+        'perfil': user.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+
+    hoje = date.today()
+
+    resp = client.post('/api/ocupacoes', json={
+        'sala_id': sala.id,
+        'curso_evento': 'Teste de Cor',
+        'data_inicio': hoje.isoformat(),
+        'data_fim': hoje.isoformat(),
+        'turno': 'Noite'
+    }, headers={'Authorization': f'Bearer {token}'})
+    assert resp.status_code == 201
+
+    resp_cal = client.get('/api/ocupacoes/calendario', query_string={
+        'data_inicio': hoje.isoformat(),
+        'data_fim': hoje.isoformat()
+    }, headers={'Authorization': f'Bearer {token}'})
+    assert resp_cal.status_code == 200
+    eventos = resp_cal.get_json()
+    assert len(eventos) == 1
+    evento = eventos[0]
+    assert evento['backgroundColor'] == '#673AB7'
+    assert evento['borderColor'] == '#673AB7'
+    assert evento['extendedProps']['turno'] == 'Noite'
