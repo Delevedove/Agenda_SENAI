@@ -7,6 +7,7 @@ from src.routes.user import verificar_autenticacao, verificar_admin
 from datetime import datetime, date, time, timedelta
 import csv
 from io import StringIO, BytesIO
+from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from sqlalchemy import and_, or_
@@ -83,7 +84,7 @@ def listar_ocupacoes():
 
 @ocupacao_bp.route('/ocupacoes/export', methods=['GET'])
 def exportar_ocupacoes():
-    """Exporta ocupações em CSV ou PDF."""
+    """Exporta ocupações em CSV, PDF ou XLSX."""
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
@@ -112,6 +113,23 @@ def exportar_ocupacoes():
         c.save()
         buffer.seek(0)
         return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name='ocupacoes.pdf')
+
+    if formato == 'xlsx':
+        wb = Workbook()
+        ws = wb.active
+        ws.append(["ID", "Sala", "Data", "Início", "Fim", "Status"])
+        for oc in ocupacoes:
+            sala = oc.sala.nome if oc.sala else oc.sala_id
+            ws.append([oc.id, sala, oc.data, oc.horario_inicio, oc.horario_fim, oc.status])
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='ocupacoes.xlsx'
+        )
 
     # CSV padrão
     si = StringIO()
@@ -668,6 +686,29 @@ def gerar_relatorio_ocupacoes():
             for tipo, total in ocupacoes_por_tipo
         ]
     }
-    
+
     return jsonify(relatorio)
+
+
+@ocupacao_bp.route('/ocupacoes/tendencia', methods=['GET'])
+def obter_tendencia_ocupacoes():
+    """Retorna total de ocupações por mês do ano informado."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    if not verificar_admin(user):
+        return jsonify({'erro': 'Permissão negada'}), 403
+
+    ano = request.args.get('ano', type=int, default=date.today().year)
+
+    resultados = db.session.query(
+        db.func.strftime('%m', Ocupacao.data).label('mes'),
+        db.func.count(Ocupacao.id).label('total')
+    ).filter(
+        db.func.strftime('%Y', Ocupacao.data) == str(ano)
+    ).group_by('mes').order_by('mes').all()
+
+    tendencia = [{'mes': int(r.mes), 'total': r.total} for r in resultados]
+    return jsonify(tendencia)
 

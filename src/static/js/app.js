@@ -549,7 +549,7 @@ async function carregarLaboratoriosParaFiltro(seletorElemento) {
     }
 }
 
-// Exporta dados genéricos (CSV ou PDF)
+// Exporta dados genéricos (CSV, PDF ou XLSX)
 async function exportarDados(endpoint, formato, nomeArquivo) {
     try {
         const response = await fetch(`${API_URL}${endpoint}?formato=${formato}`, {

@@ -437,3 +437,46 @@ function formatarDataCurta(dataStr) {
     });
 }
 
+// Carrega tendência mensal de ocupações e renderiza gráfico
+async function carregarTendenciaMensal() {
+    if (!isAdmin()) return;
+    try {
+        const ano = new Date().getFullYear();
+        const response = await fetch(`${API_URL}/ocupacoes/tendencia?ano=${ano}`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (response.ok) {
+            const dados = await response.json();
+            renderizarGraficoTendencia(dados);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar tendência mensal:', error);
+    }
+}
+
+function renderizarGraficoTendencia(dados) {
+    const ctx = document.getElementById('graficoTendenciaMensal');
+    if (!ctx) return;
+
+    const labels = dados.map(d => d.mes);
+    const valores = dados.map(d => d.total);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ocupações',
+                data: valores,
+                borderColor: '#0d6efd',
+                tension: 0.3
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
