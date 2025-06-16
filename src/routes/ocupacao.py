@@ -517,7 +517,8 @@ def obter_ocupacoes_calendario():
     data_inicio_str = request.args.get('data_inicio')
     data_fim_str = request.args.get('data_fim')
     sala_id = request.args.get('sala_id', type=int)
-    
+    turno = request.args.get('turno')
+
     # Define período padrão (mês atual) se não fornecido
     if not data_inicio_str or not data_fim_str:
         hoje = date.today()
