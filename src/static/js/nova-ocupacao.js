@@ -188,19 +188,13 @@ async function carregarOcupacaoParaEdicao(id) {
 function validarDatas() {
     const inicio = document.getElementById('dataInicio').value;
     const fim = document.getElementById('dataFim').value;
-    const hoje = new Date().toISOString().split('T')[0];
-
-    if (inicio && inicio < hoje) {
-        document.getElementById('dataInicio').setCustomValidity('Data não pode ser no passado');
-    } else {
-        document.getElementById('dataInicio').setCustomValidity('');
-    }
-
     if (inicio && fim && fim < inicio) {
         document.getElementById('dataFim').setCustomValidity('Data de fim deve ser posterior ou igual à data de início');
     } else {
         document.getElementById('dataFim').setCustomValidity('');
     }
+
+    document.getElementById('dataInicio').setCustomValidity('');
 }
 
 // Verifica disponibilidade de forma dinâmica

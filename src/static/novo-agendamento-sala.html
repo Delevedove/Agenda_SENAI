@@ -227,12 +227,7 @@
             await carregarSalas();
             await carregarInstrutores();
             await carregarTurmasSelect();
-            
-            // Define data mínima como hoje
-            const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('dataInicio').min = hoje;
-            document.getElementById('dataFim').min = hoje;
-            
+
             // Adiciona listeners para validação em tempo real
             adicionarListenersValidacao();
         });

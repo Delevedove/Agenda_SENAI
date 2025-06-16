@@ -211,8 +211,6 @@ def criar_ocupacao():
         if data_inicio > data_fim:
             return jsonify({'erro': 'Data de início deve ser anterior ou igual à data de fim'}), 400
 
-        if data_inicio < date.today():
-            return jsonify({'erro': 'Não é possível agendar para datas passadas'}), 400
 
         if data['turno'] not in TURNOS_PADRAO:
             return jsonify({'erro': 'Turno inválido'}), 400
@@ -345,13 +343,9 @@ def atualizar_ocupacao(id):
 
         if 'data_inicio' in data:
             data_ocupacao = datetime.strptime(data['data_inicio'], '%Y-%m-%d').date()
-            if data_ocupacao < date.today():
-                return jsonify({'erro': 'Não é possível agendar para datas passadas'}), 400
             ocupacao.data = data_ocupacao
         elif 'data' in data:
             data_ocupacao = datetime.strptime(data['data'], '%Y-%m-%d').date()
-            if data_ocupacao < date.today():
-                return jsonify({'erro': 'Não é possível agendar para datas passadas'}), 400
             ocupacao.data = data_ocupacao
 
         if 'turno' in data:
