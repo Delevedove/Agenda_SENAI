@@ -1,19 +1,16 @@
-# Roadmap de Melhorias
+# Roadmap do Projeto
 
-Este roadmap sugere próximos passos para evolução do projeto.
+Este documento descreve as próximas melhorias e funcionalidades previstas para o sistema de controle de ocupação.
 
-## Prioridade Alta
-- **Correções de validação**: garantir tratamento uniforme de erros e mensagens nas rotas.
-- **Refresh token**: adicionar mecanismo de renovação e revogação do JWT.
-- **Novos testes**: ampliar cobertura de testes automatizados, incluindo rotas de usuários, salas e agendamentos.
-
-## Prioridade Média
-- **Interface responsiva**: criar ou aprimorar frontend para melhor uso em dispositivos móveis.
-- **Refatoração de código**: mover validações repetitivas para funções utilitárias e reduzir duplicação.
-- **Integração de Notificações**: implementar job periódico chamando `criar_notificacoes_agendamentos_proximos` e enviar emails ou mensagens.
-
-## Prioridade Baixa
-- **Exportação de dados**: permitir exportar agendamentos e ocupações em CSV ou PDF.
-- **Integração com calendário externo**: avaliar sincronização com Google Calendar ou similar.
-- **Dashboard visual**: painéis gráficos para utilização de salas e instrutores.
+| Título da Tarefa | Descrição | Status |
+|------------------|-----------|--------|
+| Correção do botão de exclusão de ocupações | Corrigir problema de não execução da exclusão | Em desenvolvimento |
+| Nova tela de Gerenciamento de Turmas | Implementar CRUD completo de turmas no Sistema de Ocupação | Concluído |
+| Integração de Turmas com campo Curso/Evento | Campo agora como select dinâmico populado da tabela Turmas | Concluído |
+| Edição de Ocupação: Carregar período completo | Corrigir para carregar data de início e fim originais | Em validação |
+| Validação de conflito na edição | Ajustar para ignorar o próprio ID da ocupação sendo editada | Pendente |
+| Padronização visual de todas as telas | Unificar layout, fontes, cores e botões em todo o sistema | Em desenvolvimento |
+| Melhoria do fluxo de criação de ocupação | Remover etapa de verificação manual e implementar feedback dinâmico | Concluído |
+| Filtros no Calendário de Ocupações | Implementar filtros por Sala, Instrutor e Turno | Pendente |
+| Exportação de ocupações | Criar função de exportar agenda por período (Excel/PDF) | Planejado |
 
