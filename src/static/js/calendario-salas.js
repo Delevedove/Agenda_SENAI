@@ -183,7 +183,10 @@ function mostrarResumoDia(dataStr) {
 
         const header = document.createElement('div');
         header.className = `card-header resumo-card-header resumo-card-${slugifyTurno(turno)}`;
-        header.innerHTML = `<div class="d-flex justify-content-between align-items-center"><span>${turno}</span><span class="badge bg-secondary">${info.ocupadas}/${info.total_salas} Salas</span></div>`;
+        const icon = document.createElement('i');
+        icon.className = 'bi bi-chevron-up toggle-icon ms-2';
+        header.innerHTML = `<div class="d-flex justify-content-between align-items-center"><span>${turno}</span><span><span class="badge bg-secondary">${info.ocupadas}/${info.total_salas} Salas</span></span></div>`;
+        header.querySelector('span span').appendChild(icon);
         card.appendChild(header);
 
         const body = document.createElement('div');
@@ -208,6 +211,12 @@ function mostrarResumoDia(dataStr) {
 
         body.innerHTML = html;
         card.appendChild(body);
+        header.addEventListener('click', () => {
+            body.classList.toggle('d-none');
+            card.classList.toggle('resumo-card-collapsed');
+            icon.classList.toggle('bi-chevron-up');
+            icon.classList.toggle('bi-chevron-down');
+        });
         container.appendChild(card);
     });
 

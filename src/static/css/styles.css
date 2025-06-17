@@ -349,6 +349,16 @@ small, .small {
   font-size: 0.8rem;
 }
 
+/* Permite clicar no cabeçalho do resumo para expandir/contrair */
+.resumo-card-header {
+  cursor: pointer;
+}
+
+/* Esconde o corpo quando o card está minimizado */
+.resumo-card-collapsed .card-body {
+  display: none;
+}
+
 @media (max-width: 576px) {
   .resumo-card-header span.badge {
     font-size: 0.7rem;
