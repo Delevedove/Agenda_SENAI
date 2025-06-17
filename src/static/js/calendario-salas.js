@@ -84,6 +84,7 @@ async function carregarOcupacoes(dataInicio, dataFim) {
         
         if (response.ok) {
             const eventos = await response.json();
+            ocupacoesData = eventos;
             return eventos.map(evento => ({
                 id: evento.id,
                 title: evento.title,
@@ -162,20 +163,30 @@ function mostrarResumoDia(dataStr) {
     ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
         const info = resumoDia[turno];
         if (!info) return;
+
+        const ocupacoesTurno = calendar.getEvents().filter(ev =>
+            ev.extendedProps.data === dataStr && ev.extendedProps.turno === turno
+        );
+
         let html = `<h6 class="mt-3">${turno} (${info.ocupadas}/${info.total_salas} ocupadas)</h6>`;
-        if (info.salas_ocupadas.length) {
-            html += '<p><strong>Salas Ocupadas:</strong></p><ul>';
-            info.salas_ocupadas.forEach(s => {
-                const instr = s.instrutor_nome ? ` - ${s.instrutor_nome}` : '';
-                html += `<li>${s.sala_nome} - ${s.curso_evento}${instr}</li>`;
+
+        if (ocupacoesTurno.length) {
+            html += '<ul>';
+            ocupacoesTurno.forEach(ev => {
+                const props = ev.extendedProps;
+                const instr = props.instrutor_nome ? ` - ${props.instrutor_nome}` : '';
+                html += `<li>${props.sala_nome} - ${props.curso_evento}${instr} ` +
+                        `<button class="btn btn-sm btn-link p-0 ms-1" onclick="editarOcupacao(${ev.id})"><i class="bi bi-pencil"></i></button></li>`;
             });
             html += '</ul>';
         } else {
             html += '<p><em>Sem ocupações.</em></p>';
         }
+
         if (info.salas_livres.length) {
             html += `<p><strong>Salas Livres:</strong> ${info.salas_livres.join(', ')}</p>`;
         }
+
         container.innerHTML += html;
     });
 
