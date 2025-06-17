@@ -547,8 +547,9 @@ footer {
 .fc-event-title {
   font-weight: 500;
 }
-.fc-daygrid-event {
-  margin: 1px 0;
+.fc-dayGridMonth-view .fc-daygrid-event,
+.fc-dayGridMonth-view .fc-daygrid-day-events {
+  display: none;
 }
 .fc-timegrid-event {
   border-radius: 3px;
