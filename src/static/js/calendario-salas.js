@@ -8,6 +8,14 @@ let instrutoresData = [];
 let tiposOcupacao = [];
 let resumoOcupacoes = {};
 
+// Converte o nome do turno em um identificador CSS sem acentos
+function slugifyTurno(turno) {
+    return turno
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '');
+}
+
 // Inicializa o calendário
 function inicializarCalendario() {
     const calendarEl = document.getElementById('calendario');
@@ -143,7 +151,7 @@ function atualizarResumoNoCalendario() {
                 const info = resumoDia[turno];
                 if (!info) return;
                 const div = document.createElement('div');
-                div.className = `resumo-turno resumo-${turno.toLowerCase()}`;
+                div.className = `resumo-turno resumo-${slugifyTurno(turno)}`;
                 div.textContent = `${turno}: ${info.ocupadas}/${info.total_salas}`;
                 cell.appendChild(div);
             });
@@ -455,10 +463,15 @@ function formatarData(dataStr) {
 
 // Edita ocupação
 function editarOcupacao(id) {
-    // Fecha modal atual
-    const modal = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesOcupacao'));
-    modal.hide();
-    
+    // Fecha modais abertos antes de redirecionar
+    const detalhesEl = document.getElementById('modalDetalhesOcupacao');
+    const detalhesModal = detalhesEl ? bootstrap.Modal.getInstance(detalhesEl) : null;
+    if (detalhesModal) detalhesModal.hide();
+
+    const resumoEl = document.getElementById('modalResumoDia');
+    const resumoModal = resumoEl ? bootstrap.Modal.getInstance(resumoEl) : null;
+    if (resumoModal) resumoModal.hide();
+
     // Redireciona para edição (implementar página de edição)
     window.location.href = `/novo-agendamento-sala.html?editar=${id}`;
 }
