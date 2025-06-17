@@ -163,10 +163,12 @@ function mostrarResumoDia(dataStr) {
     const resumoDia = resumoOcupacoes[dataStr];
     if (!resumoDia) return;
 
-    const modal = new bootstrap.Modal(document.getElementById('modalResumoDia'));
+    const modalEl = document.getElementById('modalResumoDia');
+    const modal = new bootstrap.Modal(modalEl);
     const container = document.getElementById('conteudoResumoDia');
 
-    container.innerHTML = `<h5 class="mb-3">${formatarData(dataStr)}</h5>`;
+    document.getElementById('modalResumoDiaLabel').innerHTML = '\uD83D\uDCCB Resumo de Ocupacao \u2013 ' + formatarData(dataStr);
+    container.innerHTML = '';
 
     ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
         const info = resumoDia[turno];
@@ -176,26 +178,37 @@ function mostrarResumoDia(dataStr) {
             ev.extendedProps.data === dataStr && ev.extendedProps.turno === turno
         );
 
-        let html = `<h6 class="mt-3">${turno} (${info.ocupadas}/${info.total_salas} ocupadas)</h6>`;
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
 
+        const header = document.createElement('div');
+        header.className = `card-header resumo-card-header resumo-card-${slugifyTurno(turno)}`;
+        header.innerHTML = `<div class="d-flex justify-content-between align-items-center"><span>${turno}</span><span class="badge bg-secondary">${info.ocupadas}/${info.total_salas} Salas</span></div>`;
+        card.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'card-body';
+
+        let html = '';
         if (ocupacoesTurno.length) {
-            html += '<ul>';
+            html += '<h6 class="mb-2">✅ Salas Ocupadas:</h6><ul class="list-unstyled">';
             ocupacoesTurno.forEach(ev => {
                 const props = ev.extendedProps;
                 const instr = props.instrutor_nome ? ` - ${props.instrutor_nome}` : '';
-                html += `<li>${props.sala_nome} - ${props.curso_evento}${instr} ` +
-                        `<button class="btn btn-sm btn-link p-0 ms-1" onclick="editarOcupacao(${ev.id})"><i class="bi bi-pencil"></i></button></li>`;
+                html += `<li class="d-flex justify-content-between align-items-start mb-1"><span>${props.sala_nome}: ${props.curso_evento}${instr}</span><button class="btn btn-sm btn-link p-0 ms-2" onclick="editarOcupacao(${ev.id})"><i class="bi bi-pencil"></i></button></li>`;
             });
             html += '</ul>';
         } else {
-            html += '<p><em>Sem ocupações.</em></p>';
+            html += '<p class="fst-italic text-muted mb-2">Nenhuma sala ocupada neste turno.</p>';
         }
 
         if (info.salas_livres.length) {
-            html += `<p><strong>Salas Livres:</strong> ${info.salas_livres.join(', ')}</p>`;
+            html += `<h6 class="mt-3 mb-1">🏷️ Salas Livres:</h6><p class="mb-0">${info.salas_livres.join(', ')}</p>`;
         }
 
-        container.innerHTML += html;
+        body.innerHTML = html;
+        card.appendChild(body);
+        container.appendChild(card);
     });
 
     modal.show();

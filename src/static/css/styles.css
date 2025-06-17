@@ -325,6 +325,31 @@ small, .small {
   color: #fff;
 }
 
+/* Resumo do dia - cards por turno */
+.resumo-card-manha {
+  background-color: var(--turno-manha-color);
+}
+
+.resumo-card-tarde {
+  background-color: var(--turno-tarde-color);
+  color: #fff;
+}
+
+.resumo-card-noite {
+  background-color: var(--turno-noite-color);
+  color: #fff;
+}
+
+.resumo-card-header span.badge {
+  font-size: 0.8rem;
+}
+
+@media (max-width: 576px) {
+  .resumo-card-header span.badge {
+    font-size: 0.7rem;
+  }
+}
+
 /* Notificações */
 .notificacao-badge {
   position: absolute;
