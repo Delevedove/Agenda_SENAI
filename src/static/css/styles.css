@@ -340,6 +340,11 @@ small, .small {
   color: #fff;
 }
 
+/* Itens de ocupação no resumo do dia */
+.resumo-ocupacao-item {
+  line-height: 1.3;
+}
+
 .resumo-card-header span.badge {
   font-size: 0.8rem;
 }

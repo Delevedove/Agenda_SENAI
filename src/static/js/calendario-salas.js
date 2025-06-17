@@ -195,7 +195,7 @@ function mostrarResumoDia(dataStr) {
             ocupacoesTurno.forEach(ev => {
                 const props = ev.extendedProps;
                 const instr = props.instrutor_nome ? ` - ${props.instrutor_nome}` : '';
-                html += `<li class="d-flex justify-content-between align-items-start mb-1"><span>${props.sala_nome}: ${props.curso_evento}${instr}</span><button class="btn btn-sm btn-link p-0 ms-2" onclick="editarOcupacao(${ev.id})"><i class="bi bi-pencil"></i></button></li>`;
+                html += `<li class="d-flex justify-content-between align-items-start mb-2 resumo-ocupacao-item"><span>${props.sala_nome}: ${props.curso_evento}${instr}</span><span><button class="btn btn-sm btn-link p-0 ms-2" onclick="editarOcupacao(${ev.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="excluirOcupacaoResumo(${ev.id})"><i class="bi bi-trash"></i></button></span></li>`;
             });
             html += '</ul>';
         } else {
@@ -487,6 +487,14 @@ function editarOcupacao(id) {
 
     // Redireciona para edição (implementar página de edição)
     window.location.href = `/novo-agendamento-sala.html?editar=${id}`;
+}
+
+// Exclui ocupação a partir do resumo do dia
+function excluirOcupacaoResumo(id) {
+    const evento = calendar.getEventById(id);
+    if (!evento) return;
+    const props = evento.extendedProps;
+    excluirOcupacao(id, props.curso_evento, props.grupo_ocupacao_id || '');
 }
 
 // Exclui ocupação
