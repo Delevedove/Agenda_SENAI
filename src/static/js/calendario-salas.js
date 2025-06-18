@@ -511,9 +511,14 @@ function excluirOcupacaoResumo(id) {
 
 // Exclui ocupação
 function excluirOcupacao(id, nome, grupoId) {
-    // Fecha modal atual
-    const modal = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesOcupacao'));
-    modal.hide();
+    // Fecha modais que possam estar abertos
+    const detalhesEl = document.getElementById('modalDetalhesOcupacao');
+    const detalhesModal = detalhesEl ? bootstrap.Modal.getInstance(detalhesEl) : null;
+    if (detalhesModal) detalhesModal.hide();
+
+    const resumoEl = document.getElementById('modalResumoDia');
+    const resumoModal = resumoEl ? bootstrap.Modal.getInstance(resumoEl) : null;
+    if (resumoModal) resumoModal.hide();
 
     // Configura modal de exclusão
     let resumo = `<strong>${nome}</strong>`;
