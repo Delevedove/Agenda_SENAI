@@ -98,6 +98,7 @@ Todos os módulos seguem convenções REST. Abaixo estão listados os principais
 ## Fluxos de Funcionalidades
 - **Criação de ocupação**: a inclusão de novas ocupações foi unificada em uma única tela. Durante o preenchimento são feitas chamadas ao endpoint `/api/ocupacoes/verificar-disponibilidade` para apresentar ao usuário se a sala está disponível no turno desejado.
 - **Edição de ocupação**: ao abrir uma ocupação para edição o sistema carrega todo o período originalmente reservado, permitindo ajustes com segurança.
+- **Resumo diário de ocupações**: os cards de Manhã, Tarde e Noite são exibidos minimizados por padrão. Ao expandir um turno é possível visualizar salas ocupadas e livres, além de excluir todo o período diretamente pelo ícone de lixeira.
 
 ## Validações e Regras de Negócio
 - A verificação de conflito de ocupações ignora o próprio identificador quando a ação é de edição, evitando falsos positivos.

@@ -7,6 +7,7 @@ let salasData = [];
 let instrutoresData = [];
 let tiposOcupacao = [];
 let resumoOcupacoes = {};
+let diaResumoAtual = null;
 
 // Converte o nome do turno em um identificador CSS sem acentos
 function slugifyTurno(turno) {
@@ -160,6 +161,7 @@ function atualizarResumoNoCalendario() {
 }
 
 function mostrarResumoDia(dataStr) {
+    diaResumoAtual = dataStr;
     const resumoDia = resumoOcupacoes[dataStr];
     if (!resumoDia) return;
 
@@ -184,13 +186,14 @@ function mostrarResumoDia(dataStr) {
         const header = document.createElement('div');
         header.className = `card-header resumo-card-header resumo-card-${slugifyTurno(turno)}`;
         const icon = document.createElement('i');
-        icon.className = 'bi bi-chevron-up toggle-icon ms-2';
+        icon.className = 'bi bi-chevron-down toggle-icon ms-2';
         header.innerHTML = `<div class="d-flex justify-content-between align-items-center"><span>${turno}</span><span><span class="badge bg-secondary">${info.ocupadas}/${info.total_salas} Salas</span></span></div>`;
         header.querySelector('span span').appendChild(icon);
         card.appendChild(header);
 
         const body = document.createElement('div');
-        body.className = 'card-body';
+        body.className = 'card-body d-none';
+        card.classList.add('resumo-card-collapsed');
 
         let html = '';
         if (ocupacoesTurno.length) {
@@ -547,13 +550,20 @@ async function confirmarExclusaoOcupacao() {
         
         if (response.ok) {
             exibirAlerta('Ocupação excluída com sucesso!', 'success');
-            
+
             // Fecha o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalExcluirOcupacao'));
             modal.hide();
-            
-            // Atualiza o calendário
+
+            // Atualiza o calendário e o resumo
             calendar.refetchEvents();
+            await carregarResumoPeriodo(
+                calendar.view.activeStart.toISOString().split('T')[0],
+                calendar.view.activeEnd.toISOString().split('T')[0]
+            );
+            if (diaResumoAtual) {
+                mostrarResumoDia(diaResumoAtual);
+            }
         } else {
             throw new Error(result.erro || 'Erro ao excluir ocupação');
         }
