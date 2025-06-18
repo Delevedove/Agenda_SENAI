@@ -4,7 +4,8 @@ Este documento descreve as próximas melhorias e funcionalidades previstas para 
 
 | Título da Tarefa | Descrição | Status |
 |------------------|-----------|--------|
-| Correção do botão de exclusão de ocupações | Corrigir problema de não execução da exclusão | Em desenvolvimento |
+| Correção do botão de exclusão de ocupações | Corrigir problema de não execução da exclusão | Concluído |
+| Resumo diário colapsado por padrão | Exibir Manhã, Tarde e Noite minimizados e permitir expansão | Concluído |
 | Nova tela de Gerenciamento de Turmas | Implementar CRUD completo de turmas no Sistema de Ocupação | Concluído |
 | Integração de Turmas com campo Curso/Evento | Campo agora como select dinâmico populado da tabela Turmas | Concluído |
 | Edição de Ocupação: Carregar período completo | Corrigir para carregar data de início e fim originais | Em validação |
