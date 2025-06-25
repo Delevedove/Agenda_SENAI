@@ -8,6 +8,7 @@ import uuid
 from src.models import db
 from src.models.user import User
 from src.models.refresh_token import RefreshToken
+from src.redis_client import redis_conn
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
 from src.auth import (
@@ -272,12 +273,26 @@ def refresh_token():
 
 @user_bp.route('/logout', methods=['POST'])
 def logout():
-    data = request.json or {}
-    token = data.get('refresh_token')
+    """Revoga o token de acesso atual e, opcionalmente, o refresh token."""
+    auth_header = request.headers.get('Authorization')
+    token = auth_header.split(' ')[1] if auth_header else None
     if not token:
-        return jsonify({'erro': 'Refresh token obrigatório'}), 400
-    rt = RefreshToken.query.filter_by(token=token).first()
-    if rt:
-        rt.revoked = True
-        db.session.commit()
+        return jsonify({'erro': 'Token obrigatório'}), 400
+    try:
+        dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        jti = dados.get('jti')
+        exp = datetime.utcfromtimestamp(dados['exp'])
+        ttl = exp - datetime.utcnow()
+        if jti:
+            redis_conn.setex(jti, ttl, "revoked")
+    except jwt.PyJWTError:
+        return jsonify({'erro': 'Token inválido'}), 401
+
+    data = request.json or {}
+    refresh = data.get('refresh_token')
+    if refresh:
+        rt = RefreshToken.query.filter_by(token=refresh).first()
+        if rt:
+            rt.revoked = True
+            db.session.commit()
     return jsonify({'mensagem': 'Logout realizado'})
