@@ -1,28 +1,52 @@
-// Funções para gerenciamento de salas
+// Gerenciamento de salas utilizando classe
 
-// Variáveis globais
-let salasData = [];
-let salaEditando = null;
-let recursosSala = [];
+class GerenciadorSalas {
+    constructor() {
+        this.salasData = [];
+        this.salaEditando = null;
+        this.recursosSala = [];
 
+        this.inicializar();
+    }
 
-// Carrega recursos disponíveis para salas
-async function carregarRecursosSala() {
-    try {
-        const response = await fetch(`${API_URL}/salas/recursos`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
+    inicializar() {
+        document.addEventListener('DOMContentLoaded', () => {
+            this.carregarRecursosSala();
+            this.carregarSalas();
         });
+
+        const formSala = document.getElementById('formSala');
+        if (formSala) {
+            formSala.addEventListener('submit', e => {
+                e.preventDefault();
+                this.salvarSala();
+            });
+        }
+
+        const btnConfirmarExclusao = document.getElementById('confirmarExcluirSala');
+        if (btnConfirmarExclusao) {
+            btnConfirmarExclusao.addEventListener('click', () => this.confirmarExclusaoSala());
+        }
+    }
+
+
+    // Carrega recursos disponíveis para salas
+    async carregarRecursosSala() {
+        try {
+            const response = await fetch(`${API_URL}/salas/recursos`, {
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`
+                }
+            });
         
         if (response.ok) {
-            recursosSala = await response.json();
+            this.recursosSala = await response.json();
             
             // Preenche o container de recursos
             const container = document.getElementById('recursosContainer');
             container.innerHTML = '';
             
-            recursosSala.forEach(recurso => {
+            this.recursosSala.forEach(recurso => {
                 const col = document.createElement('div');
                 col.className = 'col-md-4 col-sm-6';
                 col.innerHTML = `
@@ -39,14 +63,14 @@ async function carregarRecursosSala() {
     } catch (error) {
         console.error('Erro ao carregar recursos de sala:', error);
     }
-}
+    }
 
-// Carrega lista de salas
-async function carregarSalas() {
-    try {
-        document.getElementById('loadingSalas').style.display = 'block';
-        document.getElementById('listaSalas').style.display = 'none';
-        document.getElementById('nenhumaSala').style.display = 'none';
+    // Carrega lista de salas
+    async carregarSalas() {
+        try {
+            document.getElementById('loadingSalas').style.display = 'block';
+            document.getElementById('listaSalas').style.display = 'none';
+            document.getElementById('nenhumaSala').style.display = 'none';
         
         // Constrói parâmetros de filtro
         const params = new URLSearchParams();
@@ -64,20 +88,20 @@ async function carregarSalas() {
         });
 
         if (response.ok) {
-            salasData = await response.json();
+            this.salasData = await response.json();
             
             // Aplica filtro de busca local se necessário
             const busca = document.getElementById('filtroBusca').value.toLowerCase();
-            let salasFiltradas = salasData;
+            let salasFiltradas = this.salasData;
             
             if (busca) {
-                salasFiltradas = salasData.filter(sala => 
+                salasFiltradas = this.salasData.filter(sala =>
                     sala.nome.toLowerCase().includes(busca) ||
                     (sala.localizacao && sala.localizacao.toLowerCase().includes(busca))
                 );
             }
             
-            renderizarTabelaSalas(salasFiltradas);
+            this.renderizarTabelaSalas(salasFiltradas);
         } else {
             const erro = await response.json().catch(() => ({}));
             throw new Error(erro.erro || `Erro ${response.status}`);
@@ -97,7 +121,7 @@ async function carregarSalas() {
 }
 
 // Renderiza a tabela de salas
-function renderizarTabelaSalas(salas) {
+    renderizarTabelaSalas(salas) {
     const tbody = document.getElementById('tabelaSalas');
     
     if (salas.length === 0) {
@@ -131,62 +155,62 @@ function renderizarTabelaSalas(salas) {
             </td>
             <td>
                 <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" onclick="editarSala(${sala.id})" title="Editar">
+                    <button type="button" class="btn btn-outline-primary" onclick="gerenciadorSalas.editarSala(${sala.id})" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-info" onclick="verOcupacoesSala(${sala.id})" title="Ver Ocupações">
+                    <button type="button" class="btn btn-outline-info" onclick="gerenciadorSalas.verOcupacoesSala(${sala.id})" title="Ver Ocupações">
                         <i class="bi bi-calendar-check"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="excluirSala(${sala.id}, '${sala.nome}')" title="Excluir">
+                    <button type="button" class="btn btn-outline-danger" onclick="gerenciadorSalas.excluirSala(${sala.id}, '${sala.nome}')" title="Excluir">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
             </td>
-        `;
+        `);
         tbody.appendChild(row);
     });
 }
 
 // Retorna badge de status
-function getStatusBadge(status) {
+    getStatusBadge(status) {
     const badges = {
         'ativa': '<span class="badge bg-success">Ativa</span>',
         'inativa': '<span class="badge bg-secondary">Inativa</span>',
         'manutencao': '<span class="badge bg-warning">Manutenção</span>'
     };
     return badges[status] || '<span class="badge bg-secondary">-</span>';
-}
+    }
 
 // Aplica filtros
-function aplicarFiltros() {
-    carregarSalas();
-}
+    aplicarFiltros() {
+    this.carregarSalas();
+    }
 
 // Limpa filtros
-function limparFiltros() {
-    document.getElementById('filtroStatus').value = '';
-    document.getElementById('filtroCapacidade').value = '';
-    document.getElementById('filtroBusca').value = '';
-    carregarSalas();
-}
+    limparFiltros() {
+        document.getElementById('filtroStatus').value = '';
+        document.getElementById('filtroCapacidade').value = '';
+        document.getElementById('filtroBusca').value = '';
+    this.carregarSalas();
+    }
 
 // Abre modal para nova sala
-function novaSala() {
-    salaEditando = null;
+    novaSala() {
+    this.salaEditando = null;
     document.getElementById('modalSalaLabel').textContent = 'Nova Sala';
     document.getElementById('btnSalvarTexto').textContent = 'Salvar';
     document.getElementById('formSala').reset();
     document.getElementById('salaId').value = '';
     
     // Desmarca todos os recursos
-    recursosSala.forEach(recurso => {
+    this.recursosSala.forEach(recurso => {
         const checkbox = document.getElementById(`recurso_${recurso.valor}`);
         if (checkbox) checkbox.checked = false;
     });
-}
+    }
 
 // Edita uma sala existente
-async function editarSala(id) {
+    async editarSala(id) {
     try {
         const response = await fetch(`${API_URL}/salas/${id}`, {
             headers: {
@@ -196,7 +220,7 @@ async function editarSala(id) {
         
         if (response.ok) {
             const sala = await response.json();
-            salaEditando = sala;
+            this.salaEditando = sala;
             
             // Preenche o formulário
             document.getElementById('modalSalaLabel').textContent = 'Editar Sala';
@@ -209,7 +233,7 @@ async function editarSala(id) {
             document.getElementById('salaObservacoes').value = sala.observacoes || '';
             
             // Marca os recursos selecionados
-            recursosSala.forEach(recurso => {
+            this.recursosSala.forEach(recurso => {
                 const checkbox = document.getElementById(`recurso_${recurso.valor}`);
                 if (checkbox) {
                     checkbox.checked = sala.recursos.includes(recurso.valor);
@@ -229,7 +253,7 @@ async function editarSala(id) {
 }
 
 // Salva sala (criar ou atualizar)
-async function salvarSala() {
+    async salvarSala() {
     try {
         const formData = {
             nome: document.getElementById('salaNome').value.trim(),
@@ -252,7 +276,7 @@ async function salvarSala() {
         }
         
         // Coleta recursos selecionados
-        recursosSala.forEach(recurso => {
+        this.recursosSala.forEach(recurso => {
             const checkbox = document.getElementById(`recurso_${recurso.valor}`);
             if (checkbox && checkbox.checked) {
                 formData.recursos.push(recurso.valor);
@@ -282,10 +306,10 @@ async function salvarSala() {
 
             // Reseta o formulário e o estado de edição para evitar
             // que uma nova criação seja tratada como atualização
-            novaSala();
+            this.novaSala();
 
             // Recarrega a lista
-            carregarSalas();
+            this.carregarSalas();
         } else {
             throw new Error(result.erro || 'Erro ao salvar sala');
         }
@@ -296,7 +320,7 @@ async function salvarSala() {
 }
 
 // Exclui uma sala
-function excluirSala(id, nome) {
+    excluirSala(id, nome) {
     document.getElementById('nomeSalaExcluir').textContent = nome;
     document.getElementById('modalExcluirSala').setAttribute('data-sala-id', id);
     
@@ -305,7 +329,7 @@ function excluirSala(id, nome) {
 }
 
 // Confirma exclusão da sala
-async function confirmarExclusaoSala() {
+    async confirmarExclusaoSala() {
     try {
         const salaId = document.getElementById('modalExcluirSala').getAttribute('data-sala-id');
         
@@ -326,7 +350,7 @@ async function confirmarExclusaoSala() {
             modal.hide();
             
             // Recarrega a lista
-            carregarSalas();
+            this.carregarSalas();
         } else {
             throw new Error(result.erro || 'Erro ao excluir sala');
         }
@@ -337,9 +361,11 @@ async function confirmarExclusaoSala() {
 }
 
 // Ver ocupações de uma sala
-function verOcupacoesSala(id) {
-    // Redireciona para o calendário com filtro da sala
-    window.location.href = `/calendario-salas.html?sala_id=${id}`;
+    verOcupacoesSala(id) {
+        // Redireciona para o calendário com filtro da sala
+        window.location.href = `/calendario-salas.html?sala_id=${id}`;
+    }
+
 }
 
 // Função para exibir alertas
@@ -370,4 +396,7 @@ function exibirAlerta(mensagem, tipo) {
         }
     }, 5000);
 }
+
+// Instancia o gerenciador de salas
+const gerenciadorSalas = new GerenciadorSalas();
 

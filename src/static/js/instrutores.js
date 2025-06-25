@@ -1,23 +1,55 @@
-// Funções para gerenciamento de instrutores
+// Gerenciamento de instrutores utilizando classe para encapsular estado
 
-// Variáveis globais
-let instrutoresData = [];
-let instrutorEditando = null;
-let areasAtuacao = [];
-let capacidadesSugeridas = [];
-let capacidadesInstrutor = [];
+class GerenciadorInstrutores {
+    constructor() {
+        // Estado interno
+        this.instrutoresData = [];
+        this.instrutorEditando = null;
+        this.areasAtuacao = [];
+        this.capacidadesSugeridas = [];
+        this.capacidadesInstrutor = [];
 
-// Carrega áreas de atuação disponíveis
-async function carregarAreasAtuacao() {
-    try {
-        const response = await fetch(`${API_URL}/instrutores/areas-atuacao`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
+        this.inicializar();
+    }
+
+    inicializar() {
+        document.addEventListener('DOMContentLoaded', () => {
+            this.carregarAreasAtuacao();
+            this.configurarDisponibilidade();
+            this.carregarCapacidadesSugeridas();
+            this.carregarInstrutores();
         });
+
+        const form = document.getElementById('formInstrutor');
+        if (form) {
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                this.salvarInstrutor();
+            });
+        }
+
+        const areaSelect = document.getElementById('instrutorAreaAtuacao');
+        if (areaSelect) {
+            areaSelect.addEventListener('change', e => this.carregarCapacidadesSugeridas(e.target.value));
+        }
+
+        const btnConfirmarExclusao = document.getElementById('confirmarExcluirInstrutor');
+        if (btnConfirmarExclusao) {
+            btnConfirmarExclusao.addEventListener('click', () => this.confirmarExclusaoInstrutor());
+        }
+    }
+
+    // Carrega áreas de atuação disponíveis
+    async carregarAreasAtuacao() {
+        try {
+            const response = await fetch(`${API_URL}/instrutores/areas-atuacao`, {
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`
+                }
+            });
         
         if (response.ok) {
-            areasAtuacao = await response.json();
+            this.areasAtuacao = await response.json();
             
             // Preenche os selects de área
             const selectArea = document.getElementById('instrutorAreaAtuacao');
@@ -26,7 +58,7 @@ async function carregarAreasAtuacao() {
             selectArea.innerHTML = '<option value="">Selecione...</option>';
             filtroArea.innerHTML = '<option value="">Todas</option>';
             
-            areasAtuacao.forEach(area => {
+            this.areasAtuacao.forEach(area => {
                 selectArea.innerHTML += `<option value="${area.valor}">${area.nome}</option>`;
                 filtroArea.innerHTML += `<option value="${area.valor}">${area.nome}</option>`;
             });
@@ -34,82 +66,82 @@ async function carregarAreasAtuacao() {
     } catch (error) {
         console.error('Erro ao carregar áreas de atuação:', error);
     }
-}
+    }
 
-// Carrega capacidades sugeridas
-async function carregarCapacidadesSugeridas(area='') {
-    try {
-        const url = area ? `${API_URL}/instrutores/capacidades-sugeridas?area=${area}`
+    // Carrega capacidades sugeridas
+    async carregarCapacidadesSugeridas(area='') {
+        try {
+            const url = area ? `${API_URL}/instrutores/capacidades-sugeridas?area=${area}`
                          : `${API_URL}/instrutores/capacidades-sugeridas`;
-        const response = await fetch(url, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${getToken()}`
+                }
+            });
         
         if (response.ok) {
-            capacidadesSugeridas = await response.json();
-            renderizarCapacidadesSugeridas();
+            this.capacidadesSugeridas = await response.json();
+            this.renderizarCapacidadesSugeridas();
         }
     } catch (error) {
         console.error('Erro ao carregar capacidades sugeridas:', error);
     }
-}
+    }
 
-// Renderiza capacidades sugeridas
-function renderizarCapacidadesSugeridas() {
-    const container = document.getElementById('capacidadesSugeridas');
-    container.innerHTML = '';
+    // Renderiza capacidades sugeridas
+    renderizarCapacidadesSugeridas() {
+        const container = document.getElementById('capacidadesSugeridas');
+        container.innerHTML = '';
     
     // Mostra apenas algumas sugestões inicialmente
-    const sugestoes = capacidadesSugeridas.slice(0, 10);
+    const sugestoes = this.capacidadesSugeridas.slice(0, 10);
     
     sugestoes.forEach(capacidade => {
         const badge = document.createElement('span');
         badge.className = 'badge bg-light text-dark me-1 mb-1';
         badge.style.cursor = 'pointer';
         badge.textContent = capacidade;
-        badge.onclick = () => adicionarCapacidadeSugerida(capacidade);
+        badge.onclick = () => this.adicionarCapacidadeSugerida(capacidade);
         container.appendChild(badge);
     });
-    
-    if (capacidadesSugeridas.length > 10) {
+
+    if (this.capacidadesSugeridas.length > 10) {
         const verMais = document.createElement('span');
         verMais.className = 'badge bg-primary';
         verMais.style.cursor = 'pointer';
-        verMais.textContent = `+${capacidadesSugeridas.length - 10} mais`;
-        verMais.onclick = () => mostrarTodasCapacidades();
+        verMais.textContent = `+${this.capacidadesSugeridas.length - 10} mais`;
+        verMais.onclick = () => this.mostrarTodasCapacidades();
         container.appendChild(verMais);
     }
-}
+    }
 
-// Mostra todas as capacidades sugeridas
-function mostrarTodasCapacidades() {
-    const container = document.getElementById('capacidadesSugeridas');
-    container.innerHTML = '';
-    
-    capacidadesSugeridas.forEach(capacidade => {
+    // Mostra todas as capacidades sugeridas
+    mostrarTodasCapacidades() {
+        const container = document.getElementById('capacidadesSugeridas');
+        container.innerHTML = '';
+
+    this.capacidadesSugeridas.forEach(capacidade => {
         const badge = document.createElement('span');
         badge.className = 'badge bg-light text-dark me-1 mb-1';
         badge.style.cursor = 'pointer';
         badge.textContent = capacidade;
-        badge.onclick = () => adicionarCapacidadeSugerida(capacidade);
+        badge.onclick = () => this.adicionarCapacidadeSugerida(capacidade);
         container.appendChild(badge);
     });
-}
-
-// Adiciona capacidade sugerida
-function adicionarCapacidadeSugerida(capacidade) {
-    if (!capacidadesInstrutor.includes(capacidade)) {
-        capacidadesInstrutor.push(capacidade);
-        renderizarCapacidades();
     }
-}
+
+    // Adiciona capacidade sugerida
+    adicionarCapacidadeSugerida(capacidade) {
+        if (!this.capacidadesInstrutor.includes(capacidade)) {
+        this.capacidadesInstrutor.push(capacidade);
+        this.renderizarCapacidades();
+    }
+    }
 
 // Configura interface de disponibilidade
-function configurarDisponibilidade() {
-    const container = document.getElementById('disponibilidadeContainer');
-    container.innerHTML = `
+    configurarDisponibilidade() {
+        const container = document.getElementById('disponibilidadeContainer');
+        container.innerHTML = `
         <div class="form-check form-check-inline">
             <input class="form-check-input" type="checkbox" id="dispManha" value="manha">
             <label class="form-check-label" for="dispManha">Manhã</label>
@@ -123,14 +155,14 @@ function configurarDisponibilidade() {
             <label class="form-check-label" for="dispNoite">Noite</label>
         </div>
     `;
-}
+    }
 
 // Carrega lista de instrutores disponíveis
-async function carregarInstrutores() {
-    try {
-        document.getElementById('loadingInstrutores').style.display = 'block';
-        document.getElementById('listaInstrutores').style.display = 'none';
-        document.getElementById('nenhumInstrutor').style.display = 'none';
+    async carregarInstrutores() {
+        try {
+            document.getElementById('loadingInstrutores').style.display = 'block';
+            document.getElementById('listaInstrutores').style.display = 'none';
+            document.getElementById('nenhumInstrutor').style.display = 'none';
         
         // Constrói parâmetros de filtro
         const params = new URLSearchParams();
@@ -150,20 +182,20 @@ async function carregarInstrutores() {
         });
 
         if (response.ok) {
-            instrutoresData = await response.json();
+            this.instrutoresData = await response.json();
             
             // Aplica filtro de busca local se necessário
             const busca = document.getElementById('filtroBusca').value.toLowerCase();
-            let instrutoresFiltrados = instrutoresData;
+            let instrutoresFiltrados = this.instrutoresData;
             
             if (busca) {
-                instrutoresFiltrados = instrutoresData.filter(instrutor => 
+                instrutoresFiltrados = this.instrutoresData.filter(instrutor =>
                     instrutor.nome.toLowerCase().includes(busca) ||
                     (instrutor.email && instrutor.email.toLowerCase().includes(busca))
                 );
             }
-            
-            renderizarTabelaInstrutores(instrutoresFiltrados);
+
+            this.renderizarTabelaInstrutores(instrutoresFiltrados);
         } else {
             const erro = await response.json().catch(() => ({}));
             throw new Error(erro.erro || `Erro ${response.status}`);
@@ -183,8 +215,8 @@ async function carregarInstrutores() {
 }
 
 // Renderiza a tabela de instrutores
-function renderizarTabelaInstrutores(instrutores) {
-    const tbody = document.getElementById('tabelaInstrutores');
+    renderizarTabelaInstrutores(instrutores) {
+        const tbody = document.getElementById('tabelaInstrutores');
     
     if (instrutores.length === 0) {
         document.getElementById('listaInstrutores').style.display = 'none';
@@ -216,114 +248,114 @@ function renderizarTabelaInstrutores(instrutores) {
             </td>
             <td>
                 <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" onclick="editarInstrutor(${instrutor.id})" title="Editar">
+                    <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-info" onclick="verOcupacoesInstrutor(${instrutor.id})" title="Ver Ocupações">
+                    <button type="button" class="btn btn-outline-info" onclick="gerenciadorInstrutores.verOcupacoesInstrutor(${instrutor.id})" title="Ver Ocupações">
                         <i class="bi bi-calendar-check"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="excluirInstrutor(${instrutor.id}, '${instrutor.nome}')" title="Excluir">
+                    <button type="button" class="btn btn-outline-danger" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${instrutor.nome}')" title="Excluir">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
             </td>
-        `;
+        `);
         tbody.appendChild(row);
     });
-}
-
-// Retorna o nome da área de atuação
-function getAreaNome(valor) {
-    const area = areasAtuacao.find(a => a.valor === valor);
-    return area ? area.nome : valor || '-';
-}
-
-// Retorna badge de status para instrutor
-function getStatusBadgeInstrutor(status) {
-    const badges = {
-        'ativo': '<span class="badge bg-success">Ativo</span>',
-        'inativo': '<span class="badge bg-secondary">Inativo</span>',
-        'licenca': '<span class="badge bg-warning">Licença</span>'
-    };
-    return badges[status] || '<span class="badge bg-secondary">-</span>';
-}
-
-// Aplica filtros
-function aplicarFiltros() {
-    carregarInstrutores();
-}
-
-// Limpa filtros
-function limparFiltros() {
-    document.getElementById('filtroStatus').value = '';
-    document.getElementById('filtroArea').value = '';
-    document.getElementById('filtroCapacidade').value = '';
-    document.getElementById('filtroBusca').value = '';
-    carregarInstrutores();
-}
-
-// Adiciona nova capacidade
-function adicionarCapacidade() {
-    const input = document.getElementById('novaCapacidade');
-    const capacidade = input.value.trim();
-    
-    if (capacidade && !capacidadesInstrutor.includes(capacidade)) {
-        capacidadesInstrutor.push(capacidade);
-        input.value = '';
-        renderizarCapacidades();
     }
-}
 
-// Renderiza capacidades do instrutor
-function renderizarCapacidades() {
-    const container = document.getElementById('capacidadesContainer');
-    container.innerHTML = '';
-    
-    if (capacidadesInstrutor.length === 0) {
+    // Retorna o nome da área de atuação
+    getAreaNome(valor) {
+    const area = this.areasAtuacao.find(a => a.valor === valor);
+    return area ? area.nome : valor || '-';
+    }
+
+    // Retorna badge de status para instrutor
+    getStatusBadgeInstrutor(status) {
+        const badges = {
+            'ativo': '<span class="badge bg-success">Ativo</span>',
+            'inativo': '<span class="badge bg-secondary">Inativo</span>',
+            'licenca': '<span class="badge bg-warning">Licença</span>'
+        };
+        return badges[status] || '<span class="badge bg-secondary">-</span>';
+    }
+
+    // Aplica filtros
+    aplicarFiltros() {
+    this.carregarInstrutores();
+    }
+
+    // Limpa filtros
+    limparFiltros() {
+        document.getElementById('filtroStatus').value = '';
+        document.getElementById('filtroArea').value = '';
+        document.getElementById('filtroCapacidade').value = '';
+        document.getElementById('filtroBusca').value = '';
+    this.carregarInstrutores();
+    }
+
+    // Adiciona nova capacidade
+    adicionarCapacidade() {
+        const input = document.getElementById('novaCapacidade');
+        const capacidade = input.value.trim();
+
+        if (capacidade && !this.capacidadesInstrutor.includes(capacidade)) {
+        this.capacidadesInstrutor.push(capacidade);
+        input.value = '';
+        this.renderizarCapacidades();
+    }
+    }
+
+    // Renderiza capacidades do instrutor
+    renderizarCapacidades() {
+        const container = document.getElementById('capacidadesContainer');
+        container.innerHTML = '';
+
+    if (this.capacidadesInstrutor.length === 0) {
         container.innerHTML = '<small class="text-muted">Nenhuma capacidade adicionada</small>';
         return;
     }
-    
-    capacidadesInstrutor.forEach((capacidade, index) => {
+
+    this.capacidadesInstrutor.forEach((capacidade, index) => {
         const badge = document.createElement('span');
         badge.className = 'badge bg-primary me-1 mb-1';
         badge.innerHTML = `
             ${capacidade}
-            <button type="button" class="btn-close btn-close-white ms-1" onclick="removerCapacidade(${index})" style="font-size: 0.7em;"></button>
+            <button type="button" class="btn-close btn-close-white ms-1" onclick="gerenciadorInstrutores.removerCapacidade(${index})" style="font-size: 0.7em;"></button>
         `;
         container.appendChild(badge);
     });
-}
+    }
 
-// Remove capacidade
-function removerCapacidade(index) {
-    capacidadesInstrutor.splice(index, 1);
-    renderizarCapacidades();
-}
+    // Remove capacidade
+    removerCapacidade(index) {
+    this.capacidadesInstrutor.splice(index, 1);
+    this.renderizarCapacidades();
+    }
 
-// Abre modal para novo instrutor
-function novoInstrutor() {
-    instrutorEditando = null;
-    capacidadesInstrutor = [];
+    // Abre modal para novo instrutor
+    novoInstrutor() {
+    this.instrutorEditando = null;
+    this.capacidadesInstrutor = [];
     
     document.getElementById('modalInstrutorLabel').textContent = 'Novo Instrutor';
     document.getElementById('btnSalvarTexto').textContent = 'Salvar';
     document.getElementById('formInstrutor').reset();
     document.getElementById('instrutorId').value = '';
 
-    renderizarCapacidades();
-    limparDisponibilidadeTodos();
-}
+    this.renderizarCapacidades();
+    this.limparDisponibilidadeTodos();
+    }
 
-// Limpa disponibilidade (desmarca todos os turnos)
-function limparDisponibilidadeTodos() {
+    // Limpa disponibilidade (desmarca todos os turnos)
+    limparDisponibilidadeTodos() {
     document.getElementById('dispManha').checked = false;
     document.getElementById('dispTarde').checked = false;
     document.getElementById('dispNoite').checked = false;
-}
+    }
 
 // Edita um instrutor existente
-async function editarInstrutor(id) {
+    async editarInstrutor(id) {
     try {
         const response = await fetch(`${API_URL}/instrutores/${id}`, {
             headers: {
@@ -333,8 +365,8 @@ async function editarInstrutor(id) {
         
         if (response.ok) {
             const instrutor = await response.json();
-            instrutorEditando = instrutor;
-            capacidadesInstrutor = [...instrutor.capacidades];
+            this.instrutorEditando = instrutor;
+            this.capacidadesInstrutor = [...instrutor.capacidades];
             
             // Preenche o formulário
             document.getElementById('modalInstrutorLabel').textContent = 'Editar Instrutor';
@@ -343,12 +375,12 @@ async function editarInstrutor(id) {
             document.getElementById('instrutorNome').value = instrutor.nome;
             document.getElementById('instrutorEmail').value = instrutor.email || '';
             document.getElementById('instrutorAreaAtuacao').value = instrutor.area_atuacao || '';
-            carregarCapacidadesSugeridas(instrutor.area_atuacao || '');
+            this.carregarCapacidadesSugeridas(instrutor.area_atuacao || '');
             document.getElementById('instrutorStatus').value = instrutor.status;
             document.getElementById('instrutorObservacoes').value = instrutor.observacoes || '';
             
             // Renderiza capacidades
-            renderizarCapacidades();
+            this.renderizarCapacidades();
             
             // Preenche disponibilidade
             const disponibilidade = instrutor.disponibilidade || [];
@@ -369,7 +401,7 @@ async function editarInstrutor(id) {
 }
 
 // Salva instrutor (criar ou atualizar)
-async function salvarInstrutor() {
+    async salvarInstrutor() {
     try {
         const formData = {
             nome: document.getElementById('instrutorNome').value.trim(),
@@ -377,7 +409,7 @@ async function salvarInstrutor() {
             area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
             status: document.getElementById('instrutorStatus').value,
             observacoes: document.getElementById('instrutorObservacoes').value.trim(),
-            capacidades: capacidadesInstrutor,
+            capacidades: this.capacidadesInstrutor,
             disponibilidade: []
         };
         
@@ -415,10 +447,10 @@ async function salvarInstrutor() {
 
             // Reseta o formulário e o estado de edição para evitar
             // que uma nova criação seja tratada como atualização
-            novoInstrutor();
+            this.novoInstrutor();
 
             // Recarrega a lista
-            carregarInstrutores();
+            this.carregarInstrutores();
         } else {
             throw new Error(result.erro || 'Erro ao salvar instrutor');
         }
@@ -429,16 +461,16 @@ async function salvarInstrutor() {
 }
 
 // Exclui um instrutor
-function excluirInstrutor(id, nome) {
-    document.getElementById('nomeInstrutorExcluir').textContent = nome;
-    document.getElementById('modalExcluirInstrutor').setAttribute('data-instrutor-id', id);
+    excluirInstrutor(id, nome) {
+        document.getElementById('nomeInstrutorExcluir').textContent = nome;
+        document.getElementById('modalExcluirInstrutor').setAttribute('data-instrutor-id', id);
     
     const modal = new bootstrap.Modal(document.getElementById('modalExcluirInstrutor'));
     modal.show();
 }
 
 // Confirma exclusão do instrutor
-async function confirmarExclusaoInstrutor() {
+    async confirmarExclusaoInstrutor() {
     try {
         const instrutorId = document.getElementById('modalExcluirInstrutor').getAttribute('data-instrutor-id');
         
@@ -459,7 +491,7 @@ async function confirmarExclusaoInstrutor() {
             modal.hide();
             
             // Recarrega a lista
-            carregarInstrutores();
+            this.carregarInstrutores();
         } else {
             throw new Error(result.erro || 'Erro ao excluir instrutor');
         }
@@ -470,9 +502,11 @@ async function confirmarExclusaoInstrutor() {
 }
 
 // Ver ocupações de um instrutor
-function verOcupacoesInstrutor(id) {
-    // Redireciona para o calendário com filtro do instrutor
-    window.location.href = `/calendario-salas.html?instrutor_id=${id}`;
+    verOcupacoesInstrutor(id) {
+        // Redireciona para o calendário com filtro do instrutor
+        window.location.href = `/calendario-salas.html?instrutor_id=${id}`;
+    }
+
 }
 
 // Função para exibir alertas
@@ -503,4 +537,7 @@ function exibirAlerta(mensagem, tipo) {
         }
     }, 5000);
 }
+
+// Instancia o gerenciador quando o script é carregado
+const gerenciadorInstrutores = new GerenciadorInstrutores();
 

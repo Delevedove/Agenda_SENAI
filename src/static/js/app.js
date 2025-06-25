@@ -215,8 +215,8 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
         }
 
         if (response.status === 401) {
-            console.error('Usuário não está logado. Redirecionando para login...');
-            realizarLogout();
+            exibirAlerta('Sua sessão expirou. Você será redirecionado para a página de login.', 'warning');
+            setTimeout(() => { window.location.href = '/login.html'; }, 2500);
             throw new Error('Não autenticado');
         }
         
