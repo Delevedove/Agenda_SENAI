@@ -29,6 +29,9 @@ async function realizarLogin(username, senha) {
         
         // Armazena os dados do usuário no localStorage
         localStorage.setItem('token', data.token);
+        if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
         localStorage.setItem('usuario', JSON.stringify(data.usuario));
         
         // Se for admin, redireciona para a tela de seleção de sistema
@@ -50,7 +53,16 @@ async function realizarLogin(username, senha) {
  * Realiza o logout do usuário
  */
 function realizarLogout() {
+    const refresh = localStorage.getItem('refresh_token');
+    if (refresh) {
+        fetch(`${API_URL}/logout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refresh })
+        }).catch(() => {});
+    }
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('usuario');
     window.location.href = '/admin-login.html';
 }
@@ -61,6 +73,33 @@ function realizarLogout() {
  */
 function getToken() {
     return localStorage.getItem('token');
+}
+
+function getRefreshToken() {
+    return localStorage.getItem('refresh_token');
+}
+
+async function tentarAtualizarToken() {
+    const refresh = getRefreshToken();
+    if (!refresh) return false;
+    try {
+        const resp = await fetch(`${API_URL}/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refresh })
+        });
+        if (!resp.ok) {
+            return false;
+        }
+        const data = await resp.json();
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
 }
 
 function estaAutenticado() {
@@ -150,9 +189,16 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
     }
     
     try {
-        const response = await fetch(url, options);
-        
-        // Se o erro for de autenticação, faz logout imediatamente
+        let response = await fetch(url, options);
+
+        if (response.status === 401 && requerAuth) {
+            const atualizado = await tentarAtualizarToken();
+            if (atualizado) {
+                headers['Authorization'] = `Bearer ${getToken()}`;
+                response = await fetch(url, { ...options, headers });
+            }
+        }
+
         if (response.status === 401) {
             console.error('Usuário não está logado. Redirecionando para login...');
             realizarLogout();
