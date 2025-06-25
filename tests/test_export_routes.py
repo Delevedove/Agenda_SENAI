@@ -42,11 +42,12 @@ def client_ag(app_agendamentos):
 def login_admin(client):
     resp = client.post('/api/login', json={'username': 'admin', 'senha': 'password'})
     assert resp.status_code == 200
-    return resp.get_json()['token']
+    data = resp.get_json()
+    return data['token'], data['refresh_token']
 
 
 def test_export_agendamentos_csv(client_ag):
-    token = login_admin(client_ag)
+    token, _ = login_admin(client_ag)
     headers = {'Authorization': f'Bearer {token}'}
     client_ag.post('/api/agendamentos', json={
         'data': date.today().isoformat(),
@@ -61,7 +62,7 @@ def test_export_agendamentos_csv(client_ag):
 
 
 def test_export_agendamentos_pdf(client_ag):
-    token = login_admin(client_ag)
+    token, _ = login_admin(client_ag)
     headers = {'Authorization': f'Bearer {token}'}
     resp = client_ag.get('/api/agendamentos/export?formato=pdf', headers=headers)
     assert resp.status_code == 200
@@ -69,7 +70,7 @@ def test_export_agendamentos_pdf(client_ag):
 
 
 def test_export_agendamentos_xlsx(client_ag):
-    token = login_admin(client_ag)
+    token, _ = login_admin(client_ag)
     headers = {'Authorization': f'Bearer {token}'}
     resp = client_ag.get('/api/agendamentos/export?formato=xlsx', headers=headers)
     assert resp.status_code == 200

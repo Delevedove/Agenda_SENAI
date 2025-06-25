@@ -2,10 +2,39 @@ from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
 import jwt
+import uuid
 from src.models import db
 from src.models.user import User
+from src.models.refresh_token import RefreshToken
 
 user_bp = Blueprint('user', __name__)
+
+# Funções auxiliares para geração de tokens
+
+def gerar_token_acesso(usuario):
+    payload = {
+        'user_id': usuario.id,
+        'nome': usuario.nome,
+        'perfil': usuario.tipo,
+        'exp': datetime.utcnow() + timedelta(minutes=15),
+        'jti': str(uuid.uuid4()),
+    }
+    return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+
+
+def gerar_refresh_token(usuario):
+    exp = datetime.utcnow() + timedelta(days=7)
+    payload = {
+        'user_id': usuario.id,
+        'exp': exp,
+        'type': 'refresh',
+        'jti': str(uuid.uuid4()),
+    }
+    token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+    rt = RefreshToken(user_id=usuario.id, token=token, expires_at=exp)
+    db.session.add(rt)
+    db.session.commit()
+    return token
 
 # Função auxiliar para verificar autenticação
 def verificar_autenticacao(request):
@@ -47,6 +76,22 @@ def verificar_admin(user):
         bool: True se o usuário for administrador, False caso contrário
     """
     return user and user.is_admin()
+
+
+def verificar_refresh_token(token):
+    try:
+        dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        if dados.get('type') != 'refresh':
+            return None
+        rt = RefreshToken.query.filter_by(token=token, revoked=False).first()
+        if not rt or rt.is_expired():
+            return None
+        usuario = db.session.get(User, dados.get('user_id'))
+        return usuario
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
 
 @user_bp.route('/usuarios', methods=['GET'])
 def listar_usuarios():
@@ -229,16 +274,37 @@ def login():
     if not usuario or not usuario.check_senha(data['senha']):
         return jsonify({'erro': 'Credenciais inválidas'}), 401
 
-    payload = {
-        'user_id': usuario.id,
-        'nome': usuario.nome,
-        'perfil': usuario.tipo,
-        'exp': datetime.utcnow() + timedelta(hours=1)
-    }
-
-    token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+    access_token = gerar_token_acesso(usuario)
+    refresh_token = gerar_refresh_token(usuario)
 
     return jsonify({
-        'token': token,
+        'token': access_token,
+        'refresh_token': refresh_token,
         'usuario': usuario.to_dict()
     })
+
+
+@user_bp.route('/refresh', methods=['POST'])
+def refresh_token():
+    data = request.json or {}
+    token = data.get('refresh_token')
+    if not token:
+        return jsonify({'erro': 'Refresh token obrigatório'}), 400
+    usuario = verificar_refresh_token(token)
+    if not usuario:
+        return jsonify({'erro': 'Refresh token inválido'}), 401
+    novo_token = gerar_token_acesso(usuario)
+    return jsonify({'token': novo_token})
+
+
+@user_bp.route('/logout', methods=['POST'])
+def logout():
+    data = request.json or {}
+    token = data.get('refresh_token')
+    if not token:
+        return jsonify({'erro': 'Refresh token obrigatório'}), 400
+    rt = RefreshToken.query.filter_by(token=token).first()
+    if rt:
+        rt.revoked = True
+        db.session.commit()
+    return jsonify({'mensagem': 'Logout realizado'})

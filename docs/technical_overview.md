@@ -115,7 +115,8 @@ Todos os módulos seguem convenções REST. Abaixo estão listados os principais
 - Autenticação e autorização utilizam JWT. As funções `verificar_autenticacao` e `verificar_admin` validam o token e as permissões do usuário.
 
 ## Recomendações e Possíveis Melhorias
-Aprimorar a autenticação JWT implementando mecanismos de refresh e revogação de tokens.
+O sistema utiliza JWT com tokens de acesso de curta duração e tokens de atualização (refresh) de longa duração.
+Há também rota para revogação de tokens no logout.
 - Centralizar mensagens de erro e validações em utilitários para evitar repetição.
 - Adicionar testes de integração para as rotas restantes (hoje apenas `tests/test_ocupacao.py`).
 - Utilizar um cliente SPA ou framework de frontend para melhorar a experiência do usuário.

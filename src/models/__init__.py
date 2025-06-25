@@ -4,4 +4,7 @@ db = SQLAlchemy()
 
 __all__ = [
     "db",
+    "RefreshToken",
 ]
+
+from .refresh_token import RefreshToken
