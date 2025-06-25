@@ -116,15 +116,15 @@ function renderizarTabelaSalas(salas) {
         const recursos = sala.recursos.slice(0, 3).join(', ') + (sala.recursos.length > 3 ? '...' : '');
         
         const row = document.createElement('tr');
-        row.innerHTML = `
+        row.innerHTML = sanitizeHTML(`
             <td>
-                <strong>${sala.nome}</strong>
-                ${sala.localizacao ? `<br><small class="text-muted">${sala.localizacao}</small>` : ''}
+                <strong>${escapeHTML(sala.nome)}</strong>
+                ${sala.localizacao ? `<br><small class="text-muted">${escapeHTML(sala.localizacao)}</small>` : ''}
             </td>
             <td>
-                <span class="badge bg-info">${sala.capacidade} pessoas</span>
+                <span class="badge bg-info">${escapeHTML(sala.capacidade)} pessoas</span>
             </td>
-            <td>${sala.localizacao || '-'}</td>
+            <td>${escapeHTML(sala.localizacao) || '-'}</td>
             <td>${statusBadge}</td>
             <td>
                 <small class="text-muted">${recursos || 'Nenhum'}</small>

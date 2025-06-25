@@ -169,7 +169,7 @@ function mostrarResumoDia(dataStr) {
     const modal = new bootstrap.Modal(modalEl);
     const container = document.getElementById('conteudoResumoDia');
 
-    document.getElementById('modalResumoDiaLabel').innerHTML = '\uD83D\uDCCB Resumo de Ocupacao \u2013 ' + formatarData(dataStr);
+    document.getElementById('modalResumoDiaLabel').textContent = '\uD83D\uDCCB Resumo de Ocupacao \u2013 ' + formatarData(dataStr);
     container.innerHTML = '';
 
     ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
@@ -187,7 +187,7 @@ function mostrarResumoDia(dataStr) {
         header.className = `card-header resumo-card-header resumo-card-${slugifyTurno(turno)}`;
         const icon = document.createElement('i');
         icon.className = 'bi bi-chevron-down toggle-icon ms-2';
-        header.innerHTML = `<div class="d-flex justify-content-between align-items-center"><span>${turno}</span><span><span class="badge bg-secondary">${info.livres} - ${info.ocupadas} / ${info.total_salas} Salas</span></span></div>`;
+        header.innerHTML = sanitizeHTML(`<div class="d-flex justify-content-between align-items-center"><span>${escapeHTML(turno)}</span><span><span class="badge bg-secondary">${escapeHTML(info.livres)} - ${escapeHTML(info.ocupadas)} / ${escapeHTML(info.total_salas)} Salas</span></span></div>`);
         header.querySelector('span span').appendChild(icon);
         card.appendChild(header);
 
@@ -212,7 +212,7 @@ function mostrarResumoDia(dataStr) {
             html += `<h6 class="mt-3 mb-1">🏷️ Salas Livres:</h6><p class="mb-0">${info.salas_livres.join(', ')}</p>`;
         }
 
-        body.innerHTML = html;
+        body.innerHTML = sanitizeHTML(html);
         card.appendChild(body);
         header.addEventListener('click', () => {
             body.classList.toggle('d-none');

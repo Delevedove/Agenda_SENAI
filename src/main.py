@@ -1,4 +1,5 @@
 from flask import Flask
+from src.limiter import limiter
 import os
 import logging
 
@@ -78,6 +79,7 @@ def create_app():
     app.config['SECRET_KEY'] = secret_key
 
     db.init_app(app)
+    limiter.init_app(app, storage_uri=os.getenv('REDIS_URL', 'redis://localhost:6379'))
 
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(agendamento_bp, url_prefix='/api')

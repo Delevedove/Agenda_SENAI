@@ -203,12 +203,12 @@ function renderizarTabelaInstrutores(instrutores) {
         const capacidades = instrutor.capacidades.slice(0, 3).join(', ') + (instrutor.capacidades.length > 3 ? '...' : '');
         
         const row = document.createElement('tr');
-        row.innerHTML = `
+        row.innerHTML = sanitizeHTML(`
             <td>
-                <strong>${instrutor.nome}</strong>
-                ${instrutor.telefone ? `<br><small class="text-muted">${instrutor.telefone}</small>` : ''}
+                <strong>${escapeHTML(instrutor.nome)}</strong>
+                ${instrutor.telefone ? `<br><small class="text-muted">${escapeHTML(instrutor.telefone)}</small>` : ''}
             </td>
-            <td>${instrutor.email || '-'}</td>
+            <td>${escapeHTML(instrutor.email) || '-'}</td>
             <td>${areaNome}</td>
             <td>${statusBadge}</td>
             <td>

@@ -35,7 +35,7 @@ def app():
             nome='Admin',
             email='admin@example.com',
             username='admin',
-            senha='password',
+            senha='Password1!',
             tipo='admin'
         )
         db.session.add(admin)
@@ -43,7 +43,7 @@ def app():
             nome='Usuario',
             email='usuario@example.com',
             username='usuario',
-            senha='password',
+            senha='Password1!',
             tipo='comum'
         )
         db.session.add(comum)

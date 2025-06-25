@@ -18,7 +18,7 @@ def test_criar_usuario(client):
         'nome': 'Novo Usuario',
         'email': 'novo@example.com',
         'username': 'novo',
-        'senha': 'senha'
+        'senha': 'Senha@123'
     }, environ_base={'REMOTE_ADDR': '1.1.1.10'})
     assert response.status_code == 201
     data = response.get_json()
@@ -26,7 +26,7 @@ def test_criar_usuario(client):
 
 
 def test_login(client):
-    response = client.post('/api/login', json={'username': 'admin', 'senha': 'password'})
+    response = client.post('/api/login', json={'username': 'admin', 'senha': 'Password1!'})
     assert response.status_code == 200
     json_data = response.get_json()
     assert 'token' in json_data
@@ -57,25 +57,25 @@ def test_atualizar_senha_requer_verificacao(client):
         'nome': 'Teste',
         'email': 'teste@example.com',
         'username': 'teste',
-        'senha': 'original'
+        'senha': 'Original1!'
     }, environ_base={'REMOTE_ADDR': '1.1.1.11'})
     assert resp.status_code == 201
     user_id = resp.get_json()['id']
 
     # login como o novo usuario
-    resp_login = client.post('/api/login', json={'username': 'teste', 'senha': 'original'})
+    resp_login = client.post('/api/login', json={'username': 'teste', 'senha': 'Original1!'})
     assert resp_login.status_code == 200
     token = resp_login.get_json()['token']
     headers = {'Authorization': f'Bearer {token}'}
 
     # Falta senha_atual
-    resp_put = client.put(f'/api/usuarios/{user_id}', json={'senha': 'nova'}, headers=headers)
+    resp_put = client.put(f'/api/usuarios/{user_id}', json={'senha': 'Nova1!'}, headers=headers)
     assert resp_put.status_code == 400
 
     # Senha atual incorreta
     resp_put = client.put(
         f'/api/usuarios/{user_id}',
-        json={'senha': 'nova', 'senha_atual': 'errada'},
+        json={'senha': 'Nova1!', 'senha_atual': 'Errada1!'},
         headers=headers,
     )
     assert resp_put.status_code == 403
@@ -83,13 +83,13 @@ def test_atualizar_senha_requer_verificacao(client):
     # Senha atual correta
     resp_put = client.put(
         f'/api/usuarios/{user_id}',
-        json={'senha': 'nova', 'senha_atual': 'original'},
+        json={'senha': 'Nova1!', 'senha_atual': 'Original1!'},
         headers=headers,
     )
     assert resp_put.status_code == 200
 
     # login com nova senha deve funcionar
-    resp_login2 = client.post('/api/login', json={'username': 'teste', 'senha': 'nova'})
+    resp_login2 = client.post('/api/login', json={'username': 'teste', 'senha': 'Nova1!'})
     assert resp_login2.status_code == 200
 
 
@@ -108,14 +108,14 @@ def test_criar_usuario_duplicado(client):
         'nome': 'Dup',
         'email': 'dup1@example.com',
         'username': 'dup',
-        'senha': 'x'
+        'senha': 'Dup#1234'
     }, environ_base={'REMOTE_ADDR': '1.1.1.2'})
     assert resp1.status_code == 201
     resp2 = client.post('/api/usuarios', json={
         'nome': 'Outro',
         'email': 'dup2@example.com',
         'username': 'dup',
-        'senha': 'y'
+        'senha': 'Dup#4321'
     }, environ_base={'REMOTE_ADDR': '1.1.1.3'})
     assert resp2.status_code == 400
 
@@ -127,7 +127,7 @@ def test_atualizar_usuario_tipo_invalido(client):
         'nome': 'Tipo',
         'email': 'tipo@example.com',
         'username': 'tipo',
-        'senha': 'pwd'
+        'senha': 'Tipo@123'
     }, environ_base={'REMOTE_ADDR': '1.1.1.4'})
     assert resp.status_code == 201
     user_id = resp.get_json()['id']
