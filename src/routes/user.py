@@ -8,6 +8,8 @@ import uuid
 from src.models import db
 from src.models.user import User
 from src.models.refresh_token import RefreshToken
+from sqlalchemy.exc import SQLAlchemyError
+from src.utils.error_handler import handle_internal_error
 
 user_bp = Blueprint('user', __name__)
 
@@ -178,9 +180,9 @@ def criar_usuario():
         db.session.add(novo_usuario)
         db.session.commit()
         return jsonify(novo_usuario.to_dict()), 201
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @user_bp.route('/usuarios/<int:id>', methods=['PUT'])
 def atualizar_usuario(id):
@@ -227,9 +229,9 @@ def atualizar_usuario(id):
     try:
         db.session.commit()
         return jsonify(usuario.to_dict())
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @user_bp.route('/usuarios/<int:id>', methods=['DELETE'])
 def remover_usuario(id):
@@ -258,9 +260,9 @@ def remover_usuario(id):
         db.session.delete(usuario)
         db.session.commit()
         return jsonify({'mensagem': 'Usuário removido com sucesso'})
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @user_bp.route('/login', methods=['POST'])
 @rate_limit(limit=10, window=60)

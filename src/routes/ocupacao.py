@@ -4,6 +4,8 @@ from src.models.ocupacao import Ocupacao
 from src.models.sala import Sala
 from src.models.instrutor import Instrutor
 from src.routes.user import verificar_autenticacao, verificar_admin
+from sqlalchemy.exc import SQLAlchemyError
+from src.utils.error_handler import handle_internal_error
 from datetime import datetime, date, time, timedelta
 from pydantic import ValidationError
 from src.schemas import OcupacaoCreateSchema, OcupacaoUpdateSchema
@@ -297,9 +299,9 @@ def criar_ocupacao():
         
     except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @ocupacao_bp.route('/ocupacoes/<int:id>', methods=['PUT'])
 def atualizar_ocupacao(id):
@@ -403,9 +405,9 @@ def atualizar_ocupacao(id):
         
     except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @ocupacao_bp.route('/ocupacoes/<int:id>', methods=['DELETE'])
 def remover_ocupacao(id):
@@ -437,9 +439,9 @@ def remover_ocupacao(id):
 
         db.session.commit()
         return jsonify({'mensagem': 'Ocupação removida com sucesso', 'removidas': quantidade})
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @ocupacao_bp.route('/ocupacoes/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
@@ -499,8 +501,8 @@ def verificar_disponibilidade():
         
     except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
+    except SQLAlchemyError as e:
+        return handle_internal_error(e)
 
 @ocupacao_bp.route('/ocupacoes/calendario', methods=['GET'])
 def obter_ocupacoes_calendario():

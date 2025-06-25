@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from src.models import db
 from src.models.agendamento import Notificacao
 from src.routes.user import verificar_autenticacao, verificar_admin
+from sqlalchemy.exc import SQLAlchemyError
+from src.utils.error_handler import handle_internal_error
 
 notificacao_bp = Blueprint('notificacao', __name__)
 
@@ -48,9 +50,9 @@ def marcar_notificacao_lida(id):
         notificacao.marcar_como_lida()
         db.session.commit()
         return jsonify(notificacao.to_dict())
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 # Função para criar notificações de agendamentos próximos
 def criar_notificacoes_agendamentos_proximos():
@@ -93,6 +95,7 @@ def criar_notificacoes_agendamentos_proximos():
     try:
         db.session.commit()
         return True
-    except Exception:
+    except SQLAlchemyError as e:
         db.session.rollback()
+        handle_internal_error(e)
         return False

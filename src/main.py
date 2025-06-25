@@ -1,5 +1,6 @@
 from flask import Flask
 import os
+import logging
 
 from src.models import db
 from sqlalchemy import text, inspect
@@ -54,6 +55,7 @@ def ensure_grupo_ocupacao_column(app):
 
 def create_app():
     """Application factory used by Flask."""
+    logging.basicConfig(level=logging.INFO)
     app = Flask(__name__, static_url_path='', static_folder='static')
 
     db_uri = os.getenv(

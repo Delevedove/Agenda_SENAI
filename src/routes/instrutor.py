@@ -3,6 +3,8 @@ from src.models import db
 from src.models.instrutor import Instrutor
 from src.models.ocupacao import Ocupacao
 from src.routes.user import verificar_autenticacao, verificar_admin
+from sqlalchemy.exc import SQLAlchemyError
+from src.utils.error_handler import handle_internal_error
 from datetime import datetime, date
 from pydantic import ValidationError
 from src.schemas import InstrutorCreateSchema, InstrutorUpdateSchema
@@ -100,9 +102,9 @@ def criar_instrutor():
         db.session.commit()
         
         return jsonify(novo_instrutor.to_dict()), 201
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @instrutor_bp.route('/instrutores/<int:id>', methods=['PUT'])
 def atualizar_instrutor(id):
@@ -164,9 +166,9 @@ def atualizar_instrutor(id):
     try:
         db.session.commit()
         return jsonify(instrutor.to_dict())
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @instrutor_bp.route('/instrutores/<int:id>', methods=['DELETE'])
 def remover_instrutor(id):
@@ -200,9 +202,9 @@ def remover_instrutor(id):
         db.session.delete(instrutor)
         db.session.commit()
         return jsonify({'mensagem': 'Instrutor removido com sucesso'})
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @instrutor_bp.route('/instrutores/<int:id>/disponibilidade', methods=['GET'])
 def verificar_disponibilidade_instrutor(id):
@@ -261,8 +263,8 @@ def verificar_disponibilidade_instrutor(id):
         
     except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
+    except SQLAlchemyError as e:
+        return handle_internal_error(e)
 
 @instrutor_bp.route('/instrutores/<int:id>/ocupacoes', methods=['GET'])
 def listar_ocupacoes_instrutor(id):
@@ -345,9 +347,9 @@ def atualizar_capacidades_instrutor(id):
             'mensagem': 'Capacidades atualizadas com sucesso',
             'instrutor': instrutor.to_dict()
         })
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @instrutor_bp.route('/instrutores/areas-atuacao', methods=['GET'])
 def listar_areas_atuacao():
