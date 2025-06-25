@@ -91,18 +91,18 @@ function mostrarDetalhesAgendamento(agendamento) {
     let horariosFormatados = '';
     try {
         const horarios = JSON.parse(agendamento.horarios);
-        horariosFormatados = horarios.join('<br>');
+        horariosFormatados = horarios.map(h => escapeHTML(h)).join('<br>');
     } catch (e) {
-        horariosFormatados = agendamento.horarios;
+        horariosFormatados = escapeHTML(agendamento.horarios);
     }
 
     modalBody.innerHTML = `
-        <div class="mb-3"><strong>Laboratório:</strong> ${agendamento.laboratorio}</div>
-        <div class="mb-3"><strong>Turma:</strong> ${agendamento.turma}</div>
-        <div class="mb-3"><strong>Data:</strong> ${formatarData(agendamento.data)}</div>
-        <div class="mb-3"><strong>Turno:</strong> <span class="badge ${getClasseTurno(agendamento.turno)}">${agendamento.turno}</span></div>
+        <div class="mb-3"><strong>Laboratório:</strong> ${escapeHTML(agendamento.laboratorio)}</div>
+        <div class="mb-3"><strong>Turma:</strong> ${escapeHTML(agendamento.turma)}</div>
+        <div class="mb-3"><strong>Data:</strong> ${escapeHTML(formatarData(agendamento.data))}</div>
+        <div class="mb-3"><strong>Turno:</strong> <span class="badge ${getClasseTurno(agendamento.turno)}">${escapeHTML(agendamento.turno)}</span></div>
         <div class="mb-3"><strong>Horários:</strong><br>${horariosFormatados}</div>
-        <div class="mb-3"><strong>Agendado por:</strong> ${agendamento.usuario_nome || 'Não informado'}</div>
+        <div class="mb-3"><strong>Agendado por:</strong> ${escapeHTML(agendamento.usuario_nome || 'Não informado')}</div>
     `;
 
     const usuario = getUsuarioLogado();

@@ -4,6 +4,17 @@
 // Constantes globais
 const API_URL = '/api';
 
+/**
+ * Escapes HTML special characters to prevent XSS attacks.
+ * @param {string} str - Text to escape
+ * @returns {string} - Escaped HTML string
+ */
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+}
+
 // Funções de autenticação
 /**
  * Realiza o login do usuário
@@ -264,16 +275,19 @@ function formatarHorario(horario) {
 function exibirAlerta(mensagem, tipo = 'info', containerId = 'alertContainer') {
     const container = document.getElementById(containerId);
     if (!container) return;
-    
+
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
     alertDiv.role = 'alert';
-    
-    alertDiv.innerHTML = `
-        ${mensagem}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-    `;
-    
+
+    alertDiv.textContent = mensagem;
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'btn-close';
+    closeBtn.setAttribute('data-bs-dismiss', 'alert');
+    closeBtn.setAttribute('aria-label', 'Fechar');
+    alertDiv.appendChild(closeBtn);
+
     container.appendChild(alertDiv);
     
     // Remove o alerta após 5 segundos
