@@ -4,6 +4,8 @@ from src.models.instrutor import Instrutor
 from src.models.ocupacao import Ocupacao
 from src.routes.user import verificar_autenticacao, verificar_admin
 from datetime import datetime, date
+from pydantic import ValidationError
+from src.schemas import InstrutorCreateSchema, InstrutorUpdateSchema
 
 instrutor_bp = Blueprint('instrutor', __name__)
 
@@ -68,33 +70,30 @@ def criar_instrutor():
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    data = request.json
-    
-    # Validação de dados obrigatórios
-    if not data.get('nome'):
-        return jsonify({'erro': 'Nome é obrigatório'}), 400
-    
-    # Verifica se o email já existe (se fornecido)
-    if data.get('email'):
-        if Instrutor.query.filter_by(email=data['email']).first():
-            return jsonify({'erro': 'Já existe um instrutor com este email'}), 400
-    
-    # Validação de status
+    data = request.json or {}
+    try:
+        payload = InstrutorCreateSchema(**data)
+    except ValidationError as e:
+        return jsonify({'erro': e.errors()}), 400
+
+    if payload.email and Instrutor.query.filter_by(email=payload.email).first():
+        return jsonify({'erro': 'Já existe um instrutor com este email'}), 400
+
     status_validos = ['ativo', 'inativo', 'licenca']
-    status = data.get('status', 'ativo')
+    status = payload.status or 'ativo'
     if status not in status_validos:
         return jsonify({'erro': f'Status deve ser um dos seguintes: {", ".join(status_validos)}'}), 400
     
     try:
         novo_instrutor = Instrutor(
-            nome=data['nome'],
-            email=data.get('email'),
-            telefone=data.get('telefone'),
-            capacidades=data.get('capacidades', []),
-            area_atuacao=data.get('area_atuacao'),
-            disponibilidade=data.get('disponibilidade', []),
+            nome=payload.nome,
+            email=payload.email,
+            telefone=payload.telefone,
+            capacidades=payload.capacidades,
+            area_atuacao=payload.area_atuacao,
+            disponibilidade=payload.disponibilidade,
             status=status,
-            observacoes=data.get('observacoes')
+            observacoes=payload.observacoes
         )
         
         db.session.add(novo_instrutor)
@@ -122,42 +121,45 @@ def atualizar_instrutor(id):
     if not instrutor:
         return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
-    data = request.json
+    data = request.json or {}
+    try:
+        payload = InstrutorUpdateSchema(**data)
+    except ValidationError as e:
+        return jsonify({'erro': e.errors()}), 400
     
     # Atualiza os campos fornecidos
-    if 'nome' in data:
-        if not data['nome']:
+    if payload.nome is not None:
+        if not payload.nome:
             return jsonify({'erro': 'Nome não pode estar vazio'}), 400
-        instrutor.nome = data['nome']
+        instrutor.nome = payload.nome
     
-    if 'email' in data:
-        if data['email']:
-            # Verifica se o email já existe para outro instrutor
-            instrutor_existente = Instrutor.query.filter_by(email=data['email']).first()
+    if payload.email is not None:
+        if payload.email:
+            instrutor_existente = Instrutor.query.filter_by(email=payload.email).first()
             if instrutor_existente and instrutor_existente.id != id:
                 return jsonify({'erro': 'Já existe um instrutor com este email'}), 400
-        instrutor.email = data['email']
+        instrutor.email = payload.email
     
-    if 'telefone' in data:
-        instrutor.telefone = data['telefone']
+    if payload.telefone is not None:
+        instrutor.telefone = payload.telefone
     
-    if 'capacidades' in data:
-        instrutor.set_capacidades(data['capacidades'])
+    if payload.capacidades is not None:
+        instrutor.set_capacidades(payload.capacidades)
     
-    if 'area_atuacao' in data:
-        instrutor.area_atuacao = data['area_atuacao']
+    if payload.area_atuacao is not None:
+        instrutor.area_atuacao = payload.area_atuacao
     
-    if 'disponibilidade' in data:
-        instrutor.set_disponibilidade(data['disponibilidade'])
+    if payload.disponibilidade is not None:
+        instrutor.set_disponibilidade(payload.disponibilidade)
     
-    if 'status' in data:
+    if payload.status is not None:
         status_validos = ['ativo', 'inativo', 'licenca']
-        if data['status'] not in status_validos:
+        if payload.status not in status_validos:
             return jsonify({'erro': f'Status deve ser um dos seguintes: {", ".join(status_validos)}'}), 400
-        instrutor.status = data['status']
+        instrutor.status = payload.status
     
-    if 'observacoes' in data:
-        instrutor.observacoes = data['observacoes']
+    if payload.observacoes is not None:
+        instrutor.observacoes = payload.observacoes
     
     try:
         db.session.commit()

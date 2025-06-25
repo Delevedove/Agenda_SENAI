@@ -11,7 +11,7 @@ class Agendamento(db.Model):
         laboratorio (str): Nome/identificador do laboratório
         turma (str): Turma para a qual o agendamento foi feito
         turno (str): Turno do agendamento (manhã, tarde ou noite)
-        horarios (str): Horários reservados, armazenados como string JSON
+        horarios (list): Horários reservados
         usuario_id (int): ID do usuário responsável pelo agendamento
         data_criacao (datetime): Data de criação do registro
         data_atualizacao (datetime): Data da última atualização do registro
@@ -23,7 +23,7 @@ class Agendamento(db.Model):
     laboratorio = db.Column(db.String(50), nullable=False)
     turma = db.Column(db.String(50), nullable=False)
     turno = db.Column(db.String(20), nullable=False)
-    horarios = db.Column(db.Text, nullable=False)  # Armazenado como JSON
+    horarios = db.Column(db.JSON, nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -37,7 +37,7 @@ class Agendamento(db.Model):
             laboratorio (str): Nome/identificador do laboratório
             turma (str): Turma para a qual o agendamento foi feito
             turno (str): Turno do agendamento (manhã, tarde ou noite)
-            horarios (str): Horários reservados, como string JSON
+        horarios (list): Horários reservados
             usuario_id (int): ID do usuário responsável pelo agendamento
         """
         self.data = data

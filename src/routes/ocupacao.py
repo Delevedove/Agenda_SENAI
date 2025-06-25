@@ -5,6 +5,8 @@ from src.models.sala import Sala
 from src.models.instrutor import Instrutor
 from src.routes.user import verificar_autenticacao, verificar_admin
 from datetime import datetime, date, time, timedelta
+from pydantic import ValidationError
+from src.schemas import OcupacaoCreateSchema, OcupacaoUpdateSchema
 import csv
 from io import StringIO, BytesIO
 from openpyxl import Workbook
@@ -185,43 +187,41 @@ def criar_ocupacao():
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    data = request.json
-    
-    # Validação de dados obrigatórios
-    campos_obrigatorios = ['sala_id', 'curso_evento', 'data_inicio', 'data_fim', 'turno']
-    if not all(key in data for key in campos_obrigatorios):
-        return jsonify({'erro': 'Campos obrigatórios: sala_id, curso_evento, data_inicio, data_fim, turno'}), 400
-    
-    # Verifica se a sala existe
-    sala = db.session.get(Sala, data['sala_id'])
+    data = request.json or {}
+    try:
+        payload = OcupacaoCreateSchema(**data)
+    except ValidationError as e:
+        return jsonify({'erro': e.errors()}), 400
+
+    sala = db.session.get(Sala, payload.sala_id)
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
-    
+
     # Verifica se o instrutor existe (se fornecido)
     instrutor = None
-    if data.get('instrutor_id'):
-        instrutor = db.session.get(Instrutor, data['instrutor_id'])
+    if payload.instrutor_id:
+        instrutor = db.session.get(Instrutor, payload.instrutor_id)
         if not instrutor:
             return jsonify({'erro': 'Instrutor não encontrado'}), 404
     
     try:
-        data_inicio = datetime.strptime(data['data_inicio'], '%Y-%m-%d').date()
-        data_fim = datetime.strptime(data['data_fim'], '%Y-%m-%d').date()
+        data_inicio = datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
+        data_fim = datetime.strptime(payload.data_fim, '%Y-%m-%d').date()
 
         if data_inicio > data_fim:
             return jsonify({'erro': 'Data de início deve ser anterior ou igual à data de fim'}), 400
 
 
-        if data['turno'] not in TURNOS_PADRAO:
+        if payload.turno not in TURNOS_PADRAO:
             return jsonify({'erro': 'Turno inválido'}), 400
 
-        horario_inicio, horario_fim = TURNOS_PADRAO[data['turno']]
+        horario_inicio, horario_fim = TURNOS_PADRAO[payload.turno]
 
         conflitos_totais = []
         dia = data_inicio
         while dia <= data_fim:
             if not sala.is_disponivel(dia, horario_inicio, horario_fim):
-                conflitos = Ocupacao.buscar_conflitos(data['sala_id'], dia, horario_inicio, horario_fim)
+                conflitos = Ocupacao.buscar_conflitos(payload.sala_id, dia, horario_inicio, horario_fim)
                 conflitos_totais.extend(conflitos)
             dia += timedelta(days=1)
 
@@ -257,13 +257,13 @@ def criar_ocupacao():
         
         # Validação de tipo de ocupação
         tipos_validos = ['aula_regular', 'evento_especial', 'reuniao', 'manutencao', 'reserva_especial']
-        tipo_ocupacao = data.get('tipo_ocupacao', 'aula_regular')
+        tipo_ocupacao = payload.tipo_ocupacao or 'aula_regular'
         if tipo_ocupacao not in tipos_validos:
             return jsonify({'erro': f'Tipo de ocupação deve ser um dos seguintes: {", ".join(tipos_validos)}'}), 400
-        
+
         # Validação de recorrência
         recorrencias_validas = ['unica', 'semanal', 'mensal']
-        recorrencia = data.get('recorrencia', 'unica')
+        recorrencia = payload.recorrencia or 'unica'
         if recorrencia not in recorrencias_validas:
             return jsonify({'erro': f'Recorrência deve ser uma das seguintes: {", ".join(recorrencias_validas)}'}), 400
         
@@ -274,17 +274,17 @@ def criar_ocupacao():
         dia = data_inicio
         while dia <= data_fim:
             nova_ocupacao = Ocupacao(
-                sala_id=data['sala_id'],
-                instrutor_id=data.get('instrutor_id'),
+                sala_id=payload.sala_id,
+                instrutor_id=payload.instrutor_id,
                 usuario_id=user.id,
-                curso_evento=data['curso_evento'],
+                curso_evento=payload.curso_evento,
                 data=dia,
                 horario_inicio=horario_inicio,
                 horario_fim=horario_fim,
                 tipo_ocupacao=tipo_ocupacao,
                 recorrencia=recorrencia,
-                status=data.get('status', 'confirmado'),
-                observacoes=data.get('observacoes'),
+                status=payload.status or 'confirmado',
+                observacoes=payload.observacoes,
                 grupo_ocupacao_id=grupo_id
             )
             db.session.add(nova_ocupacao)
@@ -318,48 +318,52 @@ def atualizar_ocupacao(id):
     if not ocupacao.pode_ser_editada_por(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    data = request.json
+    data = request.json or {}
+    try:
+        payload = OcupacaoUpdateSchema(**data)
+    except ValidationError as e:
+        return jsonify({'erro': e.errors()}), 400
     
     try:
         # Atualiza sala se fornecida
-        if 'sala_id' in data:
-            sala = db.session.get(Sala, data['sala_id'])
+        if payload.sala_id is not None:
+            sala = db.session.get(Sala, payload.sala_id)
             if not sala:
                 return jsonify({'erro': 'Sala não encontrada'}), 404
-            ocupacao.sala_id = data['sala_id']
+            ocupacao.sala_id = payload.sala_id
         
         # Atualiza instrutor se fornecido
-        if 'instrutor_id' in data:
-            if data['instrutor_id']:
-                instrutor = db.session.get(Instrutor, data['instrutor_id'])
+        if payload.instrutor_id is not None:
+            if payload.instrutor_id:
+                instrutor = db.session.get(Instrutor, payload.instrutor_id)
                 if not instrutor:
                     return jsonify({'erro': 'Instrutor não encontrado'}), 404
-            ocupacao.instrutor_id = data['instrutor_id']
+            ocupacao.instrutor_id = payload.instrutor_id
         
         # Atualiza data e horários se fornecidos
         data_ocupacao = ocupacao.data
         horario_inicio = ocupacao.horario_inicio
         horario_fim = ocupacao.horario_fim
 
-        if 'data_inicio' in data:
-            data_ocupacao = datetime.strptime(data['data_inicio'], '%Y-%m-%d').date()
+        if payload.data_inicio is not None:
+            data_ocupacao = datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
             ocupacao.data = data_ocupacao
-        elif 'data' in data:
-            data_ocupacao = datetime.strptime(data['data'], '%Y-%m-%d').date()
+        elif payload.data is not None:
+            data_ocupacao = datetime.strptime(payload.data, '%Y-%m-%d').date()
             ocupacao.data = data_ocupacao
 
-        if 'turno' in data:
-            if data['turno'] not in TURNOS_PADRAO:
+        if payload.turno is not None:
+            if payload.turno not in TURNOS_PADRAO:
                 return jsonify({'erro': 'Turno inválido'}), 400
-            horario_inicio, horario_fim = TURNOS_PADRAO[data['turno']]
+            horario_inicio, horario_fim = TURNOS_PADRAO[payload.turno]
             ocupacao.horario_inicio = horario_inicio
             ocupacao.horario_fim = horario_fim
         else:
-            if 'horario_inicio' in data:
-                horario_inicio = datetime.strptime(data['horario_inicio'], '%H:%M').time()
+            if payload.horario_inicio is not None:
+                horario_inicio = datetime.strptime(payload.horario_inicio, '%H:%M').time()
                 ocupacao.horario_inicio = horario_inicio
-            if 'horario_fim' in data:
-                horario_fim = datetime.strptime(data['horario_fim'], '%H:%M').time()
+            if payload.horario_fim is not None:
+                horario_fim = datetime.strptime(payload.horario_fim, '%H:%M').time()
                 ocupacao.horario_fim = horario_fim
         
         # Validação de horários
@@ -376,23 +380,23 @@ def atualizar_ocupacao(id):
             }), 409
         
         # Atualiza outros campos
-        if 'curso_evento' in data:
-            ocupacao.curso_evento = data['curso_evento']
+        if payload.curso_evento is not None:
+            ocupacao.curso_evento = payload.curso_evento
         
-        if 'tipo_ocupacao' in data:
+        if payload.tipo_ocupacao is not None:
             tipos_validos = ['aula_regular', 'evento_especial', 'reuniao', 'manutencao', 'reserva_especial']
-            if data['tipo_ocupacao'] not in tipos_validos:
+            if payload.tipo_ocupacao not in tipos_validos:
                 return jsonify({'erro': f'Tipo de ocupação deve ser um dos seguintes: {", ".join(tipos_validos)}'}), 400
-            ocupacao.tipo_ocupacao = data['tipo_ocupacao']
+            ocupacao.tipo_ocupacao = payload.tipo_ocupacao
         
-        if 'status' in data:
+        if payload.status is not None:
             status_validos = ['confirmado', 'pendente', 'cancelado']
-            if data['status'] not in status_validos:
+            if payload.status not in status_validos:
                 return jsonify({'erro': f'Status deve ser um dos seguintes: {", ".join(status_validos)}'}), 400
-            ocupacao.status = data['status']
+            ocupacao.status = payload.status
         
-        if 'observacoes' in data:
-            ocupacao.observacoes = data['observacoes']
+        if payload.observacoes is not None:
+            ocupacao.observacoes = payload.observacoes
         
         db.session.commit()
         return jsonify(ocupacao.to_dict())

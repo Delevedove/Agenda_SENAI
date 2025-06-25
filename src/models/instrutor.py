@@ -1,6 +1,5 @@
 from src.models import db
 from datetime import datetime
-import json
 
 class Instrutor(db.Model):
     """
@@ -12,9 +11,9 @@ class Instrutor(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True)
     telefone = db.Column(db.String(20))
-    capacidades = db.Column(db.Text)  # JSON com lista de cursos que pode ministrar
+    capacidades = db.Column(db.JSON)
     area_atuacao = db.Column(db.String(100))  # Departamento ou área de especialização
-    disponibilidade = db.Column(db.Text)  # JSON com horários preferenciais
+    disponibilidade = db.Column(db.JSON)
     status = db.Column(db.String(20), default='ativo')  # ativo, inativo, licenca
     observacoes = db.Column(db.Text)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
@@ -28,9 +27,9 @@ class Instrutor(db.Model):
         self.nome = nome
         self.email = email
         self.telefone = telefone
-        self.capacidades = json.dumps(capacidades) if capacidades else json.dumps([])
+        self.capacidades = capacidades or []
         self.area_atuacao = area_atuacao
-        self.disponibilidade = json.dumps(disponibilidade) if disponibilidade else json.dumps([])
+        self.disponibilidade = disponibilidade or []
         self.status = status
         self.observacoes = observacoes
     
@@ -38,32 +37,26 @@ class Instrutor(db.Model):
         """
         Retorna a lista de capacidades técnicas do instrutor.
         """
-        try:
-            return json.loads(self.capacidades) if self.capacidades else []
-        except (json.JSONDecodeError, TypeError):
-            return []
+        return self.capacidades or []
     
     def set_capacidades(self, capacidades_list):
         """
         Define a lista de capacidades técnicas do instrutor.
         """
-        self.capacidades = json.dumps(capacidades_list) if capacidades_list else json.dumps([])
+        self.capacidades = capacidades_list or []
     
     def get_disponibilidade(self):
         """
         Retorna a lista de turnos disponíveis do instrutor.
         Exemplo: ['manha', 'tarde']
         """
-        try:
-            return json.loads(self.disponibilidade) if self.disponibilidade else []
-        except (json.JSONDecodeError, TypeError):
-            return []
+        return self.disponibilidade or []
     
     def set_disponibilidade(self, disponibilidade_list):
         """
         Define a disponibilidade do instrutor.
         """
-        self.disponibilidade = json.dumps(disponibilidade_list) if disponibilidade_list else json.dumps([])
+        self.disponibilidade = disponibilidade_list or []
     
     def pode_ministrar_curso(self, curso):
         """
