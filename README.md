@@ -38,3 +38,6 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
    As tabelas do banco são criadas automaticamente na primeira execução e um
    usuário administrador padrão (`admin` / `admin123`) é gerado se ainda não
    existir.
+
+5. As rotas de autenticação e cadastro possuem uma limitação de
+   requisições por minuto para evitar abusos de login ou criação de contas.

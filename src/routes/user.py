@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash
+
+from src.rate_limiter import rate_limit
 from datetime import datetime, timedelta
 import jwt
 import uuid
@@ -130,6 +132,7 @@ def obter_usuario(id):
     return jsonify(usuario.to_dict())
 
 @user_bp.route('/usuarios', methods=['POST'])
+@rate_limit(limit=5, window=60)
 def criar_usuario():
     """
     Cria um novo usuário.
@@ -260,6 +263,7 @@ def remover_usuario(id):
         return jsonify({'erro': str(e)}), 500
 
 @user_bp.route('/login', methods=['POST'])
+@rate_limit(limit=10, window=60)
 def login():
     """
     Autentica um usuário.
