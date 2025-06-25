@@ -349,14 +349,17 @@ function exibirAlerta(mensagem, tipo) {
     // Remove alertas existentes
     const alertasExistentes = document.querySelectorAll('.alert-auto-dismiss');
     alertasExistentes.forEach(alerta => alerta.remove());
-    
+
     // Cria novo alerta
     const alerta = document.createElement('div');
     alerta.className = `alert alert-${tipo} alert-dismissible fade show alert-auto-dismiss`;
-    alerta.innerHTML = `
-        ${mensagem}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+    alerta.textContent = mensagem;
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'btn-close';
+    closeBtn.setAttribute('data-bs-dismiss', 'alert');
+    closeBtn.setAttribute('aria-label', 'Close');
+    alerta.appendChild(closeBtn);
     
     // Insere no início do main
     const main = document.querySelector('main');

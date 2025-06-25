@@ -157,35 +157,35 @@ function renderizarProximasOcupacoes() {
     ocupacoesLimitadas.forEach(ocupacao => {
         const item = document.createElement('div');
         item.className = `ocupacao-item ${ocupacao.tipo_ocupacao}`;
-        
+
         const dataFormatada = formatarDataCurta(ocupacao.data);
         const isHoje = ocupacao.data === new Date().toISOString().split('T')[0];
-        
+
         item.innerHTML = `
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <h6 class="mb-1">${ocupacao.curso_evento}</h6>
+                    <h6 class="mb-1">${escapeHTML(ocupacao.curso_evento)}</h6>
                     <small class="text-muted">
-                        <i class="bi bi-building me-1"></i>${ocupacao.sala_nome || 'Sala não informada'}
+                        <i class="bi bi-building me-1"></i>${escapeHTML(ocupacao.sala_nome || 'Sala não informada')}
                     </small>
                     ${ocupacao.instrutor_nome ? `
                         <br><small class="text-muted">
-                            <i class="bi bi-person-badge me-1"></i>${ocupacao.instrutor_nome}
+                            <i class="bi bi-person-badge me-1"></i>${escapeHTML(ocupacao.instrutor_nome)}
                         </small>
                     ` : ''}
                 </div>
                 <div class="text-end">
                     <small class="fw-bold ${isHoje ? 'text-primary' : ''}">
-                        ${isHoje ? 'HOJE' : dataFormatada}
+                        ${isHoje ? 'HOJE' : escapeHTML(dataFormatada)}
                     </small>
                     <br>
                     <small class="text-muted">
-                        ${ocupacao.horario_inicio} - ${ocupacao.horario_fim}
+                        ${escapeHTML(ocupacao.horario_inicio)} - ${escapeHTML(ocupacao.horario_fim)}
                     </small>
                 </div>
             </div>
         `;
-        
+
         container.appendChild(item);
     });
     
