@@ -276,13 +276,11 @@
                 }
                 
                 try {
-                    // Aqui seria necessário verificar a senha atual no backend
-                    // Como não temos essa rota específica, vamos simular
-                    
                     const usuario = getUsuarioLogado();
-                    
+
                     await chamarAPI(`/usuarios/${usuario.id}`, 'PUT', {
-                        senha: novaSenha
+                        senha: novaSenha,
+                        senha_atual: senhaAtual
                     });
                     
                     exibirAlerta('Senha alterada com sucesso!', 'success');

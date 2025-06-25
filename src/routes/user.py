@@ -224,6 +224,16 @@ def atualizar_usuario(id):
     
     # Atualiza a senha se fornecida
     if 'senha' in data:
+        senha_atual = data.get('senha_atual')
+
+        # Se quem está alterando não é um administrador editando outro usuário,
+        # exige a senha atual para confirmar a operação
+        if not verificar_admin(user) or user.id == id:
+            if not senha_atual:
+                return jsonify({'erro': 'Senha atual obrigatória'}), 400
+            if not usuario.check_senha(senha_atual):
+                return jsonify({'erro': 'Senha atual incorreta'}), 403
+
         usuario.set_senha(data['senha'])
     
     try:
