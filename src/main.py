@@ -68,7 +68,11 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    secret_key = os.getenv('SECRET_KEY') or os.getenv('FLASK_SECRET_KEY') or 'chave-secreta-do-sistema-de-agenda'
+    secret_key = os.getenv('SECRET_KEY') or os.getenv('FLASK_SECRET_KEY')
+    if not secret_key:
+        raise RuntimeError(
+            "SECRET_KEY environment variable must be set for JWT signing"
+        )
     app.config['SECRET_KEY'] = secret_key
 
     db.init_app(app)
