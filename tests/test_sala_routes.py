@@ -53,3 +53,21 @@ def test_delete_sala_as_non_admin_fails(client, non_admin_auth_headers):
 
     delete_resp = client.delete(f'/api/salas/{sala_id}', headers=non_admin_auth_headers)
     assert delete_resp.status_code == 403
+
+
+def test_criar_sala_dados_invalidos(client):
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+    resp = client.post('/api/salas', json={'nome': 'SemCapacidade'}, headers=headers)
+    assert resp.status_code == 400
+    assert 'erro' in resp.get_json()
+
+
+def test_atualizar_sala_nome_duplicado(client):
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+    r1 = client.post('/api/salas', json={'nome': 'SalaA', 'capacidade': 10}, headers=headers)
+    r2 = client.post('/api/salas', json={'nome': 'SalaB', 'capacidade': 10}, headers=headers)
+    sala_b = r2.get_json()['id']
+    resp = client.put(f'/api/salas/{sala_b}', json={'nome': 'SalaA'}, headers=headers)
+    assert resp.status_code == 400

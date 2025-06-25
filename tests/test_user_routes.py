@@ -19,7 +19,7 @@ def test_criar_usuario(client):
         'email': 'novo@example.com',
         'username': 'novo',
         'senha': 'senha'
-    })
+    }, environ_base={'REMOTE_ADDR': '1.1.1.10'})
     assert response.status_code == 201
     data = response.get_json()
     assert data['username'] == 'novo'
@@ -58,7 +58,7 @@ def test_atualizar_senha_requer_verificacao(client):
         'email': 'teste@example.com',
         'username': 'teste',
         'senha': 'original'
-    })
+    }, environ_base={'REMOTE_ADDR': '1.1.1.11'})
     assert resp.status_code == 201
     user_id = resp.get_json()['id']
 
@@ -91,3 +91,60 @@ def test_atualizar_senha_requer_verificacao(client):
     # login com nova senha deve funcionar
     resp_login2 = client.post('/api/login', json={'username': 'teste', 'senha': 'nova'})
     assert resp_login2.status_code == 200
+
+
+def test_criar_usuario_dados_incompletos(client):
+    resp = client.post(
+        '/api/usuarios',
+        json={'nome': 'Incompleto'},
+        environ_base={'REMOTE_ADDR': '1.1.1.1'}
+    )
+    assert resp.status_code == 400
+    assert 'erro' in resp.get_json()
+
+
+def test_criar_usuario_duplicado(client):
+    resp1 = client.post('/api/usuarios', json={
+        'nome': 'Dup',
+        'email': 'dup1@example.com',
+        'username': 'dup',
+        'senha': 'x'
+    }, environ_base={'REMOTE_ADDR': '1.1.1.2'})
+    assert resp1.status_code == 201
+    resp2 = client.post('/api/usuarios', json={
+        'nome': 'Outro',
+        'email': 'dup2@example.com',
+        'username': 'dup',
+        'senha': 'y'
+    }, environ_base={'REMOTE_ADDR': '1.1.1.3'})
+    assert resp2.status_code == 400
+
+
+def test_atualizar_usuario_tipo_invalido(client):
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+    resp = client.post('/api/usuarios', json={
+        'nome': 'Tipo',
+        'email': 'tipo@example.com',
+        'username': 'tipo',
+        'senha': 'pwd'
+    }, environ_base={'REMOTE_ADDR': '1.1.1.4'})
+    assert resp.status_code == 201
+    user_id = resp.get_json()['id']
+    resp_put = client.put(f'/api/usuarios/{user_id}', json={'tipo': 'super'}, headers=headers)
+    assert resp_put.status_code == 400
+
+
+def test_login_dados_incompletos(client):
+    resp = client.post('/api/login', json={'username': 'admin'})
+    assert resp.status_code == 400
+
+
+def test_refresh_sem_token(client):
+    resp = client.post('/api/refresh', json={})
+    assert resp.status_code == 400
+
+
+def test_logout_sem_token(client):
+    resp = client.post('/api/logout', json={})
+    assert resp.status_code == 400
