@@ -61,3 +61,53 @@ def test_atualizar_agendamento_data_invalida(client):
     ag_id = r.get_json()['id']
     resp = client.put(f'/api/agendamentos/{ag_id}', json={'data': '2023-02-30'}, headers=headers)
     assert resp.status_code == 400
+
+
+def test_verificar_disponibilidade_e_conflitos(client):
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+
+    hoje = date.today()
+
+    # Cria agendamento inicial
+    resp_create = client.post('/api/agendamentos', json={
+        'data': hoje.isoformat(),
+        'laboratorio': 'LabDisp',
+        'turma': '1C',
+        'turno': 'Manhã',
+        'horarios': ['08:00', '09:00']
+    }, headers=headers)
+    assert resp_create.status_code == 201
+    ag_id = resp_create.get_json()['id']
+
+    # Consulta disponibilidade para o mesmo período
+    resp_check = client.get('/api/agendamentos/verificar-disponibilidade', query_string={
+        'data': hoje.isoformat(),
+        'laboratorio': 'LabDisp',
+        'turno': 'Manhã'
+    }, headers=headers)
+    assert resp_check.status_code == 200
+    resultados = resp_check.get_json()
+    assert any(a['id'] == ag_id for a in resultados)
+
+    # Consulta disponibilidade em data diferente (deve estar livre)
+    resp_livre = client.get('/api/agendamentos/verificar-disponibilidade', query_string={
+        'data': (hoje + timedelta(days=1)).isoformat(),
+        'laboratorio': 'LabDisp',
+        'turno': 'Manhã'
+    }, headers=headers)
+    assert resp_livre.status_code == 200
+    assert resp_livre.get_json() == []
+
+    # Tenta criar agendamento parcialmente sobreposto
+    resp_conf = client.post('/api/agendamentos', json={
+        'data': hoje.isoformat(),
+        'laboratorio': 'LabDisp',
+        'turma': '1D',
+        'turno': 'Manhã',
+        'horarios': ['09:00', '10:00']
+    }, headers=headers)
+    assert resp_conf.status_code == 409
+    dados_conf = resp_conf.get_json()
+    assert 'conflitos' in dados_conf
+    assert dados_conf['conflitos']
