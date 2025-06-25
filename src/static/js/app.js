@@ -15,6 +15,10 @@ function escapeHTML(str) {
     return div.innerHTML;
 }
 
+function sanitizeHTML(html) {
+    return window.DOMPurify ? DOMPurify.sanitize(html) : html;
+}
+
 // Funções de autenticação
 /**
  * Realiza o login do usuário

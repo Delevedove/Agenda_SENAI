@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app, g
-from werkzeug.security import generate_password_hash
 
-from src.rate_limiter import rate_limit
+from src.limiter import limiter
+import re
 from datetime import datetime, timedelta
 import jwt
 import uuid
@@ -85,7 +85,7 @@ def obter_usuario(id):
     return jsonify(usuario.to_dict())
 
 @user_bp.route('/usuarios', methods=['POST'])
-@rate_limit(limit=5, window=60)
+@limiter.limit("5 per minute")
 def criar_usuario():
     """
     Cria um novo usuário.
@@ -118,7 +118,19 @@ def criar_usuario():
     
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'erro': 'Email já cadastrado'}), 400
-    
+
+    senha = data['senha']
+    requisitos = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$')
+    if not requisitos.match(senha):
+        return (
+            jsonify(
+                {
+                    'erro': 'Senha deve ter ao menos 8 caracteres, incluindo letra maiúscula, letra minúscula, número e caractere especial'
+                }
+            ),
+            400,
+        )
+
     # Cria o usuário
     try:
         novo_usuario = User(
@@ -220,7 +232,7 @@ def remover_usuario(id):
         return handle_internal_error(e)
 
 @user_bp.route('/login', methods=['POST'])
-@rate_limit(limit=10, window=60)
+@limiter.limit("10 per minute")
 def login():
     """
     Autentica um usuário.

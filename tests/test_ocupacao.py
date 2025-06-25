@@ -30,7 +30,7 @@ def app():
             nome='Test',
             email='test@example.com',
             username='test',
-            senha='password',
+            senha='Password1!',
             tipo='admin'
         )
         db.session.add(user)
