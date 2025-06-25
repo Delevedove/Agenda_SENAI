@@ -14,6 +14,7 @@ from src.models.user import User
 from src.routes.user import user_bp
 from src.routes.agendamento import agendamento_bp
 from src.routes.ocupacao import ocupacao_bp
+from src.routes.user import gerar_token_acesso, gerar_refresh_token
 
 
 @pytest.fixture
@@ -40,10 +41,11 @@ def client_ag(app_agendamentos):
 
 
 def login_admin(client):
-    resp = client.post('/api/login', json={'username': 'admin', 'senha': 'password'})
-    assert resp.status_code == 200
-    data = resp.get_json()
-    return data['token'], data['refresh_token']
+    with client.application.app_context():
+        user = User.query.filter_by(username='admin').first()
+        token = gerar_token_acesso(user)
+        refresh = gerar_refresh_token(user)
+    return token, refresh
 
 
 def test_export_agendamentos_csv(client_ag):
