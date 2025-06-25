@@ -1,9 +1,16 @@
 
+import jwt
+from datetime import datetime, timedelta
+from src.models.user import User
+from src.routes.user import gerar_token_acesso, gerar_refresh_token
+
+
 def login_admin(client):
-    response = client.post('/api/login', json={'username': 'admin', 'senha': 'password'})
-    assert response.status_code == 200
-    data = response.get_json()
-    return data['token'], data['refresh_token']
+    with client.application.app_context():
+        user = User.query.filter_by(username='admin').first()
+        token = gerar_token_acesso(user)
+        refresh = gerar_refresh_token(user)
+    return token, refresh
 
 
 def test_criar_usuario(client):

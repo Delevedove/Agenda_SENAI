@@ -1,6 +1,7 @@
 import os
 import sys
-from datetime import date
+from datetime import date, datetime, timedelta
+import jwt
 
 import pytest
 from flask import Flask
@@ -13,6 +14,7 @@ from src.models.sala import Sala
 from src.routes.user import user_bp
 from src.routes.sala import sala_bp
 from src.routes.agendamento import agendamento_bp
+from src.routes.instrutor import instrutor_bp
 
 @pytest.fixture
 def app():
@@ -25,6 +27,7 @@ def app():
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(sala_bp, url_prefix='/api')
     app.register_blueprint(agendamento_bp, url_prefix='/api')
+    app.register_blueprint(instrutor_bp, url_prefix='/api')
 
     with app.app_context():
         db.create_all()
@@ -36,6 +39,14 @@ def app():
             tipo='admin'
         )
         db.session.add(admin)
+        comum = User(
+            nome='Usuario',
+            email='usuario@example.com',
+            username='usuario',
+            senha='password',
+            tipo='comum'
+        )
+        db.session.add(comum)
         sala = Sala(nome='Sala Teste', capacidade=10)
         db.session.add(sala)
         db.session.commit()
@@ -44,3 +55,16 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def non_admin_auth_headers(app):
+    with app.app_context():
+        user = User.query.filter_by(username='usuario').first()
+        token = jwt.encode({
+            'user_id': user.id,
+            'nome': user.nome,
+            'perfil': user.tipo,
+            'exp': datetime.utcnow() + timedelta(hours=1)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        return {'Authorization': f'Bearer {token}'}

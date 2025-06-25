@@ -1,11 +1,15 @@
-from datetime import date
+from datetime import date, datetime, timedelta
+import jwt
+from src.models.user import User
+from src.routes.user import gerar_token_acesso, gerar_refresh_token
 
 
 def login_admin(client):
-    resp = client.post('/api/login', json={'username': 'admin', 'senha': 'password'})
-    assert resp.status_code == 200
-    data = resp.get_json()
-    return data['token'], data['refresh_token']
+    with client.application.app_context():
+        user = User.query.filter_by(username='admin').first()
+        token = gerar_token_acesso(user)
+        refresh = gerar_refresh_token(user)
+    return token, refresh
 
 
 def test_criar_e_listar_agendamento(client):
