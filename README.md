@@ -6,10 +6,10 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
 
 ## Configuração rápida
 
-1. Instale as dependências do projeto:
+1. Instale as dependências do projeto usando o Poetry:
 
    ```bash
-   pip install -r requirements.txt
+   poetry install
    ```
 
 2. Defina as variáveis de ambiente antes de rodar a aplicação ou os testes:
