@@ -4,6 +4,8 @@ from src.models.sala import Sala
 from src.models.ocupacao import Ocupacao
 from src.routes.user import verificar_autenticacao, verificar_admin
 from datetime import datetime, date, time
+from pydantic import ValidationError
+from src.schemas import SalaCreateSchema, SalaUpdateSchema
 
 sala_bp = Blueprint('sala', __name__)
 
@@ -67,35 +69,30 @@ def criar_sala():
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    data = request.json
-    
-    # Validação de dados obrigatórios
-    if not all(key in data for key in ['nome', 'capacidade']):
-        return jsonify({'erro': 'Nome e capacidade são obrigatórios'}), 400
-    
+    data = request.json or {}
+    try:
+        payload = SalaCreateSchema(**data)
+    except ValidationError as e:
+        return jsonify({'erro': e.errors()}), 400
+
     # Verifica se o nome já existe
-    if Sala.query.filter_by(nome=data['nome']).first():
+    if Sala.query.filter_by(nome=payload.nome).first():
         return jsonify({'erro': 'Já existe uma sala com este nome'}), 400
     
-    # Validação de capacidade
-    if not isinstance(data['capacidade'], int) or data['capacidade'] <= 0:
-        return jsonify({'erro': 'Capacidade deve ser um número inteiro positivo'}), 400
-    
-    # Validação de status
     status_validos = ['ativa', 'inativa', 'manutencao']
-    status = data.get('status', 'ativa')
+    status = payload.status or 'ativa'
     if status not in status_validos:
         return jsonify({'erro': f'Status deve ser um dos seguintes: {", ".join(status_validos)}'}), 400
-    
+
     try:
         nova_sala = Sala(
-            nome=data['nome'],
-            capacidade=data['capacidade'],
-            recursos=data.get('recursos', []),
-            localizacao=data.get('localizacao'),
-            tipo=data.get('tipo'),
+            nome=payload.nome,
+            capacidade=payload.capacidade,
+            recursos=payload.recursos,
+            localizacao=payload.localizacao,
+            tipo=payload.tipo,
             status=status,
-            observacoes=data.get('observacoes')
+            observacoes=payload.observacoes
         )
         
         db.session.add(nova_sala)
@@ -123,38 +120,40 @@ def atualizar_sala(id):
     if not sala:
         return jsonify({'erro': 'Sala não encontrada'}), 404
     
-    data = request.json
+    data = request.json or {}
+    try:
+        payload = SalaUpdateSchema(**data)
+    except ValidationError as e:
+        return jsonify({'erro': e.errors()}), 400
     
     # Atualiza os campos fornecidos
-    if 'nome' in data:
+    if payload.nome is not None:
         # Verifica se o nome já existe para outra sala
-        sala_existente = Sala.query.filter_by(nome=data['nome']).first()
+        sala_existente = Sala.query.filter_by(nome=payload.nome).first()
         if sala_existente and sala_existente.id != id:
             return jsonify({'erro': 'Já existe uma sala com este nome'}), 400
-        sala.nome = data['nome']
-    
-    if 'capacidade' in data:
-        if not isinstance(data['capacidade'], int) or data['capacidade'] <= 0:
-            return jsonify({'erro': 'Capacidade deve ser um número inteiro positivo'}), 400
-        sala.capacidade = data['capacidade']
-    
-    if 'recursos' in data:
-        sala.set_recursos(data['recursos'])
-    
-    if 'localizacao' in data:
-        sala.localizacao = data['localizacao']
-    
-    if 'tipo' in data:
-        sala.tipo = data['tipo']
-    
-    if 'status' in data:
+        sala.nome = payload.nome
+
+    if payload.capacidade is not None:
+        sala.capacidade = payload.capacidade
+
+    if payload.recursos is not None:
+        sala.set_recursos(payload.recursos)
+
+    if payload.localizacao is not None:
+        sala.localizacao = payload.localizacao
+
+    if payload.tipo is not None:
+        sala.tipo = payload.tipo
+
+    if payload.status is not None:
         status_validos = ['ativa', 'inativa', 'manutencao']
-        if data['status'] not in status_validos:
+        if payload.status not in status_validos:
             return jsonify({'erro': f'Status deve ser um dos seguintes: {", ".join(status_validos)}'}), 400
-        sala.status = data['status']
-    
-    if 'observacoes' in data:
-        sala.observacoes = data['observacoes']
+        sala.status = payload.status
+
+    if payload.observacoes is not None:
+        sala.observacoes = payload.observacoes
     
     try:
         db.session.commit()

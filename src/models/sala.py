@@ -1,6 +1,6 @@
 from src.models import db
 from datetime import datetime
-import json
+
 
 class Sala(db.Model):
     """
@@ -11,7 +11,7 @@ class Sala(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False, unique=True)
     capacidade = db.Column(db.Integer, nullable=False)
-    recursos = db.Column(db.Text)  # JSON com lista de recursos
+    recursos = db.Column(db.JSON)
     localizacao = db.Column(db.String(100))
     tipo = db.Column(db.String(50))  # aula_teorica, laboratorio, auditorio, etc.
     status = db.Column(db.String(20), default='ativa')  # ativa, inativa, manutencao
@@ -25,26 +25,19 @@ class Sala(db.Model):
     def __init__(self, nome, capacidade, recursos=None, localizacao=None, tipo=None, status='ativa', observacoes=None):
         self.nome = nome
         self.capacidade = capacidade
-        self.recursos = json.dumps(recursos) if recursos else json.dumps([])
+        self.recursos = recursos or []
         self.localizacao = localizacao
         self.tipo = tipo
         self.status = status
         self.observacoes = observacoes
     
     def get_recursos(self):
-        """
-        Retorna a lista de recursos da sala.
-        """
-        try:
-            return json.loads(self.recursos) if self.recursos else []
-        except (json.JSONDecodeError, TypeError):
-            return []
+        """Retorna a lista de recursos da sala."""
+        return self.recursos or []
     
     def set_recursos(self, recursos_list):
-        """
-        Define a lista de recursos da sala.
-        """
-        self.recursos = json.dumps(recursos_list) if recursos_list else json.dumps([])
+        """Define a lista de recursos da sala."""
+        self.recursos = recursos_list or []
     
     def is_disponivel(self, data, horario_inicio, horario_fim, ocupacao_id=None, grupo_ocupacao_id=None):
         """

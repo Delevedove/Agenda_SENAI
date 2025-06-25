@@ -81,7 +81,6 @@ def criar_agendamento():
     # Verifica o formato dos horários (deve ser uma string JSON válida)
     try:
         horarios = json.loads(data['horarios']) if isinstance(data['horarios'], str) else data['horarios']
-        horarios_json = json.dumps(horarios)
     except json.JSONDecodeError:
         return jsonify({'erro': 'Formato de horários inválido'}), 400
     
@@ -102,8 +101,8 @@ def criar_agendamento():
     conflitos = verificar_conflitos_horarios(
         data_agendamento,
         data['laboratorio'],
-        horarios_json,
-        None  # Não há ID para comparar, pois é um novo agendamento
+        horarios,
+        None
     )
     
     if conflitos:
@@ -116,7 +115,7 @@ def criar_agendamento():
             laboratorio=data['laboratorio'],
             turma=data['turma'],
             turno=data['turno'],
-            horarios=horarios_json,
+            horarios=horarios,
             usuario_id=usuario_id
         )
         db.session.add(novo_agendamento)
@@ -156,11 +155,11 @@ def atualizar_agendamento(id):
             return jsonify({'erro': 'Formato de data inválido. Use YYYY-MM-DD'}), 400
     
     # Processa os horários se fornecidos
-    horarios_json = agendamento.horarios
+    horarios_lista = agendamento.horarios
     if 'horarios' in data:
         try:
             horarios = json.loads(data['horarios']) if isinstance(data['horarios'], str) else data['horarios']
-            horarios_json = json.dumps(horarios)
+            horarios_lista = horarios
         except json.JSONDecodeError:
             return jsonify({'erro': 'Formato de horários inválido'}), 400
     
@@ -169,7 +168,7 @@ def atualizar_agendamento(id):
     conflitos = verificar_conflitos_horarios(
         data_agendamento,
         laboratorio,
-        horarios_json,
+        horarios_lista,
         id  # ID do agendamento atual para excluir da verificação
     )
     
@@ -186,7 +185,7 @@ def atualizar_agendamento(id):
     if 'turno' in data:
         agendamento.turno = data['turno']
     if 'horarios' in data:
-        agendamento.horarios = horarios_json
+        agendamento.horarios = horarios_lista
     
     # Apenas administradores podem alterar o usuário responsável
     if 'usuario_id' in data and verificar_admin(user):
@@ -425,14 +424,14 @@ def exportar_agendamentos():
     output.headers["Content-Type"] = "text/csv"
     return output
 
-def verificar_conflitos_horarios(data, laboratorio, horarios_json, agendamento_id=None):
+def verificar_conflitos_horarios(data, laboratorio, horarios_list, agendamento_id=None):
     """
     Verifica se há conflitos de horários para um agendamento.
     
     Args:
         data: Data do agendamento
         laboratorio: Laboratório a ser agendado
-        horarios_json: Horários em formato JSON
+        horarios_list: Lista de horários
         agendamento_id: ID do agendamento atual (para excluir da verificação)
         
     Returns:
@@ -456,9 +455,8 @@ def verificar_conflitos_horarios(data, laboratorio, horarios_json, agendamento_i
     
     # Converte os horários do novo agendamento para um conjunto
     try:
-        horarios_novos = set(json.loads(horarios_json))
-    except:
-        # Se não for possível converter, considera como lista vazia
+        horarios_novos = set(horarios_list)
+    except Exception:
         return ['Formato de horários inválido']
     
     conflitos = []
@@ -466,7 +464,7 @@ def verificar_conflitos_horarios(data, laboratorio, horarios_json, agendamento_i
     # Verifica conflitos com cada agendamento existente
     for agendamento in agendamentos_existentes:
         try:
-            horarios_existentes = set(json.loads(agendamento.horarios))
+            horarios_existentes = set(agendamento.horarios)
             # Se houver interseção entre os conjuntos de horários, há conflito
             intersecao = horarios_novos.intersection(horarios_existentes)
             if intersecao:
