@@ -34,9 +34,9 @@ description = "Agenda de laborat\u00f3rios e salas do SENAI"
 authors = ["Codex <codex@openai.com>"]
 readme = "README.md"
 packages = [{ include = "src" }]
-python = ">=3.11,<4"
 
 [tool.poetry.dependencies]
+python = ">=3.11,<4"
 flask = "2.3.3"
 flask-sqlalchemy = "3.1.1"
 sqlalchemy = "2.0.23"
