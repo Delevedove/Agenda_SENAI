@@ -28,3 +28,27 @@ def test_delete_instrutor_as_non_admin_fails(client, app, non_admin_auth_headers
     resp_del = client.delete(f'/api/instrutores/{instrutor_id}', headers=non_admin_auth_headers)
     assert resp_del.status_code == 403
 
+
+def test_criar_instrutor_dados_incompletos(client, app):
+    headers = admin_headers(app)
+    resp = client.post('/api/instrutores', json={}, headers=headers)
+    assert resp.status_code == 400
+    assert 'erro' in resp.get_json()
+
+
+def test_atualizar_instrutor_email_duplicado(client, app):
+    headers = admin_headers(app)
+    r1 = client.post('/api/instrutores', json={'nome': 'A', 'email': 'a@example.com'}, headers=headers)
+    r2 = client.post('/api/instrutores', json={'nome': 'B', 'email': 'b@example.com'}, headers=headers)
+    instrutor_b = r2.get_json()['id']
+    resp = client.put(f'/api/instrutores/{instrutor_b}', json={'email': 'a@example.com'}, headers=headers)
+    assert resp.status_code == 400
+
+
+def test_atualizar_capacidades_lista_invalida(client, app):
+    headers = admin_headers(app)
+    r = client.post('/api/instrutores', json={'nome': 'Cap'}, headers=headers)
+    instrutor_id = r.get_json()['id']
+    resp = client.put(f'/api/instrutores/{instrutor_id}/capacidades', json={'capacidades': 'abc'}, headers=headers)
+    assert resp.status_code == 400
+

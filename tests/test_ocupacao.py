@@ -282,3 +282,43 @@ def test_resumo_periodo_endpoint(client, app):
     dia = resumo[hoje.isoformat()]
     assert 'Manhã' in dia
     assert dia['Manhã']['ocupadas'] == 1
+
+
+def test_criar_ocupacao_dados_incompletos(client, app):
+    with app.app_context():
+        user = User.query.first()
+    token = jwt.encode({
+        'user_id': user.id,
+        'nome': user.nome,
+        'perfil': user.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+    resp = client.post('/api/ocupacoes', json={
+        'curso_evento': 'Curso',
+        'data_inicio': date.today().isoformat(),
+        'data_fim': date.today().isoformat(),
+        'turno': 'Manhã'
+    }, headers={'Authorization': f'Bearer {token}'})
+    assert resp.status_code == 400
+
+
+def test_atualizar_ocupacao_turno_invalido(client, app):
+    with app.app_context():
+        user = User.query.first()
+        sala = Sala.query.first()
+    token = jwt.encode({
+        'user_id': user.id,
+        'nome': user.nome,
+        'perfil': user.tipo,
+        'exp': datetime.utcnow() + timedelta(hours=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+    r = client.post('/api/ocupacoes', json={
+        'sala_id': sala.id,
+        'curso_evento': 'Evento',
+        'data_inicio': date.today().isoformat(),
+        'data_fim': date.today().isoformat(),
+        'turno': 'Manhã'
+    }, headers={'Authorization': f'Bearer {token}'})
+    ocupacao_id = r.get_json()[0]['id']
+    resp = client.put(f'/api/ocupacoes/{ocupacao_id}', json={'turno': 'X'}, headers={'Authorization': f'Bearer {token}'})
+    assert resp.status_code == 400

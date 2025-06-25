@@ -34,3 +34,30 @@ def test_criar_e_listar_agendamento(client):
     assert resp.status_code == 200
     ags = resp.get_json()
     assert any(a['id'] == ag_id for a in ags)
+
+
+def test_criar_agendamento_dados_incompletos(client):
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+    resp = client.post('/api/agendamentos', json={
+        'data': date.today().isoformat(),
+        'turma': '1A',
+        'turno': 'Manhã',
+        'horarios': ['08:00']
+    }, headers=headers)
+    assert resp.status_code == 400
+
+
+def test_atualizar_agendamento_data_invalida(client):
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+    r = client.post('/api/agendamentos', json={
+        'data': date.today().isoformat(),
+        'laboratorio': 'LabX',
+        'turma': '1B',
+        'turno': 'Manhã',
+        'horarios': ['08:00']
+    }, headers=headers)
+    ag_id = r.get_json()['id']
+    resp = client.put(f'/api/agendamentos/{ag_id}', json={'data': '2023-02-30'}, headers=headers)
+    assert resp.status_code == 400
