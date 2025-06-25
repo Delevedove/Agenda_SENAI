@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, g
 from werkzeug.security import generate_password_hash
 
 from src.rate_limiter import rate_limit
@@ -10,6 +10,12 @@ from src.models.user import User
 from src.models.refresh_token import RefreshToken
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
+from src.auth import (
+    verificar_autenticacao,
+    verificar_admin,
+    login_required,
+    admin_required,
+)
 
 user_bp = Blueprint('user', __name__)
 
@@ -40,46 +46,6 @@ def gerar_refresh_token(usuario):
     db.session.commit()
     return token
 
-# Função auxiliar para verificar autenticação
-def verificar_autenticacao(request):
-    """
-    Verifica se o usuário está autenticado através do token no cabeçalho.
-    
-    Args:
-        request: Objeto de requisição Flask
-        
-    Returns:
-        tuple: (is_authenticated, user_data)
-    """
-    auth_header = request.headers.get('Authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        return False, None
-
-    token = auth_header.split(' ')[1]
-    try:
-        dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-        user_id = dados.get('user_id')
-        user = db.session.get(User, user_id)
-        if user:
-            return True, user
-        return False, None
-    except jwt.ExpiredSignatureError:
-        return False, None
-    except jwt.InvalidTokenError:
-        return False, None
-
-# Função auxiliar para verificar permissões de administrador
-def verificar_admin(user):
-    """
-    Verifica se o usuário é um administrador.
-    
-    Args:
-        user: Objeto de usuário
-        
-    Returns:
-        bool: True se o usuário for administrador, False caso contrário
-    """
-    return user and user.is_admin()
 
 
 def verificar_refresh_token(token):
@@ -98,32 +64,17 @@ def verificar_refresh_token(token):
         return None
 
 @user_bp.route('/usuarios', methods=['GET'])
+@admin_required
 def listar_usuarios():
-    """
-    Lista todos os usuários (requer permissão de administrador).
-    """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
-    if not verificar_admin(user):
-        return jsonify({'erro': 'Permissão negada'}), 403
-    
+    """Lista todos os usuários."""
     usuarios = User.query.all()
     return jsonify([u.to_dict() for u in usuarios])
 
 @user_bp.route('/usuarios/<int:id>', methods=['GET'])
+@login_required
 def obter_usuario(id):
-    """
-    Obtém detalhes de um usuário específico.
-    Usuários comuns só podem ver seus próprios dados.
-    Administradores podem ver dados de qualquer usuário.
-    """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
-    # Verifica permissões
+    """Obtém detalhes de um usuário específico."""
+    user = g.current_user
     if not verificar_admin(user) and user.id != id:
         return jsonify({'erro': 'Permissão negada'}), 403
     
@@ -185,15 +136,14 @@ def criar_usuario():
         return handle_internal_error(e)
 
 @user_bp.route('/usuarios/<int:id>', methods=['PUT'])
+@login_required
 def atualizar_usuario(id):
     """
     Atualiza um usuário existente.
     Usuários comuns só podem atualizar seus próprios dados.
     Administradores podem atualizar dados de qualquer usuário.
     """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
+    user = g.current_user
     
     # Verifica permissões
     if not verificar_admin(user) and user.id != id:
@@ -244,19 +194,14 @@ def atualizar_usuario(id):
         return handle_internal_error(e)
 
 @user_bp.route('/usuarios/<int:id>', methods=['DELETE'])
+@admin_required
 def remover_usuario(id):
     """
     Remove um usuário.
     Apenas administradores podem remover usuários.
     Um usuário não pode remover a si mesmo.
     """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
-    # Verifica permissões
-    if not verificar_admin(user):
-        return jsonify({'erro': 'Permissão negada'}), 403
+    user = g.current_user
     
     # Impede que um usuário remova a si mesmo
     if user.id == id:

@@ -1,35 +1,29 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from src.models import db
 from src.models.laboratorio_turma import Laboratorio, Turma
-from src.routes.user import verificar_autenticacao, verificar_admin
+from src.auth import login_required, admin_required
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
 
 laboratorio_bp = Blueprint('laboratorio', __name__)
 
 @laboratorio_bp.route('/laboratorios', methods=['GET'])
+@login_required
 def listar_laboratorios():
     """
     Lista todos os laboratórios disponíveis.
     Acessível para todos os usuários autenticados.
     """
-    autenticado, _ = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
     laboratorios = Laboratorio.query.all()
     return jsonify([lab.to_dict() for lab in laboratorios])
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['GET'])
+@login_required
 def obter_laboratorio(id):
     """
     Obtém detalhes de um laboratório específico.
     Acessível para todos os usuários autenticados.
     """
-    autenticado, _ = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
     laboratorio = db.session.get(Laboratorio, id)
     if not laboratorio:
         return jsonify({'erro': 'Laboratório não encontrado'}), 404
@@ -37,18 +31,13 @@ def obter_laboratorio(id):
     return jsonify(laboratorio.to_dict())
 
 @laboratorio_bp.route('/laboratorios', methods=['POST'])
+@admin_required
 def criar_laboratorio():
     """
     Cria um novo laboratório.
     Apenas administradores podem criar laboratórios.
     """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
-    # Verifica permissões de administrador
-    if not verificar_admin(user):
-        return jsonify({'erro': 'Permissão negada'}), 403
+    user = g.current_user
     
     data = request.json
     
@@ -71,18 +60,13 @@ def criar_laboratorio():
         return handle_internal_error(e)
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['PUT'])
+@admin_required
 def atualizar_laboratorio(id):
     """
     Atualiza um laboratório existente.
     Apenas administradores podem atualizar laboratórios.
     """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
-    # Verifica permissões de administrador
-    if not verificar_admin(user):
-        return jsonify({'erro': 'Permissão negada'}), 403
+    user = g.current_user
     
     laboratorio = db.session.get(Laboratorio, id)
     if not laboratorio:
@@ -109,18 +93,13 @@ def atualizar_laboratorio(id):
         return handle_internal_error(e)
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['DELETE'])
+@admin_required
 def remover_laboratorio(id):
     """
     Remove um laboratório.
     Apenas administradores podem remover laboratórios.
     """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
-    # Verifica permissões de administrador
-    if not verificar_admin(user):
-        return jsonify({'erro': 'Permissão negada'}), 403
+    user = g.current_user
     
     laboratorio = db.session.get(Laboratorio, id)
     if not laboratorio:
