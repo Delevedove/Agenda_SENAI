@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 from src.models import db
+from sqlalchemy.exc import SQLAlchemyError
+from src.utils.error_handler import handle_internal_error
 from src.models.laboratorio_turma import Turma
 from src.routes.user import verificar_autenticacao, verificar_admin
 
@@ -64,9 +66,9 @@ def criar_turma():
         db.session.add(nova_turma)
         db.session.commit()
         return jsonify(nova_turma.to_dict()), 201
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @turma_bp.route('/turmas/<int:id>', methods=['PUT'])
 def atualizar_turma(id):
@@ -102,9 +104,9 @@ def atualizar_turma(id):
         turma.nome = data['nome']
         db.session.commit()
         return jsonify(turma.to_dict())
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @turma_bp.route('/turmas/<int:id>', methods=['DELETE'])
 def remover_turma(id):
@@ -128,6 +130,6 @@ def remover_turma(id):
         db.session.delete(turma)
         db.session.commit()
         return jsonify({'mensagem': 'Turma removida com sucesso'})
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)

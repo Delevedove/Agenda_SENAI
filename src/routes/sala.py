@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 from src.models import db
+from sqlalchemy.exc import SQLAlchemyError
+from src.utils.error_handler import handle_internal_error
 from src.models.sala import Sala
 from src.models.ocupacao import Ocupacao
 from src.routes.user import verificar_autenticacao, verificar_admin
@@ -99,9 +101,9 @@ def criar_sala():
         db.session.commit()
         
         return jsonify(nova_sala.to_dict()), 201
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @sala_bp.route('/salas/<int:id>', methods=['PUT'])
 def atualizar_sala(id):
@@ -158,9 +160,9 @@ def atualizar_sala(id):
     try:
         db.session.commit()
         return jsonify(sala.to_dict())
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @sala_bp.route('/salas/<int:id>', methods=['DELETE'])
 def remover_sala(id):
@@ -194,9 +196,9 @@ def remover_sala(id):
         db.session.delete(sala)
         db.session.commit()
         return jsonify({'mensagem': 'Sala removida com sucesso'})
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @sala_bp.route('/salas/<int:id>/disponibilidade', methods=['GET'])
 def verificar_disponibilidade_sala(id):
@@ -245,8 +247,8 @@ def verificar_disponibilidade_sala(id):
         
     except ValueError:
         return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
-    except Exception as e:
-        return jsonify({'erro': str(e)}), 500
+    except SQLAlchemyError as e:
+        return handle_internal_error(e)
 
 @sala_bp.route('/salas/<int:id>/ocupacoes', methods=['GET'])
 def listar_ocupacoes_sala(id):

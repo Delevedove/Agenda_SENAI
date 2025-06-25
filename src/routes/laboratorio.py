@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from src.models import db
 from src.models.laboratorio_turma import Laboratorio, Turma
 from src.routes.user import verificar_autenticacao, verificar_admin
+from sqlalchemy.exc import SQLAlchemyError
+from src.utils.error_handler import handle_internal_error
 
 laboratorio_bp = Blueprint('laboratorio', __name__)
 
@@ -64,9 +66,9 @@ def criar_laboratorio():
         db.session.add(novo_laboratorio)
         db.session.commit()
         return jsonify(novo_laboratorio.to_dict()), 201
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['PUT'])
 def atualizar_laboratorio(id):
@@ -102,9 +104,9 @@ def atualizar_laboratorio(id):
         laboratorio.nome = data['nome']
         db.session.commit()
         return jsonify(laboratorio.to_dict())
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['DELETE'])
 def remover_laboratorio(id):
@@ -128,6 +130,6 @@ def remover_laboratorio(id):
         db.session.delete(laboratorio)
         db.session.commit()
         return jsonify({'mensagem': 'Laboratório removido com sucesso'})
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)

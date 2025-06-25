@@ -10,6 +10,8 @@ from src.models import db
 from src.models.agendamento import Agendamento
 from src.models.user import User
 from src.routes.user import verificar_autenticacao, verificar_admin
+from sqlalchemy.exc import SQLAlchemyError
+from src.utils.error_handler import handle_internal_error
 
 agendamento_bp = Blueprint('agendamento', __name__)
 
@@ -121,9 +123,9 @@ def criar_agendamento():
         db.session.add(novo_agendamento)
         db.session.commit()
         return jsonify(novo_agendamento.to_dict()), 201
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @agendamento_bp.route('/agendamentos/<int:id>', methods=['PUT'])
 def atualizar_agendamento(id):
@@ -197,9 +199,9 @@ def atualizar_agendamento(id):
     try:
         db.session.commit()
         return jsonify(agendamento.to_dict())
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @agendamento_bp.route('/agendamentos/<int:id>', methods=['DELETE'])
 def remover_agendamento(id):
@@ -224,9 +226,9 @@ def remover_agendamento(id):
         db.session.delete(agendamento)
         db.session.commit()
         return jsonify({'mensagem': 'Agendamento removido com sucesso'})
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'erro': str(e)}), 500
+        return handle_internal_error(e)
 
 @agendamento_bp.route('/agendamentos/calendario/<int:mes>/<int:ano>', methods=['GET'])
 def agendamentos_calendario(mes, ano):
@@ -456,7 +458,7 @@ def verificar_conflitos_horarios(data, laboratorio, horarios_list, agendamento_i
     # Converte os horários do novo agendamento para um conjunto
     try:
         horarios_novos = set(horarios_list)
-    except Exception:
+    except (TypeError, ValueError):
         return ['Formato de horários inválido']
     
     conflitos = []
@@ -475,7 +477,7 @@ def verificar_conflitos_horarios(data, laboratorio, horarios_list, agendamento_i
                     'turma': agendamento.turma,
                     'horarios_conflitantes': list(intersecao)
                 })
-        except:
+        except Exception:
             # Ignora agendamentos com formato de horários inválido
             pass
     
