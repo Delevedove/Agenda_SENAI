@@ -153,7 +153,7 @@ function atualizarResumoNoCalendario() {
                 if (!info) return;
                 const div = document.createElement('div');
                 div.className = `resumo-turno resumo-${slugifyTurno(turno)}`;
-                div.textContent = `${turno}: ${info.ocupadas}/${info.total_salas}`;
+                div.textContent = `${turno}: ${info.livres} - ${info.ocupadas} / ${info.total_salas}`;
                 cell.appendChild(div);
             });
         }
@@ -187,7 +187,7 @@ function mostrarResumoDia(dataStr) {
         header.className = `card-header resumo-card-header resumo-card-${slugifyTurno(turno)}`;
         const icon = document.createElement('i');
         icon.className = 'bi bi-chevron-down toggle-icon ms-2';
-        header.innerHTML = `<div class="d-flex justify-content-between align-items-center"><span>${turno}</span><span><span class="badge bg-secondary">${info.ocupadas}/${info.total_salas} Salas</span></span></div>`;
+        header.innerHTML = `<div class="d-flex justify-content-between align-items-center"><span>${turno}</span><span><span class="badge bg-secondary">${info.livres} - ${info.ocupadas} / ${info.total_salas} Salas</span></span></div>`;
         header.querySelector('span span').appendChild(icon);
         card.appendChild(header);
 
