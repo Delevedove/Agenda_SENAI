@@ -232,7 +232,8 @@ class GerenciadorInstrutores {
     instrutores.forEach(instrutor => {
         const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);
         const areaNome = this.getAreaNome(instrutor.area_atuacao);
-        const capacidades = instrutor.capacidades.slice(0, 3).join(', ') + (instrutor.capacidades.length > 3 ? '...' : '');
+        const capsLista = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
+        const capacidades = capsLista.slice(0, 3).join(', ') + (capsLista.length > 3 ? '...' : '');
         
         const row = document.createElement('tr');
         row.innerHTML = sanitizeHTML(`
@@ -366,7 +367,8 @@ class GerenciadorInstrutores {
         if (response.ok) {
             const instrutor = await response.json();
             this.instrutorEditando = instrutor;
-            this.capacidadesInstrutor = [...instrutor.capacidades];
+            const caps = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
+            this.capacidadesInstrutor = [...caps];
             
             // Preenche o formulário
             document.getElementById('modalInstrutorLabel').textContent = 'Editar Instrutor';
@@ -383,7 +385,7 @@ class GerenciadorInstrutores {
             this.renderizarCapacidades();
             
             // Preenche disponibilidade
-            const disponibilidade = instrutor.disponibilidade || [];
+            const disponibilidade = Array.isArray(instrutor.disponibilidade) ? instrutor.disponibilidade : [];
             document.getElementById('dispManha').checked = disponibilidade.includes('manha');
             document.getElementById('dispTarde').checked = disponibilidade.includes('tarde');
             document.getElementById('dispNoite').checked = disponibilidade.includes('noite');
