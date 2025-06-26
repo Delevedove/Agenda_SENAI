@@ -215,6 +215,33 @@ small, .small {
   border-right: none;
 }
 
+/* Ajustes para a listagem de instrutores */
+#tabelaInstrutores td,
+#tabelaInstrutores th {
+  vertical-align: middle;
+  font-size: 0.85rem;
+}
+
+#tabelaInstrutores td strong {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+#tabelaInstrutores td small {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+#tabelaInstrutores .badge {
+  font-size: 0.7rem;
+  padding: 0.35em 0.6em;
+}
+
+#tabelaInstrutores .btn-group .btn {
+  border-radius: 0;
+  padding: 0.25rem 0.4rem;
+}
+
 /* Calendário */
 .calendario-container {
   background-color: #fff;

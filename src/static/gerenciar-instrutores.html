@@ -108,7 +108,7 @@
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Gerenciar Instrutores</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalInstrutor" onclick="novoInstrutor()">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalInstrutor" onclick="gerenciadorInstrutores.novoInstrutor()">
                             <i class="bi bi-plus-circle me-1"></i>
                             Novo Instrutor
                         </button>
@@ -181,7 +181,6 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th scope="col">Nome</th>
-                                        <th scope="col">Email</th>
                                         <th scope="col">Área de Atuação</th>
                                         <th scope="col">Status</th>
                                         <th scope="col">Capacidades</th>
@@ -346,26 +345,26 @@
             document.getElementById('nomeUsuarioNav').textContent = usuario.nome;
             
             // Carrega dados iniciais
-            carregarAreasAtuacao();
-            carregarCapacidadesSugeridas();
-            configurarDisponibilidade();
-            carregarInstrutores();
+            gerenciadorInstrutores.carregarAreasAtuacao();
+            gerenciadorInstrutores.carregarCapacidadesSugeridas();
+            gerenciadorInstrutores.configurarDisponibilidade();
+            gerenciadorInstrutores.carregarInstrutores();
 
             // Configura evento para adicionar capacidade com Enter
             document.getElementById('novaCapacidade').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    adicionarCapacidade();
+                    gerenciadorInstrutores.adicionarCapacidade();
                 }
             });
 
             document.getElementById('instrutorAreaAtuacao').addEventListener('change', function() {
-                carregarCapacidadesSugeridas(this.value);
+                gerenciadorInstrutores.carregarCapacidadesSugeridas(this.value);
             });
 
             // Reseta o formulário sempre que o modal for fechado
             const modalElem = document.getElementById('modalInstrutor');
-            modalElem.addEventListener('hidden.bs.modal', novoInstrutor);
+            modalElem.addEventListener('hidden.bs.modal', () => gerenciadorInstrutores.novoInstrutor());
         });
     </script>
 <div aria-live="polite" aria-atomic="true" class="position-relative">
