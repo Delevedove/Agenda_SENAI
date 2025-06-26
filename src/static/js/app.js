@@ -644,8 +644,19 @@ async function preencherTabela(idTabela, endpoint, funcaoRenderizarLinha) {
         console.error(`Tabela com id '${idTabela}' não encontrada.`);
         return [];
     }
+    const thead = tabela.querySelector('thead');
     const tbody = tabela.querySelector('tbody');
-    tbody.innerHTML = '<tr><td colspan="100%">Carregando...</td></tr>';
+    const numColunas = thead ? thead.querySelector('tr').childElementCount : 1;
+
+    // Exibe o spinner centralizado enquanto os dados são carregados
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="${numColunas}" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </td>
+        </tr>`;
 
     try {
         const dados = await chamarAPI(endpoint, 'GET');
@@ -658,11 +669,11 @@ async function preencherTabela(idTabela, endpoint, funcaoRenderizarLinha) {
                 }
             });
         } else {
-            tbody.innerHTML = '<tr><td colspan="100%">Nenhum registro encontrado.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="${numColunas}" class="text-center">Nenhum registro encontrado.</td></tr>`;
         }
         return dados;
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="100%">Erro ao carregar os dados.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${numColunas}" class="text-center text-danger">Erro ao carregar os dados.</td></tr>`;
         console.error(`Erro ao preencher tabela ${idTabela}:`, error);
         return [];
     }
