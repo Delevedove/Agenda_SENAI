@@ -137,7 +137,8 @@ class GerenciadorSalas {
     
     salas.forEach(sala => {
         const statusBadge = this.getStatusBadge(sala.status);
-        const recursos = sala.recursos.slice(0, 3).join(', ') + (sala.recursos.length > 3 ? '...' : '');
+        const recursosLista = Array.isArray(sala.recursos) ? sala.recursos : [];
+        const recursos = recursosLista.slice(0, 3).join(', ') + (recursosLista.length > 3 ? '...' : '');
         
         const row = document.createElement('tr');
         row.innerHTML = sanitizeHTML(`
@@ -236,7 +237,8 @@ class GerenciadorSalas {
             this.recursosSala.forEach(recurso => {
                 const checkbox = document.getElementById(`recurso_${recurso.valor}`);
                 if (checkbox) {
-                    checkbox.checked = sala.recursos.includes(recurso.valor);
+                    const lista = Array.isArray(sala.recursos) ? sala.recursos : [];
+                    checkbox.checked = lista.includes(recurso.valor);
                 }
             });
             
