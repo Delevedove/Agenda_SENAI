@@ -136,7 +136,7 @@ class GerenciadorSalas {
     tbody.innerHTML = '';
     
     salas.forEach(sala => {
-        const statusBadge = getStatusBadge(sala.status);
+        const statusBadge = this.getStatusBadge(sala.status);
         const recursos = sala.recursos.slice(0, 3).join(', ') + (sala.recursos.length > 3 ? '...' : '');
         
         const row = document.createElement('tr');
