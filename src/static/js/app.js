@@ -636,3 +636,34 @@ async function exportarDados(endpoint, formato, nomeArquivo) {
         exibirAlerta('Falha ao exportar dados', 'danger');
     }
 }
+
+// Preenche de forma genérica uma tabela a partir de um endpoint
+async function preencherTabela(idTabela, endpoint, funcaoRenderizarLinha) {
+    const tabela = document.getElementById(idTabela);
+    if (!tabela) {
+        console.error(`Tabela com id '${idTabela}' não encontrada.`);
+        return [];
+    }
+    const tbody = tabela.querySelector('tbody');
+    tbody.innerHTML = '<tr><td colspan="100%">Carregando...</td></tr>';
+
+    try {
+        const dados = await chamarAPI(endpoint, 'GET');
+        tbody.innerHTML = '';
+        if (dados && dados.length > 0) {
+            dados.forEach(item => {
+                const linhaHtml = funcaoRenderizarLinha(item);
+                if (linhaHtml) {
+                    tbody.insertAdjacentHTML('beforeend', linhaHtml);
+                }
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="100%">Nenhum registro encontrado.</td></tr>';
+        }
+        return dados;
+    } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="100%">Erro ao carregar os dados.</td></tr>';
+        console.error(`Erro ao preencher tabela ${idTabela}:`, error);
+        return [];
+    }
+}
