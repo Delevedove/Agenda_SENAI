@@ -4,7 +4,8 @@
 :root {
   /* Paleta principal */
   --header-color: #003366;
-  --primary-color: #0050b3;
+  --primary-color: #00539F;
+  --accent-color: #00A9E0;
   --secondary-color: #e6f4ff;
   --success-color: #52c41a;
   --danger-color: #ff4d4f;
@@ -37,14 +38,23 @@ body {
   flex: 1;
 }
 
+.card, .btn, .form-control, .form-select, .modal-content, .input-group-text {
+  border-radius: 0 !important;
+}
+
+
+h1, .h1, h2, .h2 {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 h1, .h1 {
   font-size: 24px;
-  font-weight: 700;
 }
 
 h2, .h2 {
   font-size: 18px;
-  font-weight: 600;
 }
 
 small, .small {
@@ -85,7 +95,7 @@ small, .small {
   color: var(--dark-color);
   padding: 8px 16px;
   margin-bottom: 5px;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .sidebar .nav-link:hover {
@@ -93,8 +103,18 @@ small, .small {
 }
 
 .sidebar .nav-link.active {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: rgba(0, 83, 159, 0.1);
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.sidebar .nav-link.active::before {
+  content: ">";
+  font-family: 'Roboto', sans-serif;
+  color: var(--accent-color);
+  font-weight: 900;
+  margin-right: 8px;
+  transform: scale(1.1);
 }
 
 .sidebar .nav-link i {
@@ -105,15 +125,21 @@ small, .small {
 
 /* Cards e componentes */
 .card {
-  border: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #dee2e6;
+  box-shadow: none;
   margin-bottom: 20px;
 }
 
 .card-header {
   background-color: #fff;
   border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.card-title {
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 /* Formulários */
@@ -128,18 +154,20 @@ small, .small {
 
 /* Botões */
 .btn {
-  border-radius: 6px;
   min-height: 36px;
 }
 
 .btn-primary {
+  background-image: none;
   background-color: var(--primary-color);
   border-color: var(--primary-color);
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .btn-primary:hover {
-  background-color: #003d99;
-  border-color: #003a8c;
+  background-color: #00427f;
+  border-color: #00427f;
 }
 
 .btn-secondary {
@@ -175,8 +203,8 @@ small, .small {
 /* Calendário */
 .calendario-container {
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0;
+  box-shadow: none;
   padding: 20px;
   width: 100%;
   overflow-x: auto; /* Permite rolagem horizontal em telas muito pequenas */
@@ -200,7 +228,7 @@ small, .small {
 .calendario-day {
   position: relative;
   border: 1px solid #dee2e6;
-  border-radius: 4px;
+  border-radius: 0;
   padding: 5px;
   /* Remove rolagem do contêiner principal para evitar barras desnecessárias */
   overflow-y: hidden;
@@ -448,14 +476,15 @@ footer {
 
 /* Tela de seleção de sistema */
 .sistema-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease;
   cursor: pointer;
   height: 100%;
+  box-shadow: none;
 }
 
 .sistema-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .sistema-icon {
@@ -471,7 +500,7 @@ footer {
 
 .sistema-card.disabled:hover {
   transform: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 /* Animações */
