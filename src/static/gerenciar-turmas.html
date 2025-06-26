@@ -139,7 +139,7 @@
                         </form>
                         
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
+                            <table id="turmasTable" class="table table-striped table-hover">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
@@ -201,112 +201,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.4/dist/purify.min.js"></script>
     <script src="/js/app.js"></script>
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    verificarAutenticacao();
-    verificarPermissaoAdmin();
-
-    const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
-    let turmaParaExcluir = null;
-
-    carregarTurmas();
-
-    document.getElementById('turmaForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        salvarTurma();
-    });
-
-    document.getElementById('btnConfirmarExclusao').addEventListener('click', function() {
-        if (turmaParaExcluir !== null) {
-            excluirTurma(turmaParaExcluir);
-        }
-        confirmacaoModal.hide();
-    });
-
-    async function carregarTurmas() {
-        try {
-            const turmas = await chamarAPI('/turmas');
-            const tableBody = document.getElementById('turmasTableBody');
-
-            if (turmas.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">Nenhuma turma cadastrada.</td></tr>';
-                return;
-            }
-
-            tableBody.innerHTML = turmas.map(t => `
-                <tr>
-                    <td>${t.id}</td>
-                    <td>${t.nome}</td>
-                    <td>${formatarData(t.data_criacao)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editarTurma(${t.id}, '${t.nome}')">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao(${t.id}, '${t.nome}')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (error) {
-            document.getElementById('turmasTableBody').innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar turmas.</td></tr>';
-            console.error('Erro ao carregar turmas:', error);
-        }
-    }
-
-    async function salvarTurma() {
-        const id = document.getElementById('turmaId').value;
-        const nome = document.getElementById('nomeTurma').value;
-
-        if (!nome) {
-            exibirAlerta('O nome da turma é obrigatório.', 'danger');
-            return;
-        }
-
-        try {
-            if (id) {
-                await chamarAPI(`/turmas/${id}`, 'PUT', { nome });
-                exibirAlerta('Turma atualizada com sucesso!', 'success');
-            } else {
-                await chamarAPI('/turmas', 'POST', { nome });
-                exibirAlerta('Turma cadastrada com sucesso!', 'success');
-            }
-
-            document.getElementById('turmaForm').reset();
-            document.getElementById('turmaId').value = '';
-            document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Adicionar';
-            carregarTurmas();
-        } catch (error) {
-            exibirAlerta(`Erro ao salvar turma: ${error.message}`, 'danger');
-        }
-    }
-
-    window.editarTurma = function(id, nome) {
-        document.getElementById('turmaId').value = id;
-        document.getElementById('nomeTurma').value = nome;
-        document.getElementById('btnSalvarTurma').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar';
-        document.getElementById('nomeTurma').focus();
-    };
-
-    window.confirmarExclusao = function(id, nome) {
-        turmaParaExcluir = id;
-        document.getElementById('confirmacaoModalBody').innerHTML = `
-            <p>Tem certeza que deseja excluir a turma "${nome}"?</p>
-            <p class="text-danger">Esta ação não pode ser desfeita.</p>
-        `;
-        confirmacaoModal.show();
-    };
-
-    async function excluirTurma(id) {
-        try {
-            await chamarAPI(`/turmas/${id}`, 'DELETE');
-            exibirAlerta('Turma excluída com sucesso!', 'success');
-            carregarTurmas();
-        } catch (error) {
-            exibirAlerta(`Erro ao excluir turma: ${error.message}`, 'danger');
-        }
-    }
-});
-</script>
+    <script src="/js/turmas.js"></script>
 </body>
 </html>
