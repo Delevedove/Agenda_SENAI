@@ -219,7 +219,7 @@ class GerenciadorInstrutores {
     tbody.innerHTML = '';
 
     if (!instrutores || instrutores.length === 0) {
-        const colCount = 6;
+        const colCount = 5;
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Nenhum instrutor encontrado.</td></tr>`;
         return;
     }
@@ -232,8 +232,10 @@ class GerenciadorInstrutores {
 
         const row = `
             <tr>
-                <td><strong>${escapeHTML(instrutor.nome)}</strong>${instrutor.telefone ? `<br><small class="text-muted">${escapeHTML(instrutor.telefone)}</small>` : ''}</td>
-                <td>${escapeHTML(instrutor.email) || '-'}</td>
+                <td>
+                    <strong>${escapeHTML(instrutor.nome)}</strong><br>
+                    <small class="text-muted">${escapeHTML(instrutor.email || '-')}</small>
+                </td>
                 <td>${escapeHTML(areaNome)}</td>
                 <td>${statusBadge}</td>
                 <td><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
@@ -241,9 +243,6 @@ class GerenciadorInstrutores {
                     <div class="btn-group btn-group-sm" role="group">
                         <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
                             <i class="bi bi-pencil"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-info" onclick="gerenciadorInstrutores.verOcupacoesInstrutor(${instrutor.id})" title="Ver Ocupações">
-                            <i class="bi bi-calendar-check"></i>
                         </button>
                         <button type="button" class="btn btn-outline-danger" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')" title="Excluir">
                             <i class="bi bi-trash"></i>
