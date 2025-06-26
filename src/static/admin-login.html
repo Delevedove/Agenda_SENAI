@@ -41,8 +41,9 @@
                             </div>
                             
                             <div class="d-grid gap-2">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                                <button class="btn btn-primary" type="submit" id="btnLogin">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    <span class="btn-text"><i class="bi bi-box-arrow-in-right me-2"></i>Entrar</span>
                                 </button>
                             </div>
                         </form>
@@ -80,7 +81,11 @@
             const loginForm = document.getElementById('loginForm');
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+                const btn = document.getElementById('btnLogin');
+                const spinner = btn.querySelector('.spinner-border');
+                btn.disabled = true;
+                spinner.classList.remove('d-none');
+
                 const username = document.getElementById('username').value;
                 const senha = document.getElementById('senha').value;
                 
@@ -90,9 +95,15 @@
                     await realizarLogin(username, senha);
                 } catch (error) {
                     exibirAlerta('Credenciais inválidas. Por favor, tente novamente.', 'danger');
+                } finally {
+                    btn.disabled = false;
+                    spinner.classList.add('d-none');
                 }
             });
         });
     </script>
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+</div>
 </body>
 </html>

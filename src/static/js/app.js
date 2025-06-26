@@ -277,28 +277,34 @@ function formatarHorario(horario) {
  * @param {string} containerId - ID do container onde o alerta será exibido
  */
 function exibirAlerta(mensagem, tipo = 'info', containerId = 'alertContainer') {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+    const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) return;
 
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
-    alertDiv.role = 'alert';
+    const toastId = `toast-${Date.now()}`;
+    const bgColor =
+        tipo === 'danger' ? 'bg-danger' :
+        (tipo === 'success' ? 'bg-success' : 'bg-primary');
 
-    alertDiv.textContent = mensagem;
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'btn-close';
-    closeBtn.setAttribute('data-bs-dismiss', 'alert');
-    closeBtn.setAttribute('aria-label', 'Fechar');
-    alertDiv.appendChild(closeBtn);
+    const toastHtml = `
+        <div id="${toastId}" class="toast text-white ${bgColor}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${escapeHTML(mensagem)}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>`;
 
-    container.appendChild(alertDiv);
-    
-    // Remove o alerta após 5 segundos
-    setTimeout(() => {
-        alertDiv.classList.remove('show');
-        setTimeout(() => alertDiv.remove(), 150);
-    }, 5000);
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement);
+
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+
+    toast.show();
 }
 
 /**
