@@ -230,8 +230,8 @@ class GerenciadorInstrutores {
     tbody.innerHTML = '';
     
     instrutores.forEach(instrutor => {
-        const statusBadge = getStatusBadgeInstrutor(instrutor.status);
-        const areaNome = getAreaNome(instrutor.area_atuacao);
+        const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);
+        const areaNome = this.getAreaNome(instrutor.area_atuacao);
         const capacidades = instrutor.capacidades.slice(0, 3).join(', ') + (instrutor.capacidades.length > 3 ? '...' : '');
         
         const row = document.createElement('tr');
