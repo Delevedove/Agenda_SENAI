@@ -242,6 +242,10 @@ small, .small {
   padding: 0.25rem 0.4rem;
 }
 
+#tabelaInstrutores td.text-truncate {
+  max-width: 200px;
+}
+
 /* Calendário */
 .calendario-container {
   background-color: #fff;
