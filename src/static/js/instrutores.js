@@ -161,8 +161,6 @@ class GerenciadorInstrutores {
     async carregarInstrutores() {
         try {
             document.getElementById('loadingInstrutores').style.display = 'block';
-            document.getElementById('listaInstrutores').style.display = 'none';
-            document.getElementById('nenhumInstrutor').style.display = 'none';
         
         // Constrói parâmetros de filtro
         const params = new URLSearchParams();
@@ -217,17 +215,14 @@ class GerenciadorInstrutores {
 // Renderiza a tabela de instrutores
     renderizarTabelaInstrutores(instrutores) {
         const tbody = document.getElementById('tabelaInstrutores');
-    
-    if (instrutores.length === 0) {
-        document.getElementById('listaInstrutores').style.display = 'none';
-        document.getElementById('nenhumInstrutor').style.display = 'block';
+
+    tbody.innerHTML = '';
+
+    if (!instrutores || instrutores.length === 0) {
+        const colCount = 6;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Nenhum instrutor encontrado.</td></tr>`;
         return;
     }
-    
-    document.getElementById('listaInstrutores').style.display = 'block';
-    document.getElementById('nenhumInstrutor').style.display = 'none';
-    
-    tbody.innerHTML = '';
     
     instrutores.forEach(instrutor => {
         const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);

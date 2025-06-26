@@ -189,6 +189,11 @@ small, .small {
   color: #333;
 }
 
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
 .table tbody tr {
   min-height: 48px;
 }
