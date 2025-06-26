@@ -254,6 +254,12 @@ class GerenciadorSalas {
 
 // Salva sala (criar ou atualizar)
     async salvarSala() {
+    const btn = document.getElementById('btnSalvarSala');
+    const spinner = btn ? btn.querySelector('.spinner-border') : null;
+    if (btn && spinner) {
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+    }
     try {
         const formData = {
             nome: document.getElementById('salaNome').value.trim(),
@@ -316,6 +322,11 @@ class GerenciadorSalas {
     } catch (error) {
         console.error('Erro ao salvar sala:', error);
         exibirAlerta(error.message, 'danger');
+    } finally {
+        if (btn && spinner) {
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+        }
     }
 }
 

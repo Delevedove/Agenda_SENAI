@@ -133,7 +133,8 @@
                             </div>
                             <div class="col-md-4 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary w-100" id="btnSalvarTurma">
-                                    <i class="bi bi-plus-circle me-2"></i>Adicionar
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    <span class="btn-text"><i class="bi bi-plus-circle me-2"></i>Adicionar</span>
                                 </button>
                             </div>
                         </form>
@@ -202,5 +203,8 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.4/dist/purify.min.js"></script>
     <script src="/js/app.js"></script>
     <script src="/js/turmas.js"></script>
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+</div>
 </body>
 </html>

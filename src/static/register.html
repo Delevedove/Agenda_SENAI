@@ -68,8 +68,9 @@
                             </div>
                             
                             <div class="d-grid gap-2">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="bi bi-person-plus me-2"></i>Registrar
+                                <button class="btn btn-primary" type="submit" id="btnRegistrar">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    <span class="btn-text"><i class="bi bi-person-plus me-2"></i>Registrar</span>
                                 </button>
                             </div>
                         </form>
@@ -116,7 +117,11 @@
             const registerForm = document.getElementById('registerForm');
             registerForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+                const btn = document.getElementById('btnRegistrar');
+                const spinner = btn.querySelector('.spinner-border');
+                btn.disabled = true;
+                spinner.classList.remove('d-none');
+
                 const nome = document.getElementById('nome').value;
                 const email = document.getElementById('email').value;
                 const username = document.getElementById('username').value;
@@ -150,9 +155,15 @@
                     }, 2000);
                 } catch (error) {
                     exibirAlerta(`Erro ao registrar: ${error.message}`, 'danger');
+                } finally {
+                    btn.disabled = false;
+                    spinner.classList.add('d-none');
                 }
             });
         });
     </script>
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+</div>
 </body>
 </html>

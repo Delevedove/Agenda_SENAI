@@ -269,9 +269,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="salvarSala()">
-                        <i class="bi bi-check-circle me-1"></i>
-                        <span id="btnSalvarTexto">Salvar</span>
+                    <button type="submit" form="formSala" class="btn btn-primary" id="btnSalvarSala">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="btn-text"><i class="bi bi-check-circle me-1"></i><span id="btnSalvarTexto">Salvar</span></span>
                     </button>
                 </div>
             </div>
@@ -332,6 +332,9 @@
             modalElem.addEventListener('hidden.bs.modal', novaSala);
         });
     </script>
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+</div>
 </body>
 </html>
 

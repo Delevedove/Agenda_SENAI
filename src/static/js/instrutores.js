@@ -402,6 +402,12 @@ class GerenciadorInstrutores {
 
 // Salva instrutor (criar ou atualizar)
     async salvarInstrutor() {
+    const btn = document.getElementById('btnSalvarInstrutor');
+    const spinner = btn ? btn.querySelector('.spinner-border') : null;
+    if (btn && spinner) {
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+    }
     try {
         const formData = {
             nome: document.getElementById('instrutorNome').value.trim(),
@@ -457,6 +463,11 @@ class GerenciadorInstrutores {
     } catch (error) {
         console.error('Erro ao salvar instrutor:', error);
         exibirAlerta(error.message, 'danger');
+    } finally {
+        if (btn && spinner) {
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+        }
     }
 }
 

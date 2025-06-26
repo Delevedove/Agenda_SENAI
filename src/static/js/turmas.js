@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function salvarTurma() {
+        const btn = document.getElementById('btnSalvarTurma');
+        const spinner = btn ? btn.querySelector('.spinner-border') : null;
+        if (btn && spinner) {
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+        }
         const id = document.getElementById('turmaId').value;
         const nome = document.getElementById('nomeTurma').value;
 
@@ -65,6 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
             carregarTurmas();
         } catch (error) {
             exibirAlerta(`Erro ao salvar turma: ${error.message}`, 'danger');
+        } finally {
+            if (btn && spinner) {
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+            }
         }
     }
 
