@@ -41,3 +41,19 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
 
 5. As rotas de autenticação e cadastro possuem uma limitação de
    requisições por minuto para evitar abusos de login ou criação de contas.
+
+## Usando Docker
+
+Uma alternativa é rodar a aplicação em um container Docker. Para construir a imagem execute:
+
+```bash
+docker build -t agenda-senai .
+```
+
+Em seguida, inicie o container usando as variáveis definidas em um arquivo `.env`:
+
+```bash
+docker run -p 8000:8000 --env-file .env agenda-senai
+```
+
+A aplicação ficará disponível em [http://localhost:8000](http://localhost:8000).
