@@ -232,13 +232,13 @@ class GerenciadorInstrutores {
 
         const row = `
             <tr>
-                <td>
+                <td class="text-truncate" style="max-width: 200px;">
                     <strong>${escapeHTML(instrutor.nome)}</strong><br>
                     <small class="text-muted">${escapeHTML(instrutor.email || '-')}</small>
                 </td>
-                <td>${escapeHTML(areaNome)}</td>
+                <td class="text-truncate" style="max-width: 150px;">${escapeHTML(areaNome)}</td>
                 <td>${statusBadge}</td>
-                <td><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
+                <td class="text-truncate" style="max-width: 200px;"><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
                 <td>
                     <div class="btn-group btn-group-sm" role="group">
                         <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
