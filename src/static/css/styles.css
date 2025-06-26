@@ -182,9 +182,11 @@ small, .small {
 }
 
 /* Tabelas */
-.table thead th {
-  font-weight: bold;
-  font-size: 14px;
+.table > thead th {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #333;
 }
 
 .table tbody tr {
@@ -198,6 +200,14 @@ small, .small {
 .table .table-actions i {
   margin-right: 8px;
   cursor: pointer;
+}
+
+.btn-group .btn {
+  border-radius: 0 !important;
+}
+
+.btn-group > .btn:not(:last-child) {
+  border-right: none;
 }
 
 /* Calendário */

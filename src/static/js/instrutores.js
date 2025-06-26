@@ -233,35 +233,31 @@ class GerenciadorInstrutores {
         const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);
         const areaNome = this.getAreaNome(instrutor.area_atuacao);
         const capsLista = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
-        const capacidades = capsLista.slice(0, 3).join(', ') + (capsLista.length > 3 ? '...' : '');
-        
-        const row = document.createElement('tr');
-        row.innerHTML = sanitizeHTML(`
-            <td>
-                <strong>${escapeHTML(instrutor.nome)}</strong>
-                ${instrutor.telefone ? `<br><small class="text-muted">${escapeHTML(instrutor.telefone)}</small>` : ''}
-            </td>
-            <td>${escapeHTML(instrutor.email) || '-'}</td>
-            <td>${areaNome}</td>
-            <td>${statusBadge}</td>
-            <td>
-                <small class="text-muted">${capacidades || 'Nenhuma'}</small>
-            </td>
-            <td>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-info" onclick="gerenciadorInstrutores.verOcupacoesInstrutor(${instrutor.id})" title="Ver Ocupações">
-                        <i class="bi bi-calendar-check"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${instrutor.nome}')" title="Excluir">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `);
-        tbody.appendChild(row);
+        const capacidades = capsLista.slice(0, 2).join(', ') + (capsLista.length > 2 ? '...' : '');
+
+        const row = `
+            <tr>
+                <td><strong>${escapeHTML(instrutor.nome)}</strong>${instrutor.telefone ? `<br><small class="text-muted">${escapeHTML(instrutor.telefone)}</small>` : ''}</td>
+                <td>${escapeHTML(instrutor.email) || '-'}</td>
+                <td>${escapeHTML(areaNome)}</td>
+                <td>${statusBadge}</td>
+                <td><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="gerenciadorInstrutores.verOcupacoesInstrutor(${instrutor.id})" title="Ver Ocupações">
+                            <i class="bi bi-calendar-check"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', sanitizeHTML(row));
     });
     }
 
