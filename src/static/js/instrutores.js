@@ -234,7 +234,8 @@ class GerenciadorInstrutores {
             <tr>
                 <td class="text-truncate" style="max-width: 200px;">
                     <strong>${escapeHTML(instrutor.nome)}</strong><br>
-                    <small class="text-muted">${escapeHTML(instrutor.email || '-')}</small>
+                    <small>${escapeHTML(instrutor.email || '-')}</small><br>
+                    <small class="text-muted">${escapeHTML(areaNome)}</small>
                 </td>
                 <td class="text-truncate" style="max-width: 150px;">${escapeHTML(areaNome)}</td>
                 <td>${statusBadge}</td>
