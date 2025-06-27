@@ -105,14 +105,11 @@
 
             <!-- Conteúdo Principal -->
             <main class="col-lg-9">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Gerenciar Instrutores</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalInstrutor" onclick="gerenciadorInstrutores.novoInstrutor()">
-                            <i class="bi bi-plus-circle me-1"></i>
-                            Novo Instrutor
-                        </button>
-                    </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">Gerenciar Instrutores</h2>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalInstrutor" onclick="gerenciadorInstrutores.novoInstrutor()">
+                        <i class="bi bi-plus-circle me-2"></i>Adicionar
+                    </button>
                 </div>
 
                 <!-- Filtros -->
@@ -181,6 +178,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th scope="col">Nome</th>
+                                        <th scope="col">Email</th>
                                         <th scope="col">Área de Atuação</th>
                                         <th scope="col">Status</th>
                                         <th scope="col">Capacidades</th>

@@ -137,30 +137,18 @@ class GerenciadorSalas {
     
     salas.forEach(sala => {
         const statusBadge = this.getStatusBadge(sala.status);
-        const recursosLista = Array.isArray(sala.recursos) ? sala.recursos : [];
-        const recursos = recursosLista.slice(0, 3).join(', ') + (recursosLista.length > 3 ? '...' : '');
-        
+
         const row = document.createElement('tr');
         row.innerHTML = sanitizeHTML(`
-            <td>
-                <strong>${escapeHTML(sala.nome)}</strong>
-                ${sala.localizacao ? `<br><small class="text-muted">${escapeHTML(sala.localizacao)}</small>` : ''}
-            </td>
-            <td>
-                <span class="badge bg-info">${escapeHTML(sala.capacidade)} pessoas</span>
-            </td>
-            <td>${escapeHTML(sala.localizacao) || '-'}</td>
+            <td>${sala.id}</td>
+            <td class="text-truncate" style="max-width: 200px;">${escapeHTML(sala.nome)}</td>
+            <td class="text-truncate" style="max-width: 150px;">${escapeHTML(sala.tipo || '-')}</td>
+            <td>${escapeHTML(String(sala.capacidade))}</td>
             <td>${statusBadge}</td>
-            <td>
-                <small class="text-muted">${recursos || 'Nenhum'}</small>
-            </td>
             <td>
                 <div class="btn-group btn-group-sm" role="group">
                     <button type="button" class="btn btn-outline-primary" onclick="gerenciadorSalas.editarSala(${sala.id})" title="Editar">
                         <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-info" onclick="gerenciadorSalas.verOcupacoesSala(${sala.id})" title="Ver Ocupações">
-                        <i class="bi bi-calendar-check"></i>
                     </button>
                     <button type="button" class="btn btn-outline-danger" onclick="gerenciadorSalas.excluirSala(${sala.id}, '${sala.nome}')" title="Excluir">
                         <i class="bi bi-trash"></i>
