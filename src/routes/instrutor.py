@@ -37,7 +37,8 @@ def listar_instrutores():
     
     if capacidade:
         # Busca instrutores que podem ministrar um curso específico
-        query = query.filter(Instrutor.capacidades.ilike(f'%{capacidade}%'))
+        # Cast para texto para evitar erros com coluna JSON
+        query = query.filter(db.cast(Instrutor.capacidades, db.Text).ilike(f'%{capacidade}%'))
     
     # Ordena por nome
     instrutores = query.order_by(Instrutor.nome).all()
