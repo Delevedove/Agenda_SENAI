@@ -230,26 +230,25 @@ class GerenciadorInstrutores {
         const capsLista = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
         const capacidades = capsLista.slice(0, 2).join(', ') + (capsLista.length > 2 ? '...' : '');
 
-        const row = `
-            <tr>
-                <td class="text-truncate" style="max-width: 200px;">${escapeHTML(instrutor.nome)}</td>
-                <td class="text-truncate" style="max-width: 200px;">${escapeHTML(instrutor.email || '-')}</td>
-                <td class="text-truncate" style="max-width: 150px;">${escapeHTML(areaNome)}</td>
-                <td>${statusBadge}</td>
-                <td class="text-truncate" style="max-width: 200px;"><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
-                <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-danger" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')" title="Excluir">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-        tbody.insertAdjacentHTML('beforeend', sanitizeHTML(row));
+        const row = document.createElement('tr');
+        row.innerHTML = sanitizeHTML(`
+            <td class="text-truncate" style="max-width: 200px;">${escapeHTML(instrutor.nome)}</td>
+            <td class="text-truncate" style="max-width: 200px;">${escapeHTML(instrutor.email || '-')}</td>
+            <td class="text-truncate" style="max-width: 150px;">${escapeHTML(areaNome)}</td>
+            <td>${statusBadge}</td>
+            <td class="text-truncate" style="max-width: 200px;"><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
+            <td>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')" title="Excluir">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `);
+        tbody.appendChild(row);
     });
     }
 
