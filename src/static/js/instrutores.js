@@ -219,7 +219,7 @@ class GerenciadorInstrutores {
     tbody.innerHTML = '';
 
     if (!instrutores || instrutores.length === 0) {
-        const colCount = 5;
+        const colCount = 6;
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Nenhum instrutor encontrado.</td></tr>`;
         return;
     }
@@ -232,11 +232,8 @@ class GerenciadorInstrutores {
 
         const row = `
             <tr>
-                <td class="text-truncate" style="max-width: 200px;">
-                    <strong>${escapeHTML(instrutor.nome)}</strong><br>
-                    <small>${escapeHTML(instrutor.email || '-')}</small><br>
-                    <small class="text-muted">${escapeHTML(areaNome)}</small>
-                </td>
+                <td class="text-truncate" style="max-width: 200px;">${escapeHTML(instrutor.nome)}</td>
+                <td class="text-truncate" style="max-width: 200px;">${escapeHTML(instrutor.email || '-')}</td>
                 <td class="text-truncate" style="max-width: 150px;">${escapeHTML(areaNome)}</td>
                 <td>${statusBadge}</td>
                 <td class="text-truncate" style="max-width: 200px;"><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
