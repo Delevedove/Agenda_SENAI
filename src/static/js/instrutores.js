@@ -538,6 +538,7 @@ function exibirAlerta(mensagem, tipo) {
     }, 5000);
 }
 
-// Instancia o gerenciador quando o script é carregado
-const gerenciadorInstrutores = new GerenciadorInstrutores();
+// Instancia o gerenciador quando o script é carregado e o torna global para
+// que seja acessível em eventos inline definidos no HTML
+window.gerenciadorInstrutores = new GerenciadorInstrutores();
 

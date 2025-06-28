@@ -398,6 +398,6 @@ function exibirAlerta(mensagem, tipo) {
     }, 5000);
 }
 
-// Instancia o gerenciador de salas
-const gerenciadorSalas = new GerenciadorSalas();
+// Instancia o gerenciador de salas e o torna global para acesso inline
+window.gerenciadorSalas = new GerenciadorSalas();
 
