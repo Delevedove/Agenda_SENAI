@@ -219,11 +219,11 @@ class GerenciadorInstrutores {
     tbody.innerHTML = '';
 
     if (!instrutores || instrutores.length === 0) {
-        const colCount = 6;
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Nenhum instrutor encontrado.</td></tr>`;
+        const colCount = tbody.closest('table').querySelector('thead tr').childElementCount;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4">Nenhum instrutor encontrado.</td></tr>`;
         return;
     }
-    
+
     instrutores.forEach(instrutor => {
         const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);
         const areaNome = this.getAreaNome(instrutor.area_atuacao);
@@ -232,19 +232,15 @@ class GerenciadorInstrutores {
 
         const row = document.createElement('tr');
         row.innerHTML = sanitizeHTML(`
-            <td class="text-truncate" style="max-width: 200px;">${escapeHTML(instrutor.nome)}</td>
-            <td class="text-truncate" style="max-width: 200px;">${escapeHTML(instrutor.email || '-')}</td>
-            <td class="text-truncate" style="max-width: 150px;">${escapeHTML(areaNome)}</td>
+            <td><strong>${escapeHTML(instrutor.nome)}</strong></td>
+            <td>${escapeHTML(instrutor.email || '-')}</td>
+            <td>${escapeHTML(areaNome)}</td>
             <td>${statusBadge}</td>
-            <td class="text-truncate" style="max-width: 200px;"><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
+            <td><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
             <td>
                 <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')" title="Excluir">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                    <button type="button" class="btn btn-outline-primary" title="Editar" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})"><i class="bi bi-pencil"></i></button>
+                    <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')"><i class="bi bi-trash"></i></button>
                 </div>
             </td>
         `);
