@@ -228,17 +228,24 @@ class GerenciadorInstrutores {
         const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);
         const areaNome = this.getAreaNome(instrutor.area_atuacao);
         const capsLista = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
-        const capacidades = capsLista.slice(0, 2).join(', ') + (capsLista.length > 2 ? '...' : '');
+        let capacidades = 'Nenhuma';
+        if (capsLista.length > 0) {
+            capacidades = capsLista.slice(0, 2).join(', ');
+            if (capsLista.length > 2) {
+                capacidades += '...';
+            }
+        }
 
         const row = `
             <tr>
                 <td class="text-truncate" style="max-width: 200px;">
                     <strong>${escapeHTML(instrutor.nome)}</strong><br>
-                    <small class="text-muted">${escapeHTML(instrutor.email || '-')}</small>
+                    <small>${escapeHTML(instrutor.email || '-')}</small><br>
+                    <small class="text-muted">${escapeHTML(areaNome)}</small>
                 </td>
                 <td class="text-truncate" style="max-width: 150px;">${escapeHTML(areaNome)}</td>
                 <td>${statusBadge}</td>
-                <td class="text-truncate" style="max-width: 200px;"><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
+                <td class="text-truncate" style="max-width: 200px;"><small class="text-muted">${escapeHTML(capacidades)}</small></td>
                 <td>
                     <div class="btn-group btn-group-sm" role="group">
                         <button type="button" class="btn btn-outline-primary" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})" title="Editar">
