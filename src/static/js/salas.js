@@ -318,7 +318,11 @@ class GerenciadorSalas {
                     .join('; ');
             } else if (typeof result.detail === 'string') {
                 mensagemErro = result.detail;
-            } else if (result.erro) {
+            } else if (Array.isArray(result.erro)) {
+                mensagemErro = 'Erro de validação: ' + result.erro
+                    .map(e => `Campo '${e.loc.join('.')}' - ${e.msg}`)
+                    .join('; ');
+            } else if (typeof result.erro === 'string') {
                 mensagemErro = result.erro;
             } else if (result.message) {
                 mensagemErro = result.message;
