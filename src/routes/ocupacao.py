@@ -14,7 +14,7 @@ from io import StringIO, BytesIO
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func, extract
 
 ocupacao_bp = Blueprint('ocupacao', __name__)
 
@@ -821,12 +821,20 @@ def obter_tendencia_ocupacoes():
     ano = request.args.get('ano', type=int, default=date.today().year)
 
     resultados = db.session.query(
-        db.func.strftime('%m', Ocupacao.data).label('mes'),
-        db.func.count(Ocupacao.id).label('total')
+        extract('month', Ocupacao.data).label('mes'),
+        func.count(Ocupacao.id).label('total')
     ).filter(
-        db.func.strftime('%Y', Ocupacao.data) == str(ano)
-    ).group_by('mes').order_by('mes').all()
+        extract('year', Ocupacao.data) == ano
+    ).group_by(extract('month', Ocupacao.data)).order_by(extract('month', Ocupacao.data)).all()
 
-    tendencia = [{'mes': int(r.mes), 'total': r.total} for r in resultados]
-    return jsonify(tendencia)
+    dados_meses = {str(r.mes).zfill(2): r.total for r in resultados}
+    dados_formatados = []
+    for i in range(1, 13):
+        mes_str = str(i).zfill(2)
+        dados_formatados.append({
+            'mes': mes_str,
+            'total': dados_meses.get(mes_str, 0)
+        })
+
+    return jsonify(dados_formatados)
 
