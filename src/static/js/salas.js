@@ -145,7 +145,7 @@ class GerenciadorSalas {
             <tr>
                 <td>${sala.id}</td>
                 <td><strong>${escapeHTML(sala.nome)}</strong></td>
-                <td>${escapeHTML(sala.tipo || '-')}</td>
+                <td>${Array.isArray(sala.recursos) && sala.recursos.length > 0 ? sala.recursos.map(r => escapeHTML(r)).join(', ') : '-'}</td>
                 <td>${sala.capacidade}</td>
                 <td>${statusBadge}</td>
                 <td>
