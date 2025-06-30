@@ -117,8 +117,29 @@ async function tentarAtualizarToken() {
     }
 }
 
+function decodeTokenPayload(token) {
+    try {
+        const payload = token.split('.')[1];
+        const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+        return JSON.parse(decoded);
+    } catch (e) {
+        return null;
+    }
+}
+
+function tokenExpirado(token) {
+    const dados = decodeTokenPayload(token);
+    if (!dados || !dados.exp) return true;
+    return Date.now() >= dados.exp * 1000;
+}
+
 function estaAutenticado() {
-    return getToken() !== null;
+    const token = getToken();
+    if (!token || tokenExpirado(token)) {
+        realizarLogout();
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -425,6 +446,14 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Usuário não autenticado. Redirecionando para login...');
         return;
     }
+
+    // Desconecta automaticamente se o token expirar enquanto a página estiver aberta
+    setInterval(function() {
+        const t = getToken();
+        if (!t || tokenExpirado(t)) {
+            realizarLogout();
+        }
+    }, 60000);
     
     // Verifica se é a página de seleção de sistema
     if (paginaAtual === '/selecao-sistema.html') {
