@@ -70,7 +70,6 @@ class GerenciadorSalas {
         try {
             document.getElementById('loadingSalas').style.display = 'block';
             document.getElementById('listaSalas').style.display = 'none';
-            document.getElementById('nenhumaSala').style.display = 'none';
         
         // Constrói parâmetros de filtro
         const params = new URLSearchParams();
@@ -124,39 +123,44 @@ class GerenciadorSalas {
     renderizarTabelaSalas(salas) {
     const tbody = document.getElementById('tabelaSalas');
     
-    if (salas.length === 0) {
-        document.getElementById('listaSalas').style.display = 'none';
-        document.getElementById('nenhumaSala').style.display = 'block';
+    tbody.innerHTML = '';
+
+    if (!salas || salas.length === 0) {
+        const colCount = tbody.closest('table').querySelector('thead tr').childElementCount;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4">Nenhuma sala encontrada.</td></tr>`;
+        document.getElementById('listaSalas').style.display = 'block';
         return;
     }
-    
-    document.getElementById('listaSalas').style.display = 'block';
-    document.getElementById('nenhumaSala').style.display = 'none';
-    
-    tbody.innerHTML = '';
-    
-    salas.forEach(sala => {
-        const statusBadge = this.getStatusBadge(sala.status);
 
-        const row = document.createElement('tr');
-        row.innerHTML = sanitizeHTML(`
-            <td>${sala.id}</td>
-            <td class="text-truncate" style="max-width: 200px;">${escapeHTML(sala.nome)}</td>
-            <td class="text-truncate" style="max-width: 150px;">${escapeHTML(sala.tipo || '-')}</td>
-            <td>${escapeHTML(String(sala.capacidade))}</td>
-            <td>${statusBadge}</td>
-            <td>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" onclick="gerenciadorSalas.editarSala(${sala.id})" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="gerenciadorSalas.excluirSala(${sala.id}, '${sala.nome}')" title="Excluir">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `);
-        tbody.appendChild(row);
+    document.getElementById('listaSalas').style.display = 'block';
+
+    salas.forEach(sala => {
+        const statusBadge = sala.status === 'ativa'
+            ? `<span class="badge bg-success">Ativa</span>`
+            : sala.status === 'manutencao'
+                ? `<span class="badge bg-warning">Manutenção</span>`
+                : `<span class="badge bg-secondary">Inativa</span>`;
+
+        const row = `
+            <tr>
+                <td>${sala.id}</td>
+                <td><strong>${escapeHTML(sala.nome)}</strong></td>
+                <td>${escapeHTML(sala.tipo || '-')}</td>
+                <td>${sala.capacidade}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary" title="Editar Sala" onclick="gerenciadorSalas.editarSala(${sala.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" title="Excluir Sala" onclick="gerenciadorSalas.excluirSala(${sala.id}, '${escapeHTML(sala.nome)}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
     });
 }
 
