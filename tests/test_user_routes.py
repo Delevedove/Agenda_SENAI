@@ -1,5 +1,6 @@
 
 import jwt
+import uuid
 from datetime import datetime, timedelta
 from src.models.user import User
 from src.routes.user import gerar_token_acesso, gerar_refresh_token
@@ -148,3 +149,24 @@ def test_refresh_sem_token(client):
 def test_logout_sem_token(client):
     resp = client.post('/api/logout', json={})
     assert resp.status_code == 400
+
+
+def test_logout_com_token_expirado(client):
+    with client.application.app_context():
+        user = User.query.filter_by(username='admin').first()
+        expired_token = jwt.encode(
+            {
+                'user_id': user.id,
+                'nome': user.nome,
+                'perfil': user.tipo,
+                'exp': datetime.utcnow() - timedelta(minutes=5),
+                'jti': str(uuid.uuid4()),
+            },
+            client.application.config['SECRET_KEY'],
+            algorithm='HS256',
+        )
+        refresh = gerar_refresh_token(user)
+
+    headers = {'Authorization': f'Bearer {expired_token}'}
+    resp = client.post('/api/logout', headers=headers, json={'refresh_token': refresh})
+    assert resp.status_code == 200

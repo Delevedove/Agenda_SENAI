@@ -273,20 +273,25 @@ def refresh_token():
 
 @user_bp.route('/logout', methods=['POST'])
 def logout():
-    """Revoga o token de acesso atual e, opcionalmente, o refresh token."""
+    """Revoga o token de acesso atual e/ou o refresh token."""
     auth_header = request.headers.get('Authorization')
     token = auth_header.split(' ')[1] if auth_header else None
-    if not token:
-        return jsonify({'erro': 'Token obrigatório'}), 400
-    try:
-        dados = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
-        jti = dados.get('jti')
-        exp = datetime.utcfromtimestamp(dados['exp'])
-        ttl = exp - datetime.utcnow()
-        if jti:
-            redis_conn.setex(jti, ttl, "revoked")
-    except jwt.PyJWTError:
-        return jsonify({'erro': 'Token inválido'}), 401
+
+    if token:
+        try:
+            dados = jwt.decode(
+                token,
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256'],
+                options={'verify_exp': False},
+            )
+            jti = dados.get('jti')
+            exp = datetime.utcfromtimestamp(dados['exp'])
+            ttl = exp - datetime.utcnow()
+            if ttl.total_seconds() > 0 and jti:
+                redis_conn.setex(jti, ttl, 'revoked')
+        except jwt.InvalidTokenError:
+            return jsonify({'erro': 'Token inválido'}), 401
 
     data = request.json or {}
     refresh = data.get('refresh_token')
@@ -295,4 +300,8 @@ def logout():
         if rt:
             rt.revoked = True
             db.session.commit()
+
+    if not token and not refresh:
+        return jsonify({'erro': 'Token obrigatório'}), 400
+
     return jsonify({'mensagem': 'Logout realizado'})
