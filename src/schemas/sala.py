@@ -11,10 +11,10 @@ class SalaCreateSchema(BaseModel):
     observacoes: Optional[str] = None
 
 class SalaUpdateSchema(BaseModel):
-    nome: Optional[str]
+    nome: Optional[str] = None
     capacidade: Optional[int] = Field(default=None, gt=0)
-    recursos: Optional[List[str]]
-    localizacao: Optional[str]
-    tipo: Optional[str]
-    status: Optional[str]
-    observacoes: Optional[str]
+    recursos: Optional[List[str]] = None
+    localizacao: Optional[str] = None
+    tipo: Optional[str] = None
+    status: Optional[str] = None
+    observacoes: Optional[str] = None
