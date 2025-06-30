@@ -206,20 +206,15 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
     try {
         let response = await fetch(url, options);
 
-        if (response.status === 401 && requerAuth) {
-            const atualizado = await tentarAtualizarToken();
-            if (atualizado) {
-                headers['Authorization'] = `Bearer ${getToken()}`;
-                response = await fetch(url, { ...options, headers });
-            }
+        // Verifica se a resposta indica falta de autorização e redireciona imediatamente
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('usuario');
+            window.location.href = '/admin-login.html';
+            throw new Error('Sessão expirada');
         }
 
-        if (response.status === 401) {
-            exibirAlerta('Sua sessão expirou. Você será redirecionado para a página de login.', 'warning');
-            setTimeout(() => { window.location.href = '/login.html'; }, 2500);
-            throw new Error('Não autenticado');
-        }
-        
         const data = await response.json();
         
         if (!response.ok) {
