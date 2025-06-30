@@ -316,10 +316,12 @@ class GerenciadorSalas {
                 mensagemErro = 'Erro de validação: ' + result.detail
                     .map(e => `Campo '${e.loc.join('.')}' - ${e.msg}`)
                     .join('; ');
-            } else if (result.detail) {
+            } else if (typeof result.detail === 'string') {
                 mensagemErro = result.detail;
             } else if (result.erro) {
                 mensagemErro = result.erro;
+            } else if (result.message) {
+                mensagemErro = result.message;
             }
 
             throw new Error(mensagemErro);
