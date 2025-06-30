@@ -311,7 +311,18 @@ class GerenciadorSalas {
             // Recarrega a lista
             this.carregarSalas();
         } else {
-            throw new Error(result.erro || 'Erro ao salvar sala');
+            let mensagemErro = 'Ocorreu um erro desconhecido.';
+            if (result.detail && Array.isArray(result.detail)) {
+                mensagemErro = 'Erro de validação: ' + result.detail
+                    .map(e => `Campo '${e.loc.join('.')}' - ${e.msg}`)
+                    .join('; ');
+            } else if (result.detail) {
+                mensagemErro = result.detail;
+            } else if (result.erro) {
+                mensagemErro = result.erro;
+            }
+
+            throw new Error(mensagemErro);
         }
     } catch (error) {
         console.error('Erro ao salvar sala:', error);
