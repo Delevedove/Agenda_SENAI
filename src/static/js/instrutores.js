@@ -216,36 +216,36 @@ class GerenciadorInstrutores {
     renderizarTabelaInstrutores(instrutores) {
         const tbody = document.getElementById('tabelaInstrutores');
 
-    tbody.innerHTML = '';
+        tbody.innerHTML = '';
 
-    if (!instrutores || instrutores.length === 0) {
-        const colCount = tbody.closest('table').querySelector('thead tr').childElementCount;
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4">Nenhum instrutor encontrado.</td></tr>`;
-        return;
-    }
+        if (!instrutores || instrutores.length === 0) {
+            const colCount = tbody.closest('table').querySelector('thead tr').childElementCount;
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4">Nenhum instrutor encontrado.</td></tr>`;
+            return;
+        }
 
-    instrutores.forEach(instrutor => {
-        const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);
-        const areaNome = this.getAreaNome(instrutor.area_atuacao);
-        const capsLista = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
-        const capacidades = capsLista.slice(0, 2).join(', ') + (capsLista.length > 2 ? '...' : '');
+        instrutores.forEach(instrutor => {
+            const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);
+            const areaNome = this.getAreaNome(instrutor.area_atuacao);
+            const capsLista = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
+            const capacidades = capsLista.slice(0, 2).join(', ') + (capsLista.length > 2 ? '...' : '');
 
-        const row = document.createElement('tr');
-        row.innerHTML = sanitizeHTML(`
-            <td><strong>${escapeHTML(instrutor.nome)}</strong></td>
-            <td>${escapeHTML(instrutor.email || '-')}</td>
-            <td>${escapeHTML(areaNome)}</td>
-            <td>${statusBadge}</td>
-            <td><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
-            <td>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" title="Editar" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})"><i class="bi bi-pencil"></i></button>
-                    <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')"><i class="bi bi-trash"></i></button>
-                </div>
-            </td>
-        `);
-        tbody.appendChild(row);
-    });
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${escapeHTML(instrutor.nome)}</strong></td>
+                <td>${escapeHTML(instrutor.email || '-')}</td>
+                <td>${escapeHTML(areaNome)}</td>
+                <td>${statusBadge}</td>
+                <td><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary" title="Editar" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')"><i class="bi bi-trash"></i></button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
     }
 
     // Retorna o nome da área de atuação
@@ -259,9 +259,9 @@ class GerenciadorInstrutores {
         const badges = {
             'ativo': '<span class="badge bg-success">Ativo</span>',
             'inativo': '<span class="badge bg-secondary">Inativo</span>',
-            'licenca': '<span class="badge bg-warning">Licença</span>'
+            'licenca': '<span class="badge bg-warning text-dark">Licença</span>'
         };
-        return badges[status] || '<span class="badge bg-secondary">-</span>';
+        return badges[status] || `<span class="badge bg-light text-dark">${escapeHTML(status)}</span>`;
     }
 
     // Aplica filtros
