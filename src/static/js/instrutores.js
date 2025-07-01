@@ -143,15 +143,15 @@ class GerenciadorInstrutores {
         const container = document.getElementById('disponibilidadeContainer');
         container.innerHTML = `
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="dispManha" value="manha">
+            <input class="form-check-input" type="checkbox" id="dispManha" name="disponibilidade" value="manha">
             <label class="form-check-label" for="dispManha">Manhã</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="dispTarde" value="tarde">
+            <input class="form-check-input" type="checkbox" id="dispTarde" name="disponibilidade" value="tarde">
             <label class="form-check-label" for="dispTarde">Tarde</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="dispNoite" value="noite">
+            <input class="form-check-input" type="checkbox" id="dispNoite" name="disponibilidade" value="noite">
             <label class="form-check-label" for="dispNoite">Noite</label>
         </div>
     `;
@@ -351,6 +351,15 @@ class GerenciadorInstrutores {
     document.getElementById('dispNoite').checked = false;
     }
 
+    // Retorna lista de turnos de disponibilidade selecionados no formulário
+    coletarDisponibilidadeSelecionada() {
+        const disponibilidade = [];
+        document
+            .querySelectorAll('#formInstrutor input[name="disponibilidade"]:checked')
+            .forEach(cb => disponibilidade.push(cb.value));
+        return disponibilidade;
+    }
+
 // Edita um instrutor existente
     async editarInstrutor(id) {
     try {
@@ -401,66 +410,87 @@ class GerenciadorInstrutores {
 
 // Salva instrutor (criar ou atualizar)
     async salvarInstrutor() {
-    const btn = document.getElementById('btnSalvarInstrutor');
-    const spinner = btn ? btn.querySelector('.spinner-border') : null;
-    if (btn && spinner) {
-        btn.disabled = true;
-        spinner.classList.remove('d-none');
-    }
-    try {
-        // Coleta as capacidades diretamente do estado controlado pela classe
-        const capacidadesSelecionadas = [...this.capacidadesInstrutor];
+        const btn = document.getElementById('btnSalvarInstrutor');
+        const spinner = btn ? btn.querySelector('.spinner-border') : null;
 
-        // Coleta disponibilidade marcada nas checkboxes do formulário
-        const disponibilidadeSelecionada = [];
-        if (document.getElementById('dispManha').checked) disponibilidadeSelecionada.push('manha');
-        if (document.getElementById('dispTarde').checked) disponibilidadeSelecionada.push('tarde');
-        if (document.getElementById('dispNoite').checked) disponibilidadeSelecionada.push('noite');
-
-        const formData = {
-            nome: document.getElementById('instrutorNome').value.trim(),
-            email: document.getElementById('instrutorEmail').value.trim(),
-            telefone: document.getElementById('instrutorTelefone').value.trim(),
-            area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
-            status: document.getElementById('instrutorStatus').value,
-            observacoes: document.getElementById('instrutorObservacoes').value.trim(),
-            capacidades: capacidadesSelecionadas,
-            disponibilidade: disponibilidadeSelecionada
-        };
-        
-        // Validações
-        if (!formData.nome) {
-            exibirAlerta('Nome do instrutor é obrigatório.', 'warning');
-            return;
-        }
-        
-        const instrutorId = document.getElementById('instrutorId').value;
-        const isEdicao = instrutorId !== '';
-        
-        await chamarAPI(`/instrutores${isEdicao ? `/${instrutorId}` : ''}`, isEdicao ? 'PUT' : 'POST', formData);
-
-        exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
-
-        // Fecha o modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrutor'));
-        modal.hide();
-
-        // Reseta o formulário e o estado de edição para evitar
-        // que uma nova criação seja tratada como atualização
-        this.novoInstrutor();
-
-        // Recarrega a lista
-        this.carregarInstrutores();
-    } catch (error) {
-        console.error('Erro ao salvar instrutor:', error);
-        exibirAlerta(error.message, 'danger');
-    } finally {
         if (btn && spinner) {
-            btn.disabled = false;
-            spinner.classList.add('d-none');
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+        }
+
+        try {
+            // Coleta capacidades e disponibilidade do formulário
+            const capacidades = [...this.capacidadesInstrutor];
+            const disponibilidade = this.coletarDisponibilidadeSelecionada();
+
+            const formData = {
+                nome: document.getElementById('instrutorNome').value.trim(),
+                email: document.getElementById('instrutorEmail').value.trim(),
+                telefone: document.getElementById('instrutorTelefone').value.trim(),
+                area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
+                status: document.getElementById('instrutorStatus').value,
+                observacoes: document.getElementById('instrutorObservacoes').value.trim(),
+                capacidades: capacidades,
+                disponibilidade: disponibilidade
+            };
+
+            if (!formData.nome) {
+                exibirAlerta('Nome do instrutor é obrigatório.', 'warning');
+                return;
+            }
+
+            const instrutorId = document.getElementById('instrutorId').value;
+            const isEdicao = instrutorId !== '';
+
+            const response = await fetch(`${API_URL}/instrutores${isEdicao ? `/${instrutorId}` : ''}`, {
+                method: isEdicao ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrutor'));
+                modal.hide();
+
+                this.novoInstrutor();
+                this.carregarInstrutores();
+            } else {
+                let mensagemErro = 'Ocorreu um erro desconhecido.';
+                if (result.detail && Array.isArray(result.detail)) {
+                    mensagemErro = 'Erro de validação: ' + result.detail
+                        .map(e => `Campo '${e.loc.join('.')}' - ${e.msg}`)
+                        .join('; ');
+                } else if (typeof result.detail === 'string') {
+                    mensagemErro = result.detail;
+                } else if (Array.isArray(result.erro)) {
+                    mensagemErro = 'Erro de validação: ' + result.erro
+                        .map(e => `Campo '${e.loc.join('.')}' - ${e.msg}`)
+                        .join('; ');
+                } else if (typeof result.erro === 'string') {
+                    mensagemErro = result.erro;
+                } else if (result.message) {
+                    mensagemErro = result.message;
+                }
+
+                throw new Error(mensagemErro);
+            }
+        } catch (error) {
+            console.error('Erro ao salvar instrutor:', error);
+            exibirAlerta(error.message, 'danger');
+        } finally {
+            if (btn && spinner) {
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+            }
         }
     }
-}
 
 // Exclui um instrutor
     excluirInstrutor(id, nome) {
