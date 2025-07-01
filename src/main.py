@@ -14,6 +14,7 @@ from src.routes.ocupacao import ocupacao_bp
 from src.routes.sala import sala_bp
 from src.routes.turma import turma_bp
 from src.routes.user import user_bp
+from src.models.recurso import Recurso
 
 def create_admin(app):
     """Create the initial admin user if it doesn't exist."""
@@ -38,6 +39,26 @@ def create_admin(app):
         except SQLAlchemyError as e:
             db.session.rollback()
             print(f"Erro ao criar usuário administrador: {str(e)}")
+
+
+def create_default_recursos(app):
+    """Populate tabela de recursos se estiver vazia."""
+    with app.app_context():
+        if Recurso.query.count() == 0:
+            padrao = [
+                "tv",
+                "projetor",
+                "quadro_branco",
+                "climatizacao",
+                "computadores",
+                "wifi",
+                "bancadas",
+                "armarios",
+                "tomadas",
+            ]
+            for nome in padrao:
+                db.session.add(Recurso(nome=nome))
+            db.session.commit()
 
 
 def create_app():
@@ -87,6 +108,7 @@ def create_app():
 
     with app.app_context():
         create_admin(app)
+        create_default_recursos(app)
 
     return app
 

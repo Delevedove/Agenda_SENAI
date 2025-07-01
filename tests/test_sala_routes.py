@@ -71,3 +71,25 @@ def test_atualizar_sala_nome_duplicado(client):
     sala_b = r2.get_json()['id']
     resp = client.put(f'/api/salas/{sala_b}', json={'nome': 'SalaA'}, headers=headers)
     assert resp.status_code == 400
+
+
+def test_atualiza_recursos_substitui(client):
+    token, _ = login_admin(client)
+    headers = {'Authorization': f'Bearer {token}'}
+
+    resp = client.post(
+        '/api/salas',
+        json={'nome': 'SalaRec', 'capacidade': 10, 'recursos': ['tv', 'wifi']},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    sala_id = resp.get_json()['id']
+
+    resp = client.put(
+        f'/api/salas/{sala_id}',
+        json={'recursos': ['projetor']},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['recursos'] == ['projetor']
