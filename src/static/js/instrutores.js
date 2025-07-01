@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tabelaInstrutoresBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Carregando...</span></div> Carregando instrutores...</td></tr>`;
 
         try {
+            // Endpoint deve coincidir exatamente com o definido no backend
             const instrutores = await chamarAPI('/api/instrutores', 'GET');
             renderizarTabela(instrutores);
         } catch (error) {
