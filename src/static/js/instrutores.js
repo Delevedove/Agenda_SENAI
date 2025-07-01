@@ -48,8 +48,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         instrutores.forEach(instrutor => {
             const statusBadge = getStatusBadge(instrutor.status);
-            const listaCapacidades = normalizarCapacidades(instrutor.capacidades);
-            const capacidades = listaCapacidades.length > 0 ? listaCapacidades.join(', ') : 'Nenhuma';
+
+            // INÍCIO DA CORREÇÃO
+            let capacidadesArray = [];
+            if (instrutor.capacidades) {
+                if (typeof instrutor.capacidades === 'string') {
+                    try {
+                        capacidadesArray = JSON.parse(instrutor.capacidades);
+                    } catch (e) {
+                        capacidadesArray = [instrutor.capacidades];
+                        console.error("Erro ao fazer parse das capacidades:", e);
+                    }
+                } else if (Array.isArray(instrutor.capacidades)) {
+                    capacidadesArray = instrutor.capacidades;
+                }
+            }
+            const capacidades = capacidadesArray.length > 0
+                ? capacidadesArray.join(', ')
+                : 'Nenhuma';
+            // FIM DA CORREÇÃO
             const row = `
                 <tr>
                     <td><strong>${escapeHTML(instrutor.nome)}</strong></td>
