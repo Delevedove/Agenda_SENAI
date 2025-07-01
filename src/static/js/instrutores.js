@@ -25,6 +25,19 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function normalizarCapacidades(campo) {
+        if (Array.isArray(campo)) {
+            return campo.filter(c => typeof c === 'string');
+        }
+        if (typeof campo === 'string') {
+            return campo.split(',').map(c => c.trim()).filter(Boolean);
+        }
+        if (campo && typeof campo === 'object') {
+            return Object.values(campo).filter(v => typeof v === 'string');
+        }
+        return [];
+    }
+
     function renderizarTabela(instrutores) {
         tabelaInstrutoresBody.innerHTML = '';
         if (!instrutores || instrutores.length === 0) {
@@ -35,7 +48,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         instrutores.forEach(instrutor => {
             const statusBadge = getStatusBadge(instrutor.status);
-            const capacidades = instrutor.capacidades && instrutor.capacidades.length > 0 ? instrutor.capacidades.join(', ') : 'Nenhuma';
+            const listaCapacidades = normalizarCapacidades(instrutor.capacidades);
+            const capacidades = listaCapacidades.length > 0 ? listaCapacidades.join(', ') : 'Nenhuma';
             const row = `
                 <tr>
                     <td><strong>${escapeHTML(instrutor.nome)}</strong></td>
