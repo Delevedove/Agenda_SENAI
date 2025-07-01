@@ -202,6 +202,15 @@ class GerenciadorSalas {
     });
     }
 
+    // Retorna lista de recursos marcados no formulario da sala
+    coletarRecursosSelecionados() {
+        const recursos = [];
+        document
+            .querySelectorAll('#formSala input[name="recursos"]:checked')
+            .forEach(cb => recursos.push(cb.value));
+        return recursos;
+    }
+
 // Edita uma sala existente
     async editarSala(id) {
     try {
@@ -255,10 +264,8 @@ class GerenciadorSalas {
         spinner.classList.remove('d-none');
     }
     try {
-        // Coleta todos os recursos marcados no formulário
-        const recursos = Array.from(
-            document.querySelectorAll('#formSala input[name="recursos"]:checked')
-        ).map(cb => cb.value);
+        // Coleta os recursos marcados no formulário
+        const recursos = this.coletarRecursosSelecionados();
 
         const formData = {
             nome: document.getElementById('salaNome').value.trim(),
