@@ -255,10 +255,10 @@ class GerenciadorSalas {
         spinner.classList.remove('d-none');
     }
     try {
-        const recursos = [];
-        document.querySelectorAll('#formSala input[name="recursos"]:checked').forEach((checkbox) => {
-            recursos.push(checkbox.value);
-        });
+        // Coleta todos os recursos marcados no formulário
+        const recursos = Array.from(
+            document.querySelectorAll('#formSala input[name="recursos"]:checked')
+        ).map(cb => cb.value);
 
         const formData = {
             nome: document.getElementById('salaNome').value.trim(),
