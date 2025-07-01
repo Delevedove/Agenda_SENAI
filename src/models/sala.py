@@ -4,8 +4,8 @@ from typing import List
 from .recurso import Recurso
 
 # Tabela associativa entre salas e recursos
-sala_recurso = db.Table(
-    'sala_recurso',
+sala_recursos = db.Table(
+    'sala_recursos',
     db.Column('sala_id', db.Integer, db.ForeignKey('salas.id'), primary_key=True),
     db.Column('recurso_id', db.Integer, db.ForeignKey('recursos.id'), primary_key=True)
 )
@@ -22,7 +22,7 @@ class Sala(db.Model):
     capacidade = db.Column(db.Integer, nullable=False)
     recursos = db.relationship(
         'Recurso',
-        secondary=sala_recurso,
+        secondary=sala_recursos,
         lazy='joined',
         backref=db.backref('salas', lazy='joined')
     )
