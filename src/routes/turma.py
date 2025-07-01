@@ -50,7 +50,7 @@ def criar_turma():
     if not verificar_admin(user):
         return jsonify({'erro': 'Permissão negada'}), 403
     
-    data = request.json
+    data = request.json or {}
 
     nome = (data.get('nome') or '').strip()
 
@@ -90,7 +90,7 @@ def atualizar_turma(id):
     if not turma:
         return jsonify({'erro': 'Turma não encontrada'}), 404
     
-    data = request.json
+    data = request.json or {}
 
     nome = (data.get('nome') or '').strip()
 

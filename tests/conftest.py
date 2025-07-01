@@ -13,6 +13,7 @@ from src.models.user import User
 from src.models.sala import Sala
 from src.routes.user import user_bp
 from src.routes.sala import sala_bp
+from src.routes.turma import turma_bp
 from src.routes.agendamento import agendamento_bp
 from src.routes.instrutor import instrutor_bp
 
@@ -26,6 +27,7 @@ def app():
     db.init_app(app)
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(sala_bp, url_prefix='/api')
+    app.register_blueprint(turma_bp, url_prefix='/api')
     app.register_blueprint(agendamento_bp, url_prefix='/api')
     app.register_blueprint(instrutor_bp, url_prefix='/api')
 
