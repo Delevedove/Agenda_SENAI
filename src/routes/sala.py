@@ -141,7 +141,14 @@ def atualizar_sala(id):
         sala.capacidade = payload.capacidade
 
     if payload.recursos is not None:
-        sala.set_recursos(payload.recursos)
+        recursos_nomes = payload.recursos
+        sala.recursos.clear()
+        for nome_recurso in recursos_nomes:
+            recurso = Recurso.query.filter_by(nome=nome_recurso).first()
+            if not recurso:
+                recurso = Recurso(nome=nome_recurso)
+                db.session.add(recurso)
+            sala.recursos.append(recurso)
 
     if payload.localizacao is not None:
         sala.localizacao = payload.localizacao
