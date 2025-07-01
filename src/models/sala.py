@@ -1,4 +1,5 @@
 from src.models import db
+from sqlalchemy.orm.attributes import flag_modified
 from datetime import datetime
 
 
@@ -38,6 +39,7 @@ class Sala(db.Model):
     def set_recursos(self, recursos_list):
         """Define a lista de recursos da sala."""
         self.recursos = recursos_list or []
+        flag_modified(self, 'recursos')
     
     def is_disponivel(self, data, horario_inicio, horario_fim, ocupacao_id=None, grupo_ocupacao_id=None):
         """
