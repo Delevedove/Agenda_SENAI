@@ -1,3 +1,4 @@
+"""Rotas para gerenciamento de laboratorios."""
 from flask import Blueprint, request, jsonify, g
 from src.models import db
 from src.models.laboratorio_turma import Laboratorio, Turma

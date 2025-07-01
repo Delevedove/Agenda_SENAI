@@ -1,3 +1,4 @@
+"""Modelo de sala."""
 from src.models import db
 from datetime import datetime
 from typing import List

@@ -1,3 +1,4 @@
+"""Rotas para gerenciamento de instrutores."""
 from flask import Blueprint, request, jsonify
 from src.models import db
 from src.models.instrutor import Instrutor

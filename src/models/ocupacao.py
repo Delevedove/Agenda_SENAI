@@ -1,3 +1,4 @@
+"""Modelo de ocupacao de sala."""
 from src.models import db
 from src.models.user import User
 from src.models.sala import Sala

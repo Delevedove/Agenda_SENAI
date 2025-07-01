@@ -1,3 +1,4 @@
+"""Rotas para gerenciamento de usuarios."""
 from flask import Blueprint, request, jsonify, current_app, g
 
 from src.limiter import limiter

@@ -1,3 +1,4 @@
+"""Rotas para gerenciamento de ocupacoes de salas."""
 from flask import Blueprint, request, jsonify, make_response, send_file
 from src.models import db
 from src.models.ocupacao import Ocupacao

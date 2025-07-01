@@ -1,3 +1,4 @@
+"""Modelos de laboratorio e turma."""
 from datetime import datetime
 from src.models import db
 

@@ -1,3 +1,6 @@
+"""
+Inicializa a aplicacao Flask e registra os blueprints.
+"""
 from flask import Flask
 from flask_migrate import Migrate
 from src.limiter import limiter

@@ -1,3 +1,4 @@
+"""Rotas para notificacoes de agendamentos."""
 from flask import Blueprint, request, jsonify
 from src.models import db
 from src.models.agendamento import Notificacao

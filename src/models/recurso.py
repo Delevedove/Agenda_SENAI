@@ -1,3 +1,4 @@
+"""Modelo de recurso."""
 from src.models import db
 
 class Recurso(db.Model):

@@ -1,3 +1,4 @@
+"""Rotas para gerenciamento de turmas."""
 from flask import Blueprint, request, jsonify
 from src.models import db
 from sqlalchemy.exc import SQLAlchemyError

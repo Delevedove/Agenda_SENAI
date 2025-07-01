@@ -1,3 +1,4 @@
+"""Modelo de token de atualizacao."""
 from datetime import datetime
 
 from src.models import db
