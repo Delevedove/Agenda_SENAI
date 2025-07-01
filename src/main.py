@@ -17,18 +17,20 @@ from src.routes.user import user_bp
 from src.models.recurso import Recurso
 
 def create_admin(app):
-    """Create the initial admin user if it doesn't exist."""
+    """Cria o usuário administrador padrão de forma idempotente."""
     from src.models.user import User
     from sqlalchemy.exc import SQLAlchemyError
     with app.app_context():
         try:
-            admin = User.query.filter_by(username='admin').first()
+            admin_email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
+            admin = User.query.filter_by(email=admin_email).first()
             if not admin:
+                admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
                 admin = User(
                     nome='Administrador',
-                    email='admin@example.com',
+                    email=admin_email,
                     username='admin',
-                    senha='admin123',
+                    senha=admin_password,
                     tipo='admin'
                 )
                 db.session.add(admin)
@@ -42,23 +44,23 @@ def create_admin(app):
 
 
 def create_default_recursos(app):
-    """Populate tabela de recursos se estiver vazia."""
+    """Garante que os recursos padrao existam de forma idempotente."""
     with app.app_context():
-        if Recurso.query.count() == 0:
-            padrao = [
-                "tv",
-                "projetor",
-                "quadro_branco",
-                "climatizacao",
-                "computadores",
-                "wifi",
-                "bancadas",
-                "armarios",
-                "tomadas",
-            ]
-            for nome in padrao:
+        padrao = [
+            "tv",
+            "projetor",
+            "quadro_branco",
+            "climatizacao",
+            "computadores",
+            "wifi",
+            "bancadas",
+            "armarios",
+            "tomadas",
+        ]
+        for nome in padrao:
+            if not Recurso.query.filter_by(nome=nome).first():
                 db.session.add(Recurso(nome=nome))
-            db.session.commit()
+        db.session.commit()
 
 
 def create_app():
@@ -107,6 +109,7 @@ def create_app():
         return app.send_static_file(path)
 
     with app.app_context():
+        db.create_all()
         create_admin(app)
         create_default_recursos(app)
 
