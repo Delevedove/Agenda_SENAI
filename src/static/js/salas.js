@@ -51,7 +51,7 @@ class GerenciadorSalas {
                 col.className = 'col-md-4 col-sm-6';
                 col.innerHTML = `
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="${recurso.valor}" id="recurso_${recurso.valor}">
+                        <input class="form-check-input" type="checkbox" value="${recurso.valor}" id="recurso_${recurso.valor}" name="recursos">
                         <label class="form-check-label" for="recurso_${recurso.valor}">
                             ${recurso.nome}
                         </label>
@@ -255,13 +255,18 @@ class GerenciadorSalas {
         spinner.classList.remove('d-none');
     }
     try {
+        const recursos = [];
+        document.querySelectorAll('#formSala input[name="recursos"]:checked').forEach((checkbox) => {
+            recursos.push(checkbox.value);
+        });
+
         const formData = {
             nome: document.getElementById('salaNome').value.trim(),
             capacidade: parseInt(document.getElementById('salaCapacidade').value),
             localizacao: document.getElementById('salaLocalizacao').value,
             status: document.getElementById('salaStatus').value,
             observacoes: document.getElementById('salaObservacoes').value.trim(),
-            recursos: []
+            recursos: recursos
         };
         
         // Validações
@@ -275,13 +280,7 @@ class GerenciadorSalas {
             return;
         }
         
-        // Coleta recursos selecionados
-        this.recursosSala.forEach(recurso => {
-            const checkbox = document.getElementById(`recurso_${recurso.valor}`);
-            if (checkbox && checkbox.checked) {
-                formData.recursos.push(recurso.valor);
-            }
-        });
+
         
         const salaId = document.getElementById('salaId').value;
         const isEdicao = salaId !== '';
