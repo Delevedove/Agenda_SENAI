@@ -408,10 +408,14 @@ class GerenciadorInstrutores {
         spinner.classList.remove('d-none');
     }
     try {
-        const capacidadesSelecionadas = [];
-        document
-            .querySelectorAll('#formInstrutor input[name="capacidades"]:checked')
-            .forEach(cb => capacidadesSelecionadas.push(cb.value));
+        // Coleta as capacidades diretamente do estado controlado pela classe
+        const capacidadesSelecionadas = [...this.capacidadesInstrutor];
+
+        // Coleta disponibilidade marcada nas checkboxes do formulário
+        const disponibilidadeSelecionada = [];
+        if (document.getElementById('dispManha').checked) disponibilidadeSelecionada.push('manha');
+        if (document.getElementById('dispTarde').checked) disponibilidadeSelecionada.push('tarde');
+        if (document.getElementById('dispNoite').checked) disponibilidadeSelecionada.push('noite');
 
         const formData = {
             nome: document.getElementById('instrutorNome').value.trim(),
@@ -421,7 +425,7 @@ class GerenciadorInstrutores {
             status: document.getElementById('instrutorStatus').value,
             observacoes: document.getElementById('instrutorObservacoes').value.trim(),
             capacidades: capacidadesSelecionadas,
-            disponibilidade: []
+            disponibilidade: disponibilidadeSelecionada
         };
         
         // Validações
@@ -429,11 +433,6 @@ class GerenciadorInstrutores {
             exibirAlerta('Nome do instrutor é obrigatório.', 'warning');
             return;
         }
-        
-        // Coleta disponibilidade
-        if (document.getElementById('dispManha').checked) formData.disponibilidade.push('manha');
-        if (document.getElementById('dispTarde').checked) formData.disponibilidade.push('tarde');
-        if (document.getElementById('dispNoite').checked) formData.disponibilidade.push('noite');
         
         const instrutorId = document.getElementById('instrutorId').value;
         const isEdicao = instrutorId !== '';
