@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             // Endpoint deve coincidir exatamente com o definido no backend
-            const instrutores = await chamarAPI('/api/instrutores', 'GET');
+            const instrutores = await chamarAPI('/instrutores', 'GET');
             renderizarTabela(instrutores);
         } catch (error) {
             // Se a chamarAPI falhar (incluindo erro 401), exibe uma mensagem de erro na tabela.
