@@ -51,18 +51,20 @@ def criar_turma():
         return jsonify({'erro': 'Permissão negada'}), 403
     
     data = request.json
-    
+
+    nome = (data.get('nome') or '').strip()
+
     # Validação de dados
-    if 'nome' not in data or not data['nome'].strip():
+    if not nome:
         return jsonify({'erro': 'Nome da turma é obrigatório'}), 400
-    
+
     # Verifica se já existe uma turma com o mesmo nome
-    if Turma.query.filter_by(nome=data['nome']).first():
+    if Turma.query.filter_by(nome=nome).first():
         return jsonify({'erro': 'Já existe uma turma com este nome'}), 400
-    
+
     # Cria a turma
     try:
-        nova_turma = Turma(nome=data['nome'])
+        nova_turma = Turma(nome=nome)
         db.session.add(nova_turma)
         db.session.commit()
         return jsonify(nova_turma.to_dict()), 201
@@ -89,19 +91,21 @@ def atualizar_turma(id):
         return jsonify({'erro': 'Turma não encontrada'}), 404
     
     data = request.json
-    
+
+    nome = (data.get('nome') or '').strip()
+
     # Validação de dados
-    if 'nome' not in data or not data['nome'].strip():
+    if not nome:
         return jsonify({'erro': 'Nome da turma é obrigatório'}), 400
-    
+
     # Verifica se já existe outra turma com o mesmo nome
-    turma_existente = Turma.query.filter_by(nome=data['nome']).first()
+    turma_existente = Turma.query.filter_by(nome=nome).first()
     if turma_existente and turma_existente.id != id:
         return jsonify({'erro': 'Já existe outra turma com este nome'}), 400
-    
+
     # Atualiza a turma
     try:
-        turma.nome = data['nome']
+        turma.nome = nome
         db.session.commit()
         return jsonify(turma.to_dict())
     except SQLAlchemyError as e:
