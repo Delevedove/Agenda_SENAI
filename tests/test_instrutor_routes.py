@@ -52,3 +52,41 @@ def test_atualizar_capacidades_lista_invalida(client, app):
     resp = client.put(f'/api/instrutores/{instrutor_id}/capacidades', json={'capacidades': 'abc'}, headers=headers)
     assert resp.status_code == 400
 
+
+def test_atualizar_instrutor_salva_capacidades_disponibilidade(client, app):
+    headers = admin_headers(app)
+    r = client.post('/api/instrutores', json={'nome': 'Salvar'}, headers=headers)
+    instrutor_id = r.get_json()['id']
+
+    resp = client.put(
+        f'/api/instrutores/{instrutor_id}',
+        json={
+            'capacidades': ['A', 'B'],
+            'disponibilidade': ['manha', 'tarde']
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['capacidades'] == ['A', 'B']
+    assert data['disponibilidade'] == ['manha', 'tarde']
+
+
+def test_atualizar_instrutor_com_strings(client, app):
+    headers = admin_headers(app)
+    r = client.post('/api/instrutores', json={'nome': 'Strings'}, headers=headers)
+    instrutor_id = r.get_json()['id']
+
+    resp = client.put(
+        f'/api/instrutores/{instrutor_id}',
+        json={
+            'capacidades': 'A,B',
+            'disponibilidade': 'manha,tarde'
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['capacidades'] == ['A', 'B']
+    assert data['disponibilidade'] == ['manha', 'tarde']
+

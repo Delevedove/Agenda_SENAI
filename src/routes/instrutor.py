@@ -9,8 +9,29 @@ from src.utils.error_handler import handle_internal_error
 from datetime import datetime, date
 from pydantic import ValidationError
 from src.schemas import InstrutorCreateSchema, InstrutorUpdateSchema
+import json
 
 instrutor_bp = Blueprint('instrutor', __name__)
+
+
+def _ensure_list(value):
+    """Converts strings or JSON arrays to a list of strings."""
+    if value is None:
+        return None
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        val = value.strip()
+        if val == "":
+            return []
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, list):
+                return parsed
+        except ValueError:
+            pass
+        return [v.strip() for v in val.split(',') if v.strip()]
+    return [str(value)]
 
 @instrutor_bp.route('/instrutores', methods=['GET'])
 def listar_instrutores():
@@ -93,9 +114,9 @@ def criar_instrutor():
             nome=payload.nome,
             email=payload.email,
             telefone=payload.telefone,
-            capacidades=payload.capacidades,
+            capacidades=_ensure_list(payload.capacidades) or [],
             area_atuacao=payload.area_atuacao,
-            disponibilidade=payload.disponibilidade,
+            disponibilidade=_ensure_list(payload.disponibilidade) or [],
             status=status,
             observacoes=payload.observacoes
         )
@@ -148,13 +169,13 @@ def atualizar_instrutor(id):
         instrutor.telefone = payload.telefone
     
     if payload.capacidades is not None:
-        instrutor.set_capacidades(payload.capacidades)
+        instrutor.set_capacidades(_ensure_list(payload.capacidades))
     
     if payload.area_atuacao is not None:
         instrutor.area_atuacao = payload.area_atuacao
     
     if payload.disponibilidade is not None:
-        instrutor.set_disponibilidade(payload.disponibilidade)
+        instrutor.set_disponibilidade(_ensure_list(payload.disponibilidade))
     
     if payload.status is not None:
         status_validos = ['ativo', 'inativo', 'licenca']
