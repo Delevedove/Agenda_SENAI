@@ -93,8 +93,9 @@
     <script src="/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Redireciona para o dashboard se já estiver autenticado
-            if (estaAutenticado()) {
+            // Redireciona para o dashboard se já houver um token válido
+            const token = getToken();
+            if (token && !tokenExpirado(token)) {
                 window.location.href = '/index.html';
                 return;
             }
