@@ -23,23 +23,28 @@ Consulte o arquivo [CHANGELOG.md](CHANGELOG.md) para detalhes das versões.
 
    Se `DATABASE_URL` não for informado ou estiver vazio, o sistema utiliza por padrão um banco SQLite local (`agenda_laboratorio.db`).
 
-3. Execute a suíte de testes para verificar se tudo está funcionando:
+3. Execute as migrações do banco para criar as tabelas necessárias:
+
+   ```bash
+   flask --app src.main db upgrade
+   ```
+
+4. Execute a suíte de testes para verificar se tudo está funcionando:
 
    ```bash
    pytest
    ```
 
-4. Para iniciar a aplicação em modo de desenvolvimento, execute:
+5. Para iniciar a aplicação em modo de desenvolvimento, execute:
 
    ```bash
    flask --app src.main run
    ```
 
-   As tabelas do banco são criadas automaticamente na primeira execução e um
-   usuário administrador padrão (`admin` / `admin123`) é gerado se ainda não
-   existir.
+   As tabelas do banco estarão disponíveis após rodar as migrações e um
+   usuário administrador padrão (`admin` / `admin123`) é gerado se ainda não existir.
 
-5. As rotas de autenticação e cadastro possuem uma limitação de
+6. As rotas de autenticação e cadastro possuem uma limitação de
    requisições por minuto para evitar abusos de login ou criação de contas.
 
 ## Usando Docker
