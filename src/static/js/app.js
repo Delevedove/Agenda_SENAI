@@ -186,6 +186,33 @@ function verificarPermissaoAdmin() {
     return true;
 }
 
+// ---------- Proteção de Rotas Global ----------
+// Esta IIFE garante que o redirecionamento ocorra apenas quando necessário,
+// evitando loops na página de login ou registro.
+(function() {
+    const currentPage = window.location.pathname;
+    const loginPage = '/admin-login.html';
+    const registerPage = '/register.html';
+    const token = getToken();
+
+    if (token && !tokenExpirado(token)) {
+        // Se estiver autenticado e na página pública, envia para o dashboard adequado
+        if (currentPage === loginPage || currentPage === registerPage) {
+            const usuario = getUsuarioLogado();
+            if (usuario && usuario.tipo === 'admin') {
+                window.location.href = '/selecao-sistema.html';
+            } else {
+                window.location.href = '/index.html';
+            }
+        }
+    } else {
+        // Não autenticado: redireciona para o login caso tente acessar página protegida
+        if (currentPage !== loginPage && currentPage !== registerPage) {
+            window.location.href = loginPage;
+        }
+    }
+})();
+
 // Funções para chamadas à API
 /**
  * Realiza uma chamada à API com autenticação
