@@ -263,12 +263,27 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
             throw new Error('Sessão expirada');
         }
 
-        const data = await response.json();
-        
+        const data = await response.json().catch(() => ({}));
+
         if (!response.ok) {
-            throw new Error(data.erro || `Erro ${response.status}`);
+            let mensagemErro = `Erro ${response.status}`;
+
+            const detalhe = data.erro || data.detail;
+            if (Array.isArray(detalhe)) {
+                mensagemErro = detalhe
+                    .map(e => {
+                        if (typeof e === 'string') return e;
+                        if (e.msg && e.loc) return `${e.loc.join('.')}: ${e.msg}`;
+                        return JSON.stringify(e);
+                    })
+                    .join('; ');
+            } else if (detalhe) {
+                mensagemErro = detalhe;
+            }
+
+            throw new Error(mensagemErro);
         }
-        
+
         return data;
     } catch (error) {
         console.error(`Erro na chamada à API ${url}:`, error);
