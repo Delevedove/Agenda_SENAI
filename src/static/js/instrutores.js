@@ -1,576 +1,176 @@
-// Gerenciamento de instrutores utilizando classe para encapsular estado
+document.addEventListener('DOMContentLoaded', function () {
+    // Variáveis de estado para o modal
+    let capacidadesInstrutor = [];
+    let todasCapacidades = []; // Para as sugestões
 
-class GerenciadorInstrutores {
-    constructor() {
-        // Estado interno
-        this.instrutoresData = [];
-        this.instrutorEditando = null;
-        this.areasAtuacao = [];
-        this.capacidadesSugeridas = [];
-        this.capacidadesInstrutor = [];
+    // Elementos do DOM
+    const modalInstrutor = document.getElementById('modalInstrutor');
+    const formInstrutor = document.getElementById('formInstrutor');
+    const inputCapacidade = document.getElementById('inputCapacidade');
+    const btnAdicionarCapacidade = document.getElementById('btnAdicionarCapacidade');
+    const containerCapacidades = document.getElementById('containerCapacidades');
+    const sugestoesContainer = document.getElementById('sugestoesCapacidades');
+    const selectArea = document.getElementById('instrutorAreaAtuacao');
 
-        this.inicializar();
+    // Carrega sugestões iniciais
+    async function carregarSugestoes(area = '') {
+        try {
+            const endpoint = area ? `/api/instrutores/capacidades-sugeridas?area=${area}`
+                                  : '/api/instrutores/capacidades-sugeridas';
+            todasCapacidades = await chamarAPI(endpoint);
+        } catch (e) {
+            console.error('Erro ao carregar sugestões:', e);
+        }
     }
 
-    inicializar() {
-        document.addEventListener('DOMContentLoaded', () => {
-            this.carregarAreasAtuacao();
-            this.configurarDisponibilidade();
-            this.carregarCapacidadesSugeridas();
-            this.carregarInstrutores();
+    // Mostra sugestões conforme o usuário digita
+    inputCapacidade.addEventListener('input', () => {
+        const termo = inputCapacidade.value.trim().toLowerCase();
+        sugestoesContainer.innerHTML = '';
+        if (!termo) return;
+        const filtradas = todasCapacidades.filter(c => c.toLowerCase().includes(termo)).slice(0,5);
+        filtradas.forEach(cap => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm btn-light me-1 mb-1';
+            btn.textContent = cap;
+            btn.addEventListener('click', () => adicionarCapacidade(cap));
+            sugestoesContainer.appendChild(btn);
         });
-
-        const form = document.getElementById('formInstrutor');
-        if (form) {
-            form.addEventListener('submit', e => {
-                e.preventDefault();
-                this.salvarInstrutor();
-            });
-        }
-
-        const areaSelect = document.getElementById('instrutorAreaAtuacao');
-        if (areaSelect) {
-            areaSelect.addEventListener('change', e => this.carregarCapacidadesSugeridas(e.target.value));
-        }
-
-        const btnConfirmarExclusao = document.getElementById('confirmarExcluirInstrutor');
-        if (btnConfirmarExclusao) {
-            btnConfirmarExclusao.addEventListener('click', () => this.confirmarExclusaoInstrutor());
-        }
-    }
-
-    // Carrega áreas de atuação disponíveis
-    async carregarAreasAtuacao() {
-        try {
-            const response = await fetch(`${API_URL}/instrutores/areas-atuacao`, {
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            });
-        
-        if (response.ok) {
-            this.areasAtuacao = await response.json();
-            
-            // Preenche os selects de área
-            const selectArea = document.getElementById('instrutorAreaAtuacao');
-            const filtroArea = document.getElementById('filtroArea');
-            
-            selectArea.innerHTML = '<option value="">Selecione...</option>';
-            filtroArea.innerHTML = '<option value="">Todas</option>';
-            
-            this.areasAtuacao.forEach(area => {
-                selectArea.innerHTML += `<option value="${area.valor}">${area.nome}</option>`;
-                filtroArea.innerHTML += `<option value="${area.valor}">${area.nome}</option>`;
-            });
-        }
-    } catch (error) {
-        console.error('Erro ao carregar áreas de atuação:', error);
-    }
-    }
-
-    // Carrega capacidades sugeridas
-    async carregarCapacidadesSugeridas(area='') {
-        try {
-            const url = area ? `${API_URL}/instrutores/capacidades-sugeridas?area=${area}`
-                         : `${API_URL}/instrutores/capacidades-sugeridas`;
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            });
-        
-        if (response.ok) {
-            this.capacidadesSugeridas = await response.json();
-            this.renderizarCapacidadesSugeridas();
-        }
-    } catch (error) {
-        console.error('Erro ao carregar capacidades sugeridas:', error);
-    }
-    }
-
-    // Renderiza capacidades sugeridas
-    renderizarCapacidadesSugeridas() {
-        const container = document.getElementById('capacidadesSugeridas');
-        container.innerHTML = '';
-    
-    // Mostra apenas algumas sugestões inicialmente
-    const sugestoes = this.capacidadesSugeridas.slice(0, 10);
-    
-    sugestoes.forEach(capacidade => {
-        const badge = document.createElement('span');
-        badge.className = 'badge bg-light text-dark me-1 mb-1';
-        badge.style.cursor = 'pointer';
-        badge.textContent = capacidade;
-        badge.onclick = () => this.adicionarCapacidadeSugerida(capacidade);
-        container.appendChild(badge);
     });
 
-    if (this.capacidadesSugeridas.length > 10) {
-        const verMais = document.createElement('span');
-        verMais.className = 'badge bg-primary';
-        verMais.style.cursor = 'pointer';
-        verMais.textContent = `+${this.capacidadesSugeridas.length - 10} mais`;
-        verMais.onclick = () => this.mostrarTodasCapacidades();
-        container.appendChild(verMais);
-    }
-    }
+    // --- Lógica do Componente de Capacidades ---
 
-    // Mostra todas as capacidades sugeridas
-    mostrarTodasCapacidades() {
-        const container = document.getElementById('capacidadesSugeridas');
-        container.innerHTML = '';
-
-    this.capacidadesSugeridas.forEach(capacidade => {
-        const badge = document.createElement('span');
-        badge.className = 'badge bg-light text-dark me-1 mb-1';
-        badge.style.cursor = 'pointer';
-        badge.textContent = capacidade;
-        badge.onclick = () => this.adicionarCapacidadeSugerida(capacidade);
-        container.appendChild(badge);
-    });
-    }
-
-    // Adiciona capacidade sugerida
-    adicionarCapacidadeSugerida(capacidade) {
-        if (!this.capacidadesInstrutor.includes(capacidade)) {
-        this.capacidadesInstrutor.push(capacidade);
-        this.renderizarCapacidades();
-    }
-    }
-
-// Configura interface de disponibilidade
-    configurarDisponibilidade() {
-        const container = document.getElementById('disponibilidadeContainer');
-        container.innerHTML = `
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="dispManha" name="disponibilidade" value="manha">
-            <label class="form-check-label" for="dispManha">Manhã</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="dispTarde" name="disponibilidade" value="tarde">
-            <label class="form-check-label" for="dispTarde">Tarde</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="dispNoite" name="disponibilidade" value="noite">
-            <label class="form-check-label" for="dispNoite">Noite</label>
-        </div>
-    `;
-    }
-
-// Carrega lista de instrutores disponíveis
-    async carregarInstrutores() {
-        try {
-            document.getElementById('loadingInstrutores').style.display = 'block';
-        
-        // Constrói parâmetros de filtro
-        const params = new URLSearchParams();
-        
-        const status = document.getElementById('filtroStatus').value;
-        const area = document.getElementById('filtroArea').value;
-        const capacidade = document.getElementById('filtroCapacidade').value;
-        
-        if (status) params.append('status', status);
-        if (area) params.append('area_atuacao', area);
-        if (capacidade) params.append('capacidade', capacidade);
-        
-        const response = await fetch(`${API_URL}/instrutores?${params.toString()}`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-
-        if (response.ok) {
-            this.instrutoresData = await response.json();
-            
-            // Aplica filtro de busca local se necessário
-            const busca = document.getElementById('filtroBusca').value.toLowerCase();
-            let instrutoresFiltrados = this.instrutoresData;
-            
-            if (busca) {
-                instrutoresFiltrados = this.instrutoresData.filter(instrutor =>
-                    instrutor.nome.toLowerCase().includes(busca) ||
-                    (instrutor.email && instrutor.email.toLowerCase().includes(busca))
-                );
-            }
-
-            this.renderizarTabelaInstrutores(instrutoresFiltrados);
-        } else {
-            const erro = await response.json().catch(() => ({}));
-            throw new Error(erro.erro || `Erro ${response.status}`);
-        }
-    } catch (error) {
-        console.error('Erro ao carregar instrutores:', error);
-        let mensagem = 'Erro ao carregar instrutores.';
-        if (error.message.includes('Failed to fetch')) {
-            mensagem += ' Verifique sua conexão e tente novamente.';
-        } else {
-            mensagem += ` ${error.message}`;
-        }
-        exibirAlerta(mensagem, 'danger');
-    } finally {
-        document.getElementById('loadingInstrutores').style.display = 'none';
-    }
-}
-
-// Renderiza a tabela de instrutores
-    renderizarTabelaInstrutores(instrutores) {
-        const tbody = document.getElementById('tabelaInstrutores');
-
-        tbody.innerHTML = '';
-
-        if (!instrutores || instrutores.length === 0) {
-            const colCount = tbody.closest('table').querySelector('thead tr').childElementCount;
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4">Nenhum instrutor encontrado.</td></tr>`;
-            return;
-        }
-
-        instrutores.forEach(instrutor => {
-            const statusBadge = this.getStatusBadgeInstrutor(instrutor.status);
-            const areaNome = this.getAreaNome(instrutor.area_atuacao);
-            const capsLista = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
-            const capacidades = capsLista.slice(0, 2).join(', ') + (capsLista.length > 2 ? '...' : '');
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><strong>${escapeHTML(instrutor.nome)}</strong></td>
-                <td>${escapeHTML(instrutor.email || '-')}</td>
-                <td>${escapeHTML(areaNome)}</td>
-                <td>${statusBadge}</td>
-                <td><small class="text-muted">${escapeHTML(capacidades || 'Nenhuma')}</small></td>
-                <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-primary" title="Editar" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})"><i class="bi bi-pencil"></i></button>
-                        <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')"><i class="bi bi-trash"></i></button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-
-    // Retorna o nome da área de atuação
-    getAreaNome(valor) {
-    const area = this.areasAtuacao.find(a => a.valor === valor);
-    return area ? area.nome : valor || '-';
-    }
-
-    // Retorna badge de status para instrutor
-    getStatusBadgeInstrutor(status) {
-        const badges = {
-            'ativo': '<span class="badge bg-success">Ativo</span>',
-            'inativo': '<span class="badge bg-secondary">Inativo</span>',
-            'licenca': '<span class="badge bg-warning text-dark">Licença</span>'
-        };
-        return badges[status] || `<span class="badge bg-light text-dark">${escapeHTML(status)}</span>`;
-    }
-
-    // Aplica filtros
-    aplicarFiltros() {
-    this.carregarInstrutores();
-    }
-
-    // Limpa filtros
-    limparFiltros() {
-        document.getElementById('filtroStatus').value = '';
-        document.getElementById('filtroArea').value = '';
-        document.getElementById('filtroCapacidade').value = '';
-        document.getElementById('filtroBusca').value = '';
-    this.carregarInstrutores();
-    }
-
-    // Adiciona nova capacidade
-    adicionarCapacidade() {
-        const input = document.getElementById('novaCapacidade');
-        const capacidade = input.value.trim();
-
-        if (capacidade && !this.capacidadesInstrutor.includes(capacidade)) {
-        this.capacidadesInstrutor.push(capacidade);
-        input.value = '';
-        this.renderizarCapacidades();
-    }
-    }
-
-    // Renderiza capacidades do instrutor
-    renderizarCapacidades() {
-        const container = document.getElementById('capacidadesContainer');
-        container.innerHTML = '';
-
-        if (this.capacidadesInstrutor.length === 0) {
-            container.innerHTML = '<small class="text-muted">Nenhuma capacidade adicionada</small>';
-            return;
-        }
-
-        this.capacidadesInstrutor.forEach((capacidade, index) => {
-            const wrapper = document.createElement('span');
-            wrapper.className = 'd-inline-block me-1 mb-1';
-
-            const hidden = document.createElement('input');
-            hidden.type = 'checkbox';
-            hidden.name = 'capacidades';
-            hidden.value = capacidade;
-            hidden.checked = true;
-            hidden.classList.add('d-none');
-
+    // Função para renderizar os badges de capacidade
+    function renderizarCapacidades() {
+        containerCapacidades.innerHTML = '';
+        capacidadesInstrutor.forEach((capacidade, index) => {
             const badge = document.createElement('span');
-            badge.className = 'badge bg-primary';
-            badge.innerHTML = `
-                ${escapeHTML(capacidade)}
-                <button type="button" class="btn-close btn-close-white ms-1" onclick="gerenciadorInstrutores.removerCapacidade(${index})" style="font-size: 0.7em;"></button>
-            `;
-
-            wrapper.appendChild(hidden);
-            wrapper.appendChild(badge);
-            container.appendChild(wrapper);
+            badge.className = 'badge bg-primary me-2 mb-2';
+            badge.innerHTML = `${escapeHTML(capacidade)} <button type="button" class="btn-close btn-close-white ms-1" data-index="${index}"></button>`;
+            containerCapacidades.appendChild(badge);
         });
     }
 
-    // Remove capacidade
-    removerCapacidade(index) {
-    this.capacidadesInstrutor.splice(index, 1);
-    this.renderizarCapacidades();
+    // Função para adicionar uma capacidade
+    function adicionarCapacidade(capacidade) {
+        const capacidadeLimpa = capacidade.trim();
+        if (capacidadeLimpa && !capacidadesInstrutor.includes(capacidadeLimpa)) {
+            capacidadesInstrutor.push(capacidadeLimpa);
+            renderizarCapacidades();
+            inputCapacidade.value = '';
+            sugestoesContainer.innerHTML = '';
+        }
     }
 
-    // Abre modal para novo instrutor
-    novoInstrutor() {
-    this.instrutorEditando = null;
-    this.capacidadesInstrutor = [];
-    
-    document.getElementById('modalInstrutorLabel').textContent = 'Novo Instrutor';
-    document.getElementById('btnSalvarTexto').textContent = 'Salvar';
-    document.getElementById('formInstrutor').reset();
-    document.getElementById('instrutorId').value = '';
+    // Função para remover uma capacidade
+    containerCapacidades.addEventListener('click', function (e) {
+        if (e.target.classList.contains('btn-close')) {
+            const index = e.target.getAttribute('data-index');
+            capacidadesInstrutor.splice(index, 1);
+            renderizarCapacidades();
+        }
+    });
 
-    this.renderizarCapacidades();
-    this.limparDisponibilidadeTodos();
-    }
+    // Event Listeners para adicionar capacidade
+    btnAdicionarCapacidade.addEventListener('click', () => adicionarCapacidade(inputCapacidade.value));
+    inputCapacidade.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            adicionarCapacidade(inputCapacidade.value);
+        }
+    });
 
-    // Limpa disponibilidade (desmarca todos os turnos)
-    limparDisponibilidadeTodos() {
-    document.getElementById('dispManha').checked = false;
-    document.getElementById('dispTarde').checked = false;
-    document.getElementById('dispNoite').checked = false;
-    }
+    selectArea.addEventListener('change', () => carregarSugestoes(selectArea.value));
+    carregarSugestoes();
 
-    // Retorna lista de turnos de disponibilidade selecionados no formulário
-    coletarDisponibilidadeSelecionada() {
-        const disponibilidade = [];
-        document
-            .querySelectorAll('#formInstrutor input[name="disponibilidade"]:checked')
-            .forEach(cb => disponibilidade.push(cb.value));
-        return disponibilidade;
-    }
+    // --- Lógica do Modal e Submissão ---
 
-// Edita um instrutor existente
-    async editarInstrutor(id) {
-    try {
-        const response = await fetch(`${API_URL}/instrutores/${id}`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-        
-        if (response.ok) {
-            const instrutor = await response.json();
-            this.instrutorEditando = instrutor;
-            const caps = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
-            this.capacidadesInstrutor = [...caps];
-            
-            // Preenche o formulário
-            document.getElementById('modalInstrutorLabel').textContent = 'Editar Instrutor';
-            document.getElementById('btnSalvarTexto').textContent = 'Atualizar';
-            document.getElementById('instrutorId').value = instrutor.id;
-            document.getElementById('instrutorNome').value = instrutor.nome;
+    // Função para abrir o modal para novo instrutor
+    window.abrirModalNovoInstrutor = function() {
+        capacidadesInstrutor = [];
+        formInstrutor.reset();
+        document.getElementById('instrutorId').value = '';
+        document.getElementById('modalInstrutorLabel').textContent = 'Novo Instrutor';
+        renderizarCapacidades();
+        document.getElementById('dispManha').checked = false;
+        document.getElementById('dispTarde').checked = false;
+        document.getElementById('dispNoite').checked = false;
+        const modal = new bootstrap.Modal(modalInstrutor);
+        modal.show();
+    };
+
+    // Função para abrir e preencher o modal para edição
+    window.abrirModalEdicaoInstrutor = async function(id) {
+        // Resetar o estado antes de preencher
+        capacidadesInstrutor = [];
+        formInstrutor.reset();
+        document.getElementById('instrutorId').value = id;
+        document.getElementById('modalInstrutorLabel').textContent = 'Editar Instrutor';
+
+        try {
+            const instrutor = await chamarAPI(`/api/instrutores/${id}`);
+            document.getElementById('instrutorNome').value = instrutor.nome || '';
             document.getElementById('instrutorEmail').value = instrutor.email || '';
             document.getElementById('instrutorTelefone').value = instrutor.telefone || '';
             document.getElementById('instrutorAreaAtuacao').value = instrutor.area_atuacao || '';
-            this.carregarCapacidadesSugeridas(instrutor.area_atuacao || '');
-            document.getElementById('instrutorStatus').value = instrutor.status;
+            document.getElementById('instrutorStatus').value = instrutor.status || 'ativo';
             document.getElementById('instrutorObservacoes').value = instrutor.observacoes || '';
-            
-            // Renderiza capacidades
-            this.renderizarCapacidades();
-            
-            // Preenche disponibilidade
-            const disponibilidade = Array.isArray(instrutor.disponibilidade) ? instrutor.disponibilidade : [];
+
+            // Preencher Capacidades
+            capacidadesInstrutor = [...(instrutor.capacidades || [])];
+            renderizarCapacidades();
+
+            // Preencher Disponibilidade
+            const disponibilidade = instrutor.disponibilidade || [];
             document.getElementById('dispManha').checked = disponibilidade.includes('manha');
             document.getElementById('dispTarde').checked = disponibilidade.includes('tarde');
             document.getElementById('dispNoite').checked = disponibilidade.includes('noite');
-            
-            // Abre o modal
-            const modal = new bootstrap.Modal(document.getElementById('modalInstrutor'));
+
+            const modal = new bootstrap.Modal(modalInstrutor);
             modal.show();
-        } else {
-            throw new Error('Erro ao carregar dados do instrutor');
+        } catch (error) {
+            exibirAlerta(`Erro ao carregar dados do instrutor: ${error.message}`, 'danger');
         }
-    } catch (error) {
-        console.error('Erro ao editar instrutor:', error);
-        exibirAlerta('Erro ao carregar dados do instrutor.', 'danger');
-    }
-}
+    };
+    
+    // Função para submeter o formulário (criar ou atualizar)
+    formInstrutor.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const instrutorId = document.getElementById('instrutorId').value;
+        const isEdicao = instrutorId !== '';
 
-// Salva instrutor (criar ou atualizar)
-    async salvarInstrutor() {
-        const btn = document.getElementById('btnSalvarInstrutor');
-        const spinner = btn ? btn.querySelector('.spinner-border') : null;
+        // Recolher a Disponibilidade
+        const disponibilidade = [];
+        if (document.getElementById('dispManha').checked) disponibilidade.push('manha');
+        if (document.getElementById('dispTarde').checked) disponibilidade.push('tarde');
+        if (document.getElementById('dispNoite').checked) disponibilidade.push('noite');
 
-        if (btn && spinner) {
-            btn.disabled = true;
-            spinner.classList.remove('d-none');
-        }
+        // Montar o payload completo
+        const dadosInstrutor = {
+            nome: document.getElementById('instrutorNome').value,
+            email: document.getElementById('instrutorEmail').value,
+            telefone: document.getElementById('instrutorTelefone').value,
+            area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
+            status: document.getElementById('instrutorStatus').value,
+            observacoes: document.getElementById('instrutorObservacoes').value,
+            capacidades: capacidadesInstrutor, // Usa a variável de estado
+            disponibilidade: disponibilidade
+        };
+
+        const url = isEdicao ? `/api/instrutores/${instrutorId}` : '/api/instrutores';
+        const method = isEdicao ? 'PUT' : 'POST';
 
         try {
-            // Coleta capacidades e disponibilidade do formulário
-            const capacidades = [...this.capacidadesInstrutor];
-            const disponibilidade = this.coletarDisponibilidadeSelecionada();
-
-            const formData = {
-                nome: document.getElementById('instrutorNome').value.trim(),
-                email: document.getElementById('instrutorEmail').value.trim(),
-                telefone: document.getElementById('instrutorTelefone').value.trim(),
-                area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
-                status: document.getElementById('instrutorStatus').value,
-                observacoes: document.getElementById('instrutorObservacoes').value.trim(),
-                capacidades: capacidades,
-                disponibilidade: disponibilidade
-            };
-
-            if (!formData.nome) {
-                exibirAlerta('Nome do instrutor é obrigatório.', 'warning');
-                return;
-            }
-
-            const instrutorId = document.getElementById('instrutorId').value;
-            const isEdicao = instrutorId !== '';
-
-            const response = await fetch(`${API_URL}/instrutores${isEdicao ? `/${instrutorId}` : ''}`, {
-                method: isEdicao ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
-
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrutor'));
-                modal.hide();
-
-                this.novoInstrutor();
-                this.carregarInstrutores();
-            } else {
-                let mensagemErro = 'Ocorreu um erro desconhecido.';
-                if (result.detail && Array.isArray(result.detail)) {
-                    mensagemErro = 'Erro de validação: ' + result.detail
-                        .map(e => `Campo '${e.loc.join('.')}' - ${e.msg}`)
-                        .join('; ');
-                } else if (typeof result.detail === 'string') {
-                    mensagemErro = result.detail;
-                } else if (Array.isArray(result.erro)) {
-                    mensagemErro = 'Erro de validação: ' + result.erro
-                        .map(e => `Campo '${e.loc.join('.')}' - ${e.msg}`)
-                        .join('; ');
-                } else if (typeof result.erro === 'string') {
-                    mensagemErro = result.erro;
-                } else if (result.message) {
-                    mensagemErro = result.message;
-                }
-
-                throw new Error(mensagemErro);
-            }
+            await chamarAPI(url, method, dadosInstrutor);
+            exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
+            bootstrap.Modal.getInstance(modalInstrutor).hide();
+            carregarInstrutores(); // Função global que recarrega a tabela de instrutores
         } catch (error) {
-            console.error('Erro ao salvar instrutor:', error);
             exibirAlerta(error.message, 'danger');
-        } finally {
-            if (btn && spinner) {
-                btn.disabled = false;
-                spinner.classList.add('d-none');
-            }
         }
-    }
+    });
 
-// Exclui um instrutor
-    excluirInstrutor(id, nome) {
-        document.getElementById('nomeInstrutorExcluir').textContent = nome;
-        document.getElementById('modalExcluirInstrutor').setAttribute('data-instrutor-id', id);
-    
-    const modal = new bootstrap.Modal(document.getElementById('modalExcluirInstrutor'));
-    modal.show();
-}
-
-// Confirma exclusão do instrutor
-    async confirmarExclusaoInstrutor() {
-    try {
-        const instrutorId = document.getElementById('modalExcluirInstrutor').getAttribute('data-instrutor-id');
-        
-        const response = await fetch(`${API_URL}/instrutores/${instrutorId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            exibirAlerta('Instrutor excluído com sucesso!', 'success');
-            
-            // Fecha o modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalExcluirInstrutor'));
-            modal.hide();
-            
-            // Recarrega a lista
-            this.carregarInstrutores();
-        } else {
-            throw new Error(result.erro || 'Erro ao excluir instrutor');
-        }
-    } catch (error) {
-        console.error('Erro ao excluir instrutor:', error);
-        exibirAlerta(error.message, 'danger');
-    }
-}
-
-// Ver ocupações de um instrutor
-    verOcupacoesInstrutor(id) {
-        // Redireciona para o calendário com filtro do instrutor
-        window.location.href = `/calendario-salas.html?instrutor_id=${id}`;
-    }
-
-}
-
-// Função para exibir alertas
-function exibirAlerta(mensagem, tipo) {
-    // Remove alertas existentes
-    const alertasExistentes = document.querySelectorAll('.alert-auto-dismiss');
-    alertasExistentes.forEach(alerta => alerta.remove());
-
-    // Cria novo alerta
-    const alerta = document.createElement('div');
-    alerta.className = `alert alert-${tipo} alert-dismissible fade show alert-auto-dismiss`;
-    alerta.textContent = mensagem;
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'btn-close';
-    closeBtn.setAttribute('data-bs-dismiss', 'alert');
-    closeBtn.setAttribute('aria-label', 'Close');
-    alerta.appendChild(closeBtn);
-    
-    // Insere no início do main
-    const main = document.querySelector('main');
-    main.insertBefore(alerta, main.firstChild);
-    
-    // Remove automaticamente após 5 segundos
-    setTimeout(() => {
-        if (alerta.parentNode) {
-            alerta.remove();
-        }
-    }, 5000);
-}
-
-// Instancia o gerenciador quando o script é carregado e o torna global para
-// que seja acessível em eventos inline definidos no HTML
-window.gerenciadorInstrutores = new GerenciadorInstrutores();
-
+    // Lógica para carregar os instrutores na tabela (deve já existir, apenas garantir que é chamada)
+    // carregarInstrutores(); 
+});
