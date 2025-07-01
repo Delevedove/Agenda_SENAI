@@ -372,6 +372,7 @@ class GerenciadorInstrutores {
             document.getElementById('instrutorId').value = instrutor.id;
             document.getElementById('instrutorNome').value = instrutor.nome;
             document.getElementById('instrutorEmail').value = instrutor.email || '';
+            document.getElementById('instrutorTelefone').value = instrutor.telefone || '';
             document.getElementById('instrutorAreaAtuacao').value = instrutor.area_atuacao || '';
             this.carregarCapacidadesSugeridas(instrutor.area_atuacao || '');
             document.getElementById('instrutorStatus').value = instrutor.status;
@@ -415,6 +416,7 @@ class GerenciadorInstrutores {
         const formData = {
             nome: document.getElementById('instrutorNome').value.trim(),
             email: document.getElementById('instrutorEmail').value.trim(),
+            telefone: document.getElementById('instrutorTelefone').value.trim(),
             area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
             status: document.getElementById('instrutorStatus').value,
             observacoes: document.getElementById('instrutorObservacoes').value.trim(),
