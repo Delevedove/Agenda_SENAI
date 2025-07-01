@@ -1,6 +1,14 @@
 from src.models import db
-from sqlalchemy.orm.attributes import flag_modified
 from datetime import datetime
+from typing import List
+from .recurso import Recurso
+
+# Tabela associativa entre salas e recursos
+sala_recurso = db.Table(
+    'sala_recurso',
+    db.Column('sala_id', db.Integer, db.ForeignKey('salas.id'), primary_key=True),
+    db.Column('recurso_id', db.Integer, db.ForeignKey('recursos.id'), primary_key=True)
+)
 
 
 class Sala(db.Model):
@@ -12,7 +20,12 @@ class Sala(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False, unique=True)
     capacidade = db.Column(db.Integer, nullable=False)
-    recursos = db.Column(db.JSON)
+    recursos = db.relationship(
+        'Recurso',
+        secondary=sala_recurso,
+        lazy='joined',
+        backref=db.backref('salas', lazy='joined')
+    )
     localizacao = db.Column(db.String(100))
     tipo = db.Column(db.String(50))  # aula_teorica, laboratorio, auditorio, etc.
     status = db.Column(db.String(20), default='ativa')  # ativa, inativa, manutencao
@@ -23,23 +36,32 @@ class Sala(db.Model):
     # Relacionamento com ocupações
     ocupacoes = db.relationship('Ocupacao', backref='sala', lazy=True, cascade='all, delete-orphan')
     
-    def __init__(self, nome, capacidade, recursos=None, localizacao=None, tipo=None, status='ativa', observacoes=None):
+    def __init__(self, nome, capacidade, recursos: List[str] | None = None, localizacao: str | None = None,
+                 tipo: str | None = None, status: str = 'ativa', observacoes: str | None = None):
         self.nome = nome
         self.capacidade = capacidade
-        self.recursos = recursos or []
+        self.set_recursos(recursos or [])
         self.localizacao = localizacao
         self.tipo = tipo
         self.status = status
         self.observacoes = observacoes
     
-    def get_recursos(self):
-        """Retorna a lista de recursos da sala."""
-        return self.recursos or []
+    def get_recursos(self) -> List[str]:
+        """Retorna a lista de nomes dos recursos da sala."""
+        return [r.nome for r in self.recursos] if self.recursos else []
     
-    def set_recursos(self, recursos_list):
-        """Define a lista de recursos da sala."""
-        self.recursos = recursos_list or []
-        flag_modified(self, 'recursos')
+    def set_recursos(self, recursos_list: List[str]):
+        """Atualiza a relação de recursos da sala a partir de uma lista de nomes."""
+        self.recursos = []
+        if not recursos_list:
+            return
+        novos_recursos = []
+        for nome in recursos_list:
+            recurso = Recurso.query.filter_by(nome=nome).first()
+            if not recurso:
+                recurso = Recurso(nome=nome)
+            novos_recursos.append(recurso)
+        self.recursos = novos_recursos
     
     def is_disponivel(self, data, horario_inicio, horario_fim, ocupacao_id=None, grupo_ocupacao_id=None):
         """

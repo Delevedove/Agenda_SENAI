@@ -3,6 +3,7 @@ from src.models import db
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.error_handler import handle_internal_error
 from src.models.sala import Sala
+from src.models.recurso import Recurso
 from src.models.ocupacao import Ocupacao
 from src.routes.user import verificar_autenticacao, verificar_admin
 from datetime import datetime, date, time
@@ -328,17 +329,9 @@ def listar_recursos_disponiveis():
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
     
-    recursos = [
-        {'valor': 'tv', 'nome': 'TV/Monitor'},
-        {'valor': 'projetor', 'nome': 'Projetor'},
-        {'valor': 'quadro_branco', 'nome': 'Quadro Branco'},
-        {'valor': 'climatizacao', 'nome': 'Climatização'},
-        {'valor': 'computadores', 'nome': 'Computadores'},
-        {'valor': 'wifi', 'nome': 'Wi-Fi'},
-        {'valor': 'bancadas', 'nome': 'Bancadas'},
-        {'valor': 'armarios', 'nome': 'Armários'},
-        {'valor': 'tomadas', 'nome': 'Tomadas Extras'}
-    ]
-    
-    return jsonify(recursos)
+    recursos = Recurso.query.order_by(Recurso.nome).all()
+    return jsonify([
+        {'valor': r.nome, 'nome': r.nome.replace('_', ' ').title()}
+        for r in recursos
+    ])
 
