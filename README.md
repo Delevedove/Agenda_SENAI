@@ -62,3 +62,26 @@ docker run -p 8000:8000 --env-file .env agenda-senai
 ```
 
 A aplicação ficará disponível em [http://localhost:8000](http://localhost:8000).
+
+## Estrutura do Projeto
+
+- `src/` - Código-fonte da aplicação Flask.
+- `src/routes/` - Blueprints com as rotas REST de cada recurso.
+- `src/models/` - Definições das tabelas e regras de negócios.
+- `src/static/` - Arquivos estáticos de frontend (HTML, CSS e JavaScript).
+- `migrations/` - Migrações do banco de dados gerenciadas pelo Flask-Migrate.
+- `tests/` - Casos de teste automatizados.
+
+## Principais Endpoints da API
+
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| `POST` | `/api/login` | Autenticação de usuários |
+| `POST` | `/api/usuarios` | Criação de usuário |
+| `GET` | `/api/usuarios` | Listagem de usuários |
+| `POST` | `/api/salas` | Criação de sala |
+| `GET` | `/api/salas/<id>` | Detalhes de uma sala |
+| `POST` | `/api/ocupacoes` | Criação de ocupação de sala |
+| `GET` | `/api/ocupacoes` | Consulta de ocupações |
+| `DELETE` | `/api/ocupacoes/<id>` | Remoção de ocupação |
+

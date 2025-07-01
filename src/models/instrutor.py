@@ -1,3 +1,4 @@
+"""Modelo de instrutor."""
 from src.models import db
 from datetime import datetime
 

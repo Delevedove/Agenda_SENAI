@@ -1,3 +1,4 @@
+"""Inicializacao do pacote de modelos."""
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()

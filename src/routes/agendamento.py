@@ -1,3 +1,4 @@
+"""Rotas de agendamento de laboratorios."""
 from flask import Blueprint, request, jsonify, make_response, send_file
 from datetime import datetime, date
 import json

@@ -1,3 +1,4 @@
+"""Modelos de agendamentos e notificacoes."""
 from datetime import datetime
 from src.models import db
 

@@ -1,13 +1,16 @@
+"""
+Fornece conexao com Redis, usando DummyRedis quando o servidor nao esta disponivel.
+"""
 import os
 import time
 
 try:
     from redis import Redis
-except Exception:  # pragma: no cover - fallback when redis package missing
+except Exception:  # pragma: no cover - pacote redis ausente
     Redis = None
 
 class DummyRedis:
-    """Simple in-memory stand-in for Redis when server is unavailable."""
+    """Implementacao em memoria usada quando o servidor Redis nao esta disponivel."""
 
     def __init__(self):
         self.store = {}
