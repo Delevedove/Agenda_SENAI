@@ -295,20 +295,33 @@ class GerenciadorInstrutores {
         const container = document.getElementById('capacidadesContainer');
         container.innerHTML = '';
 
-    if (this.capacidadesInstrutor.length === 0) {
-        container.innerHTML = '<small class="text-muted">Nenhuma capacidade adicionada</small>';
-        return;
-    }
+        if (this.capacidadesInstrutor.length === 0) {
+            container.innerHTML = '<small class="text-muted">Nenhuma capacidade adicionada</small>';
+            return;
+        }
 
-    this.capacidadesInstrutor.forEach((capacidade, index) => {
-        const badge = document.createElement('span');
-        badge.className = 'badge bg-primary me-1 mb-1';
-        badge.innerHTML = `
-            ${capacidade}
-            <button type="button" class="btn-close btn-close-white ms-1" onclick="gerenciadorInstrutores.removerCapacidade(${index})" style="font-size: 0.7em;"></button>
-        `;
-        container.appendChild(badge);
-    });
+        this.capacidadesInstrutor.forEach((capacidade, index) => {
+            const wrapper = document.createElement('span');
+            wrapper.className = 'd-inline-block me-1 mb-1';
+
+            const hidden = document.createElement('input');
+            hidden.type = 'checkbox';
+            hidden.name = 'capacidades';
+            hidden.value = capacidade;
+            hidden.checked = true;
+            hidden.classList.add('d-none');
+
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-primary';
+            badge.innerHTML = `
+                ${escapeHTML(capacidade)}
+                <button type="button" class="btn-close btn-close-white ms-1" onclick="gerenciadorInstrutores.removerCapacidade(${index})" style="font-size: 0.7em;"></button>
+            `;
+
+            wrapper.appendChild(hidden);
+            wrapper.appendChild(badge);
+            container.appendChild(wrapper);
+        });
     }
 
     // Remove capacidade
@@ -394,13 +407,18 @@ class GerenciadorInstrutores {
         spinner.classList.remove('d-none');
     }
     try {
+        const capacidadesSelecionadas = [];
+        document
+            .querySelectorAll('#formInstrutor input[name="capacidades"]:checked')
+            .forEach(cb => capacidadesSelecionadas.push(cb.value));
+
         const formData = {
             nome: document.getElementById('instrutorNome').value.trim(),
             email: document.getElementById('instrutorEmail').value.trim(),
             area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
             status: document.getElementById('instrutorStatus').value,
             observacoes: document.getElementById('instrutorObservacoes').value.trim(),
-            capacidades: this.capacidadesInstrutor,
+            capacidades: capacidadesSelecionadas,
             disponibilidade: []
         };
         
