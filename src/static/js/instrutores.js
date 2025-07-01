@@ -436,33 +436,20 @@ class GerenciadorInstrutores {
         const instrutorId = document.getElementById('instrutorId').value;
         const isEdicao = instrutorId !== '';
         
-        const response = await fetch(`${API_URL}/instrutores${isEdicao ? `/${instrutorId}` : ''}`, {
-            method: isEdicao ? 'PUT' : 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getToken()}`
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
+        await chamarAPI(`/instrutores${isEdicao ? `/${instrutorId}` : ''}`, isEdicao ? 'PUT' : 'POST', formData);
 
-            // Fecha o modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrutor'));
-            modal.hide();
+        exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
 
-            // Reseta o formulário e o estado de edição para evitar
-            // que uma nova criação seja tratada como atualização
-            this.novoInstrutor();
+        // Fecha o modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrutor'));
+        modal.hide();
 
-            // Recarrega a lista
-            this.carregarInstrutores();
-        } else {
-            throw new Error(result.erro || 'Erro ao salvar instrutor');
-        }
+        // Reseta o formulário e o estado de edição para evitar
+        // que uma nova criação seja tratada como atualização
+        this.novoInstrutor();
+
+        // Recarrega a lista
+        this.carregarInstrutores();
     } catch (error) {
         console.error('Erro ao salvar instrutor:', error);
         exibirAlerta(error.message, 'danger');
