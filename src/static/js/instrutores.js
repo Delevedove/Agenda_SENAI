@@ -1,130 +1,262 @@
-// Em: src/static/js/instrutores.js
+class GerenciadorInstrutores {
+    constructor() {
+        this.instrutoresData = [];
+        this.instrutorEditando = null;
+        this.capacidadesInstrutor = [];
+        this.inicializar();
+    }
 
-document.addEventListener('DOMContentLoaded', function () {
-    // --- Variáveis de Estado Globais para o Módulo ---
-    let capacidadesInstrutor = [];
-    let instrutorEditando = null;
+    inicializar() {
+        document.addEventListener('DOMContentLoaded', () => {
+            this.carregarInstrutores();
+        });
 
-    // --- Elementos do DOM ---
-    const modalInstrutor = document.getElementById('modalInstrutor');
-    const formInstrutor = document.getElementById('formInstrutor');
-    const inputCapacidade = document.getElementById('inputCapacidade');
-    const btnAdicionarCapacidade = document.getElementById('btnAdicionarCapacidade');
-    const containerCapacidades = document.getElementById('containerCapacidades');
-    const tabelaInstrutoresBody = document.getElementById('tabelaInstrutores');
+        const form = document.getElementById('formInstrutor');
+        if (form) {
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                this.salvarInstrutor();
+            });
+        }
 
-    // --- Funções de Renderização da UI ---
+        const btnConfirmar = document.getElementById('confirmarExcluirInstrutor');
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', () => this.confirmarExclusaoInstrutor());
+        }
 
-    function renderizarCapacidades() {
-        containerCapacidades.innerHTML = '';
-        capacidadesInstrutor.forEach((capacidade, index) => {
-            const badge = document.createElement('span');
-            badge.className = 'badge bg-primary me-2 mb-2';
-            badge.innerHTML = `${escapeHTML(capacidade)} <button type="button" class="btn-close btn-close-white ms-1" data-index="${index}"></button>`;
-            containerCapacidades.appendChild(badge);
+        const btnAddCap = document.getElementById('btnAdicionarCapacidade');
+        if (btnAddCap) {
+            btnAddCap.addEventListener('click', () => this.adicionarCapacidade(document.getElementById('inputCapacidade').value));
+        }
+    }
+
+    // ----- Capacidades -----
+    adicionarCapacidade(cap) {
+        const capacidade = cap.trim();
+        if (!capacidade) return;
+        this.capacidadesInstrutor.push(capacidade);
+        document.getElementById('inputCapacidade').value = '';
+        this.renderizarCapacidades();
+    }
+
+    renderizarCapacidades() {
+        const container = document.getElementById('containerCapacidades');
+        container.innerHTML = '';
+        this.capacidadesInstrutor.forEach((cap, index) => {
+            const span = document.createElement('span');
+            span.className = 'badge bg-primary me-2 mb-2';
+            span.innerHTML = `${escapeHTML(cap)} <button type="button" class="btn-close btn-close-white ms-1" data-index="${index}"></button>`;
+            container.appendChild(span);
+        });
+        container.querySelectorAll('button.btn-close').forEach(btn => {
+            btn.addEventListener('click', e => {
+                const idx = parseInt(e.target.getAttribute('data-index'), 10);
+                if (!isNaN(idx)) {
+                    this.capacidadesInstrutor.splice(idx, 1);
+                    this.renderizarCapacidades();
+                }
+            });
         });
     }
 
-    function normalizarCapacidades(campo) {
-        if (Array.isArray(campo)) {
-            return campo.filter(c => typeof c === 'string');
+    // ----- Carregamento de dados -----
+    async carregarInstrutores() {
+        const tbody = document.getElementById('tabelaInstrutores');
+        const loading = document.getElementById('loadingInstrutores');
+        const lista = document.getElementById('listaInstrutores');
+        loading.style.display = 'block';
+        lista.style.display = 'none';
+        try {
+            const response = await fetch(`${API_URL}/instrutores`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            if (response.ok) {
+                this.instrutoresData = await response.json();
+                this.renderizarTabelaInstrutores(this.instrutoresData);
+            } else {
+                throw new Error('Erro ao carregar instrutores');
+            }
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">${escapeHTML(err.message)}</td></tr>`;
+        } finally {
+            loading.style.display = 'none';
+            lista.style.display = 'block';
         }
-        if (typeof campo === 'string') {
-            return campo.split(',').map(c => c.trim()).filter(Boolean);
-        }
-        if (campo && typeof campo === 'object') {
-            return Object.values(campo).filter(v => typeof v === 'string');
-        }
-        return [];
     }
 
-    function renderizarTabela(instrutores) {
-        tabelaInstrutoresBody.innerHTML = '';
+    renderizarTabelaInstrutores(instrutores) {
+        const tbody = document.getElementById('tabelaInstrutores');
+        tbody.innerHTML = '';
         if (!instrutores || instrutores.length === 0) {
-            const colCount = tabelaInstrutoresBody.closest('table').querySelector('thead tr').childElementCount;
-            tabelaInstrutoresBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4">Nenhum instrutor encontrado.</td></tr>`;
+            const colCount = tbody.closest('table').querySelector('thead tr').childElementCount;
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4">Nenhum instrutor encontrado.</td></tr>`;
             return;
         }
-
         instrutores.forEach(instrutor => {
-            const statusBadge = getStatusBadge(instrutor.status);
-
-            // INÍCIO DA CORREÇÃO
-            let capacidadesArray = [];
-            if (instrutor.capacidades) {
-                if (typeof instrutor.capacidades === 'string') {
-                    try {
-                        capacidadesArray = JSON.parse(instrutor.capacidades);
-                    } catch (e) {
-                        capacidadesArray = [instrutor.capacidades];
-                        console.error("Erro ao fazer parse das capacidades:", e);
-                    }
-                } else if (Array.isArray(instrutor.capacidades)) {
-                    capacidadesArray = instrutor.capacidades;
-                }
-            }
-            const capacidades = capacidadesArray.length > 0
-                ? capacidadesArray.join(', ')
-                : 'Nenhuma';
-            // FIM DA CORREÇÃO
+            const capacidades = Array.isArray(instrutor.capacidades) ? instrutor.capacidades.join(', ') : '-';
+            const statusBadge = this.getStatusBadge(instrutor.status);
             const row = `
                 <tr>
                     <td><strong>${escapeHTML(instrutor.nome)}</strong></td>
-                    <td>${escapeHTML(instrutor.email || '-')}</td>
-                    <td>${escapeHTML(instrutor.area_atuacao || '-')}</td>
+                    <td>${escapeHTML(instrutor.email || '')}</td>
+                    <td>${escapeHTML(instrutor.area_atuacao || '')}</td>
                     <td>${statusBadge}</td>
                     <td><small class="text-muted">${escapeHTML(capacidades)}</small></td>
                     <td>
-                        <div class="btn-group btn-group-sm">
-                            <button type="button" class="btn btn-outline-primary" title="Editar" onclick="abrirModalEdicaoInstrutor(${instrutor.id})"><i class="bi bi-pencil"></i></button>
-                            <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="excluirInstrutor(${instrutor.id})"><i class="bi bi-trash"></i></button>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary" title="Editar" onclick="gerenciadorInstrutores.editarInstrutor(${instrutor.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="gerenciadorInstrutores.excluirInstrutor(${instrutor.id}, '${escapeHTML(instrutor.nome)}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </div>
                     </td>
-                </tr>
-            `;
-            tabelaInstrutoresBody.insertAdjacentHTML('beforeend', row);
+                </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
         });
     }
-    
-    function getStatusBadge(status) {
-        const badges = {'ativo': 'bg-success', 'inativo': 'bg-secondary', 'licenca': 'bg-warning text-dark'};
-        return `<span class="badge ${badges[status] || 'bg-light text-dark'}">${status}</span>`;
+
+    getStatusBadge(status) {
+        const badges = {
+            'ativo': '<span class="badge bg-success">Ativo</span>',
+            'inativo': '<span class="badge bg-secondary">Inativo</span>',
+            'licenca': '<span class="badge bg-warning text-dark">Licença</span>'
+        };
+        return badges[status] || '<span class="badge bg-secondary">-</span>';
     }
 
-    // --- Lógica de Carregamento Inicial ---
+    // ----- Formulário -----
+    novaInstrutor() {
+        this.instrutorEditando = null;
+        this.capacidadesInstrutor = [];
+        document.getElementById('modalInstrutorLabel').textContent = 'Adicionar Instrutor';
+        document.getElementById('btnSalvarTexto').textContent = 'Salvar';
+        document.getElementById('formInstrutor').reset();
+        document.getElementById('instrutorId').value = '';
+        this.renderizarCapacidades();
+        document.querySelectorAll('#formInstrutor input[name="disponibilidade"]').forEach(cb => cb.checked = false);
+    }
 
-    async function carregarInstrutores() {
-        const colCount = tabelaInstrutoresBody.closest('table').querySelector('thead tr').childElementCount;
-        tabelaInstrutoresBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Carregando...</span></div> Carregando instrutores...</td></tr>`;
-
+    async editarInstrutor(id) {
         try {
-            // Endpoint deve coincidir exatamente com o definido no backend
-            const instrutores = await chamarAPI('/instrutores', 'GET');
-            renderizarTabela(instrutores);
-        } catch (error) {
-            // Se a chamarAPI falhar (incluindo erro 401), exibe uma mensagem de erro na tabela.
-            tabelaInstrutoresBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4 text-danger">Erro ao carregar instrutores: ${error.message}</td></tr>`;
+            const response = await fetch(`${API_URL}/instrutores/${id}`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            if (!response.ok) throw new Error('Erro ao carregar dados do instrutor');
+            const instrutor = await response.json();
+            this.instrutorEditando = instrutor;
+            document.getElementById('modalInstrutorLabel').textContent = 'Editar Instrutor';
+            document.getElementById('btnSalvarTexto').textContent = 'Atualizar';
+            document.getElementById('instrutorId').value = instrutor.id;
+            document.getElementById('instrutorNome').value = instrutor.nome || '';
+            document.getElementById('instrutorEmail').value = instrutor.email || '';
+            document.getElementById('instrutorTelefone').value = instrutor.telefone || '';
+            document.getElementById('instrutorStatus').value = instrutor.status || 'ativo';
+            document.getElementById('instrutorAreaAtuacao').value = instrutor.area_atuacao || '';
+            document.getElementById('instrutorObservacoes').value = instrutor.observacoes || '';
+
+            this.capacidadesInstrutor = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
+            this.renderizarCapacidades();
+
+            document.querySelectorAll('#formInstrutor input[name="disponibilidade"]').forEach(cb => {
+                cb.checked = Array.isArray(instrutor.disponibilidade) && instrutor.disponibilidade.includes(cb.value);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('modalInstrutor'));
+            modal.show();
+        } catch (err) {
+            console.error(err);
+            exibirAlerta('Erro ao carregar dados do instrutor.', 'danger');
         }
     }
 
-    // --- Funções de Interação do Modal ---
-
-    window.abrirModalEdicaoInstrutor = async function(id) {
-        // ... (código para preencher o modal, conforme prompts anteriores) ...
-    };
-    
-    function adicionarCapacidade(capacidade) {
-        // ... (lógica para adicionar capacidade, conforme prompts anteriores) ...
+    coletarDisponibilidade() {
+        const disp = [];
+        document.querySelectorAll('#formInstrutor input[name="disponibilidade"]:checked').forEach(cb => disp.push(cb.value));
+        return disp;
     }
 
-    // --- Event Listeners ---
+    async salvarInstrutor() {
+        const btn = document.getElementById('btnSalvarInstrutor');
+        const spinner = btn.querySelector('.spinner-border');
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        try {
+            const dados = {
+                nome: document.getElementById('instrutorNome').value.trim(),
+                email: document.getElementById('instrutorEmail').value.trim(),
+                telefone: document.getElementById('instrutorTelefone').value.trim(),
+                status: document.getElementById('instrutorStatus').value,
+                area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
+                observacoes: document.getElementById('instrutorObservacoes').value.trim(),
+                capacidades: this.capacidadesInstrutor,
+                disponibilidade: this.coletarDisponibilidade()
+            };
 
-    btnAdicionarCapacidade.addEventListener('click', () => adicionarCapacidade(inputCapacidade.value));
-    // ... (outros event listeners para o modal, conforme prompts anteriores) ...
-    formInstrutor.addEventListener('submit', async function(event) {
-        // ... (lógica de submissão do formulário, conforme prompts anteriores) ...
-    });
+            if (!dados.nome) {
+                exibirAlerta('Nome é obrigatório.', 'warning');
+                return;
+            }
 
-    // --- Inicialização ---
-    carregarInstrutores();
-});
+            const instrutorId = document.getElementById('instrutorId').value;
+            const isEdicao = instrutorId !== '';
+            const response = await fetch(`${API_URL}/instrutores${isEdicao ? `/${instrutorId}` : ''}`, {
+                method: isEdicao ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
+                },
+                body: JSON.stringify(dados)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrutor'));
+                modal.hide();
+                this.novaInstrutor();
+                this.carregarInstrutores();
+            } else {
+                throw new Error(result.erro || 'Erro ao salvar instrutor');
+            }
+        } catch (err) {
+            console.error(err);
+            exibirAlerta(err.message, 'danger');
+        } finally {
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+        }
+    }
+
+    excluirInstrutor(id, nome) {
+        document.getElementById('nomeInstrutorExcluir').textContent = nome;
+        document.getElementById('modalExcluirInstrutor').setAttribute('data-instrutor-id', id);
+        const modal = new bootstrap.Modal(document.getElementById('modalExcluirInstrutor'));
+        modal.show();
+    }
+
+    async confirmarExclusaoInstrutor() {
+        try {
+            const id = document.getElementById('modalExcluirInstrutor').getAttribute('data-instrutor-id');
+            const response = await fetch(`${API_URL}/instrutores/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            const result = await response.json();
+            if (response.ok) {
+                exibirAlerta('Instrutor excluído com sucesso!', 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalExcluirInstrutor'));
+                modal.hide();
+                this.carregarInstrutores();
+            } else {
+                throw new Error(result.erro || 'Erro ao excluir instrutor');
+            }
+        } catch (err) {
+            console.error(err);
+            exibirAlerta(err.message, 'danger');
+        }
+    }
+}
+
+window.gerenciadorInstrutores = new GerenciadorInstrutores();
