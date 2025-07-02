@@ -13,85 +13,28 @@ class GerenciadorInstrutores {
 
         const formInstrutor = document.getElementById('formInstrutor');
         if (formInstrutor) {
-            formInstrutor.addEventListener('submit', async (event) => {
-                event.preventDefault(); // Impede o comportamento padrão de submissão do formulário
-
-                const btnSubmit = formInstrutor.querySelector('button[type="submit"]');
-                const spinner = btnSubmit.querySelector('.spinner-border');
-
-                // Ativa o estado de carregamento do botão
-                btnSubmit.disabled = true;
-                if (spinner) spinner.classList.remove('d-none');
-
-                const instrutorId = document.getElementById('instrutorId').value;
-                const isEdicao = instrutorId !== '';
-
-                // --- RECOLHA DE DADOS COMPLETA E CORRETA ---
-
-                // 1. Recolher Capacidades Técnicas
-                // Esta lógica assume que os badges são a fonte da verdade.
-                const capacidades = [];
-                document.querySelectorAll('#containerCapacidades .badge').forEach(badge => {
-                    // Extrai o texto do badge, ignorando o botão de fechar.
-                    capacidades.push(badge.textContent.trim().replace(/Close$/, '').trim());
-                });
-
-                // 2. Recolher Disponibilidade
-                const disponibilidade = [];
-                document.querySelectorAll('#formInstrutor input[name="disponibilidade"]:checked').forEach(checkbox => {
-                    disponibilidade.push(checkbox.value);
-                });
-
-                // 3. Montar o Objeto de Dados Completo (Payload)
-                const dadosInstrutor = {
-                    nome: document.getElementById('instrutorNome').value,
-                    email: document.getElementById('instrutorEmail').value,
-                    telefone: document.getElementById('instrutorTelefone').value,
-                    area_atuacao: document.getElementById('instrutorAreaAtuacao').value,
-                    status: document.getElementById('instrutorStatus').value,
-                    observacoes: document.getElementById('instrutorObservacoes').value,
-                    capacidades: capacidades,
-                    disponibilidade: disponibilidade
-                };
-
-                // --- CHAMADA À API E TRATAMENTO DE RESPOSTA ---
-
-                const url = isEdicao ? `/api/instrutores/${instrutorId}` : '/api/instrutores';
-                const method = isEdicao ? 'PUT' : 'POST';
-
-                try {
-                    await chamarAPI(url, method, dadosInstrutor);
-                    exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
-
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrutor'));
-                    if (modal) {
-                        modal.hide();
-                    }
-
-                    this.carregarInstrutores(); // Recarrega a lista para mostrar os dados atualizados
-                } catch (error) {
-                    // A função chamarAPI já deve tratar os erros de forma centralizada e formatada
-                    exibirAlerta(error.message, 'danger');
-                } finally {
-                    // Desativa o estado de carregamento do botão, independentemente do resultado
-                    btnSubmit.disabled = false;
-                    if (spinner) spinner.classList.add('d-none');
-                }
+            formInstrutor.addEventListener('submit', e => {
+                e.preventDefault();
+                this.salvarInstrutor();
             });
         }
 
-        const btnConfirmar = document.getElementById('confirmarExcluirInstrutor');
-        if (btnConfirmar) {
-            btnConfirmar.addEventListener('click', () => this.confirmarExclusaoInstrutor());
+        const btnConfirmarExclusao = document.getElementById('confirmarExcluirInstrutor');
+        if (btnConfirmarExclusao) {
+            btnConfirmarExclusao.addEventListener('click', () => this.confirmarExclusaoInstrutor());
         }
 
-        const btnAddCap = document.getElementById('btnAdicionarCapacidade');
-        if (btnAddCap) {
-            btnAddCap.addEventListener('click', () => this.adicionarCapacidade(document.getElementById('inputCapacidade').value));
+        const inputCap = document.getElementById('inputCapacidade');
+        if (inputCap) {
+            inputCap.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.adicionarCapacidade(inputCap.value);
+                }
+            });
         }
     }
 
-    // ----- Capacidades -----
     adicionarCapacidade(cap) {
         const capacidade = cap.trim();
         if (!capacidade) return;
@@ -120,7 +63,6 @@ class GerenciadorInstrutores {
         });
     }
 
-    // ----- Carregamento de dados -----
     async carregarInstrutores() {
         const tbody = document.getElementById('tabelaInstrutores');
         const loading = document.getElementById('loadingInstrutores');
@@ -188,7 +130,6 @@ class GerenciadorInstrutores {
         return badges[status] || '<span class="badge bg-secondary">-</span>';
     }
 
-    // ----- Formulário -----
     novaInstrutor() {
         this.instrutorEditando = null;
         this.capacidadesInstrutor = [];
@@ -202,9 +143,7 @@ class GerenciadorInstrutores {
 
     async editarInstrutor(id) {
         try {
-            const response = await fetch(`${API_URL}/instrutores/${id}`, {
-                headers: { 'Authorization': `Bearer ${getToken()}` }
-            });
+            const response = await fetch(`${API_URL}/instrutores/${id}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
             if (!response.ok) throw new Error('Erro ao carregar dados do instrutor');
             const instrutor = await response.json();
             this.instrutorEditando = instrutor;
@@ -217,14 +156,11 @@ class GerenciadorInstrutores {
             document.getElementById('instrutorStatus').value = instrutor.status || 'ativo';
             document.getElementById('instrutorAreaAtuacao').value = instrutor.area_atuacao || '';
             document.getElementById('instrutorObservacoes').value = instrutor.observacoes || '';
-
             this.capacidadesInstrutor = Array.isArray(instrutor.capacidades) ? instrutor.capacidades : [];
             this.renderizarCapacidades();
-
             document.querySelectorAll('#formInstrutor input[name="disponibilidade"]').forEach(cb => {
                 cb.checked = Array.isArray(instrutor.disponibilidade) && instrutor.disponibilidade.includes(cb.value);
             });
-
             const modal = new bootstrap.Modal(document.getElementById('modalInstrutor'));
             modal.show();
         } catch (err) {
