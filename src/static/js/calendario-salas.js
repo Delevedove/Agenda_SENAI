@@ -200,7 +200,7 @@ function mostrarResumoDia(dataStr) {
     const modal = new bootstrap.Modal(modalEl);
     const container = document.getElementById('conteudoResumoDia');
 
-    document.getElementById('modalResumoDiaLabel').textContent = '\uD83D\uDCCB Resumo de Ocupacao \u2013 ' + formatarData(dataStr);
+    document.getElementById('modalResumoDiaLabel').textContent = 'Resumo de Ocupação – ' + formatarData(dataStr);
     container.innerHTML = '';
 
     ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
@@ -211,47 +211,64 @@ function mostrarResumoDia(dataStr) {
             ev.extendedProps.data === dataStr && ev.extendedProps.turno === turno
         );
 
-        const card = document.createElement('div');
-        card.className = 'card mb-3';
+        const section = document.createElement('div');
+        section.className = 'resumo-turno';
 
-        const header = document.createElement('div');
-        header.className = `card-header resumo-card-header resumo-card-${slugifyTurno(turno)}`;
-        const icon = document.createElement('i');
-        icon.className = 'bi bi-chevron-down toggle-icon ms-2';
-        header.innerHTML = sanitizeHTML(`<div class="d-flex justify-content-between align-items-center"><span>${escapeHTML(turno)}</span><span><span class="badge bg-secondary">${escapeHTML(info.livres)} - ${escapeHTML(info.ocupadas)} / ${escapeHTML(info.total_salas)} Salas</span></span></div>`);
-        header.querySelector('span span').appendChild(icon);
-        card.appendChild(header);
+        section.innerHTML = sanitizeHTML(`
+            <h5 class="d-flex justify-content-between align-items-center">
+                <span>${escapeHTML(turno)}</span>
+                <span class="badge bg-secondary">${info.ocupadas} / ${info.total_salas} Salas</span>
+            </h5>
+            <div class="row mt-2">
+                <div class="col-md-7">
+                    <h6>Salas Ocupadas:</h6>
+                    <div class="ocupadas-list"></div>
+                </div>
+                <div class="col-md-5">
+                    <h6>Salas Livres:</h6>
+                    <div class="livres-list"></div>
+                </div>
+            </div>
+        `);
 
-        const body = document.createElement('div');
-        body.className = 'card-body d-none';
-        card.classList.add('resumo-card-collapsed');
+        const ocupadasContainer = section.querySelector('.ocupadas-list');
+        const livresContainer = section.querySelector('.livres-list');
 
-        let html = '';
         if (ocupacoesTurno.length) {
-            html += '<h6 class="mb-2">✅ Salas Ocupadas:</h6><ul class="list-unstyled">';
             ocupacoesTurno.forEach(ev => {
                 const props = ev.extendedProps;
-                const instr = props.instrutor_nome ? ` - ${props.instrutor_nome}` : '';
-                html += `<li class="d-flex justify-content-between align-items-start mb-2 resumo-ocupacao-item"><span>${props.sala_nome}: ${props.curso_evento}${instr}</span><span><button class="btn btn-sm btn-link p-0 ms-2" onclick="editarOcupacao(${ev.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="excluirOcupacaoResumo(${ev.id})"><i class="bi bi-trash"></i></button></span></li>`;
+                const instr = props.instrutor_nome ? `<small class="text-muted"><i class="bi bi-person"></i> ${escapeHTML(props.instrutor_nome)}</small>` : '';
+                const div = document.createElement('div');
+                div.className = 'd-flex justify-content-between align-items-start mb-2 resumo-ocupada-item';
+                div.innerHTML = sanitizeHTML(`
+                    <div>
+                        <strong>${escapeHTML(props.sala_nome)}</strong><br>
+                        <small class="text-muted">${escapeHTML(props.curso_evento)}</small><br>
+                        ${instr}
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editarOcupacao(${ev.id})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="excluirOcupacao(${ev.id}, '${escapeHTML(props.curso_evento).replace(/'/g, '\\&#39;')}', '${props.grupo_ocupacao_id || ''}')"><i class="bi bi-trash"></i></button>
+                    </div>
+                `);
+                ocupadasContainer.appendChild(div);
             });
-            html += '</ul>';
         } else {
-            html += '<p class="fst-italic text-muted mb-2">Nenhuma sala ocupada neste turno.</p>';
+            ocupadasContainer.innerHTML = '<p class="text-muted"><em>Nenhuma sala ocupada neste turno.</em></p>';
         }
 
         if (info.salas_livres.length) {
-            html += `<h6 class="mt-3 mb-1">🏷️ Salas Livres:</h6><p class="mb-0">${info.salas_livres.join(', ')}</p>`;
+            info.salas_livres.forEach(nome => {
+                const span = document.createElement('span');
+                span.className = 'badge bg-light text-dark border me-1 mb-1';
+                span.textContent = nome;
+                livresContainer.appendChild(span);
+            });
+        } else {
+            livresContainer.innerHTML = '<p class="text-muted"><em>Nenhuma sala livre.</em></p>';
         }
 
-        body.innerHTML = sanitizeHTML(html);
-        card.appendChild(body);
-        header.addEventListener('click', () => {
-            body.classList.toggle('d-none');
-            card.classList.toggle('resumo-card-collapsed');
-            icon.classList.toggle('bi-chevron-up');
-            icon.classList.toggle('bi-chevron-down');
-        });
-        container.appendChild(card);
+        container.appendChild(section);
     });
 
     modal.show();
@@ -552,18 +569,10 @@ function excluirOcupacao(id, nome, grupoId) {
     if (resumoModal) resumoModal.hide();
 
     // Configura modal de exclusão
-    let resumo = `<strong>${nome}</strong>`;
-    if (grupoId) {
-        const eventosGrupo = calendar.getEvents().filter(ev => ev.extendedProps.grupo_ocupacao_id === grupoId);
-        const datas = eventosGrupo.map(ev => ev.extendedProps.data).sort();
-        if (datas.length) {
-            const inicio = formatarDataCurta(datas[0]);
-            const fim = formatarDataCurta(datas[datas.length - 1]);
-            resumo += `<br><small>${inicio} a ${fim}</small>`;
-        }
-    }
-    document.getElementById('resumoOcupacaoExcluir').innerHTML = resumo;
-    document.getElementById('modalExcluirOcupacao').setAttribute('data-ocupacao-id', id);
+    document.getElementById('resumoOcupacaoExcluir').textContent = nome;
+    const modalEl = document.getElementById('modalExcluirOcupacao');
+    modalEl.setAttribute('data-ocupacao-id', id);
+    modalEl.setAttribute('data-grupo-id', grupoId);
     
     // Mostra modal de confirmação
     const modalExcluir = new bootstrap.Modal(document.getElementById('modalExcluirOcupacao'));
@@ -571,11 +580,18 @@ function excluirOcupacao(id, nome, grupoId) {
 }
 
 // Confirma exclusão da ocupação
-async function confirmarExclusaoOcupacao() {
+async function confirmarExclusaoOcupacao(modo) {
     try {
-        const ocupacaoId = document.getElementById('modalExcluirOcupacao').getAttribute('data-ocupacao-id');
-        
-        const response = await fetch(`${API_URL}/ocupacoes/${ocupacaoId}`, {
+        const modalEl = document.getElementById('modalExcluirOcupacao');
+        const ocupacaoId = modalEl.getAttribute('data-ocupacao-id');
+        const grupoId = modalEl.getAttribute('data-grupo-id');
+        const somenteDia = modo === 'dia';
+
+        const url = somenteDia ?
+            `${API_URL}/ocupacoes/${ocupacaoId}?somente_dia=true` :
+            `${API_URL}/ocupacoes/${ocupacaoId}`;
+
+        const response = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${getToken()}`

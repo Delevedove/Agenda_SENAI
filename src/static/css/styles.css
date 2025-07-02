@@ -440,6 +440,23 @@ small, .small {
   display: none;
 }
 
+/* Novo layout do resumo de ocupação */
+.resumo-turno {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.resumo-turno:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.resumo-turno h5 {
+  font-weight: 500;
+}
+.resumo-ocupada-item {
+  line-height: 1.2;
+}
+
 @media (max-width: 576px) {
   .resumo-card-header span.badge {
     font-size: 0.7rem;
