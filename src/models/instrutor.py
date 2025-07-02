@@ -23,28 +23,14 @@ class Instrutor(db.Model):
     # Relacionamento com ocupações
     ocupacoes = db.relationship('Ocupacao', backref='instrutor', lazy=True)
     
-    def __init__(self, nome, email=None, telefone=None, capacidades=None, area_atuacao=None, 
-                 disponibilidade=None, status='ativo', observacoes=None):
+    def __init__(self, nome, email=None, telefone=None, area_atuacao=None,
+                 disponibilidade=None, status='ativo'):
         self.nome = nome
         self.email = email
         self.telefone = telefone
-        self.capacidades = capacidades or []
         self.area_atuacao = area_atuacao
         self.disponibilidade = disponibilidade or []
         self.status = status
-        self.observacoes = observacoes
-    
-    def get_capacidades(self):
-        """
-        Retorna a lista de capacidades técnicas do instrutor.
-        """
-        return self.capacidades or []
-    
-    def set_capacidades(self, capacidades_list):
-        """
-        Define a lista de capacidades técnicas do instrutor.
-        """
-        self.capacidades = capacidades_list or []
     
     def get_disponibilidade(self):
         """
@@ -59,18 +45,6 @@ class Instrutor(db.Model):
         """
         self.disponibilidade = disponibilidade_list or []
     
-    def pode_ministrar_curso(self, curso):
-        """
-        Verifica se o instrutor pode ministrar um determinado curso.
-        
-        Args:
-            curso: Nome do curso
-        
-        Returns:
-            bool: True se pode ministrar, False caso contrário
-        """
-        capacidades = self.get_capacidades()
-        return curso.lower() in [cap.lower() for cap in capacidades]
     
     def is_disponivel_horario(self, dia_semana, horario):
         """
@@ -132,11 +106,9 @@ class Instrutor(db.Model):
             'nome': self.nome,
             'email': self.email,
             'telefone': self.telefone,
-            'capacidades': self.get_capacidades(),
             'area_atuacao': self.area_atuacao,
             'disponibilidade': self.get_disponibilidade(),
             'status': self.status,
-            'observacoes': self.observacoes,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }

@@ -45,10 +45,12 @@ def test_atualizar_instrutor_email_duplicado(client, app):
     assert resp.status_code == 400
 
 
-def test_atualizar_capacidades_lista_invalida(client, app):
+
+def test_atualizar_instrutor_parcial(client, app):
     headers = admin_headers(app)
-    r = client.post('/api/instrutores', json={'nome': 'Cap'}, headers=headers)
+    r = client.post('/api/instrutores', json={'nome': 'Edit'}, headers=headers)
     instrutor_id = r.get_json()['id']
-    resp = client.put(f'/api/instrutores/{instrutor_id}/capacidades', json={'capacidades': 'abc'}, headers=headers)
-    assert resp.status_code == 400
+    resp = client.put(f'/api/instrutores/{instrutor_id}', json={'nome': 'Novo'}, headers=headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['nome'] == 'Novo'
 
