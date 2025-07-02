@@ -266,18 +266,25 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            let mensagemErro = `Erro ${response.status}`;
+            let mensagemErro = `Erro ${response.status}`; // Mensagem padrão
 
+            // Extrai o detalhe do erro do corpo da resposta
             const detalhe = data.erro || data.detail;
+
+            // Verifica se o detalhe é uma lista (erro de validação do Pydantic)
             if (Array.isArray(detalhe)) {
+                // Mapeia cada objeto de erro para uma string legível e junta-as
                 mensagemErro = detalhe
                     .map(e => {
                         if (typeof e === 'string') return e;
-                        if (e.msg && e.loc) return `${e.loc.join('.')}: ${e.msg}`;
+                        // Formata a mensagem mostrando o campo e o erro
+                        if (e.msg && e.loc) return `${e.loc.join('.')}: ${e.msg}`;
+                        // Fallback para outros formatos de objeto de erro
                         return JSON.stringify(e);
                     })
-                    .join('; ');
+                    .join('; '); // Junta múltiplos erros com ponto e vírgula
             } else if (detalhe) {
+                // Se não for uma lista, usa o detalhe como está
                 mensagemErro = detalhe;
             }
 
