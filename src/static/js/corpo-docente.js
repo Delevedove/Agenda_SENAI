@@ -3,7 +3,6 @@ class GerenciadorInstrutores {
         this.instrutores = [];
         this.instrutorAtual = null;
         this.instrutorParaExcluir = null;
-        this.capacidadesSugeridas = [];
 
         this.tabelaBody = document.getElementById('tabelaCorpoDocente');
         this.btnAdicionar = document.getElementById('btnAdicionarNovo');
@@ -14,7 +13,6 @@ class GerenciadorInstrutores {
 
         this.registrarEventos();
         this.carregarAreas();
-        this.carregarCapacidades();
         this.carregarInstrutores();
     }
 
@@ -58,22 +56,7 @@ class GerenciadorInstrutores {
         }
     }
 
-    async carregarCapacidades(area = null) {
-        try {
-            const caps = await chamarAPI(`/instrutores/capacidades-sugeridas${area ? `?area=${area}` : ''}`);
-            this.capacidadesSugeridas = caps;
-            const select = document.getElementById('instrutorCapacidades');
-            select.innerHTML = '';
-            caps.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c;
-                opt.textContent = c;
-                select.appendChild(opt);
-            });
-        } catch (e) {
-            console.error('Erro ao carregar capacidades', e);
-        }
-    }
+
 
     badgesDisponibilidade(list) {
         const disp = list || [];
@@ -129,10 +112,6 @@ class GerenciadorInstrutores {
         document.getElementById('instrutorStatus').value = instr.status || 'ativo';
         document.getElementById('instrutorObservacoes').value = instr.observacoes || '';
 
-        const capsSelect = document.getElementById('instrutorCapacidades');
-        [...capsSelect.options].forEach(opt => {
-            opt.selected = Array.isArray(instr.capacidades) && instr.capacidades.includes(opt.value);
-        });
 
         const disp = instr.disponibilidade || [];
         document.getElementById('dispManha').checked = disp.includes('manha');
@@ -159,7 +138,6 @@ class GerenciadorInstrutores {
             email: document.getElementById('instrutorEmail').value.trim(),
             area_atuacao: document.getElementById('instrutorArea').value,
             status: document.getElementById('instrutorStatus').value,
-            capacidades: Array.from(document.getElementById('instrutorCapacidades').selectedOptions).map(o => o.value),
             observacoes: document.getElementById('instrutorObservacoes').value.trim(),
             disponibilidade: []
         };
@@ -171,8 +149,8 @@ class GerenciadorInstrutores {
 
     async salvarInstrutor() {
         const dados = this.coletarFormData();
-        if (!dados.nome || !dados.email || dados.capacidades.length === 0) {
-            exibirAlerta('Preencha nome, e-mail e ao menos uma capacidade.', 'warning');
+        if (!dados.nome || !dados.email) {
+            exibirAlerta('Preencha nome e e-mail.', 'warning');
             return;
         }
         const spinner = this.btnSalvar.querySelector('.spinner-border');

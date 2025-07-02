@@ -23,7 +23,6 @@ def upgrade():
     sa.Column('nome', sa.String(length=100), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=True),
     sa.Column('telefone', sa.String(length=20), nullable=True),
-    sa.Column('capacidades', sa.JSON(), nullable=True),
     sa.Column('area_atuacao', sa.String(length=100), nullable=True),
     sa.Column('disponibilidade', sa.JSON(), nullable=True),
     sa.Column('status', sa.String(length=20), nullable=True),
