@@ -89,7 +89,6 @@ Todos os módulos seguem convenções REST. Abaixo estão listados os principais
 
 ### Instrutores
 - Cadastro de instrutores, atualização de dados e verificação de disponibilidade.
-- Listagem de áreas de atuação e capacidades sugeridas.
 
 ### Notificações
 - Listagem de notificações do usuário e marcação como lidas.

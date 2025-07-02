@@ -92,7 +92,6 @@ def criar_instrutor():
             disponibilidade=payload.disponibilidade,
             status=status
         )
-        novo_instrutor.capacidades = payload.capacidades or []
         novo_instrutor.observacoes = payload.observacoes
         
         db.session.add(novo_instrutor)
@@ -144,9 +143,6 @@ def atualizar_instrutor(id):
     
     if payload.area_atuacao is not None:
         instrutor.area_atuacao = payload.area_atuacao
-
-    if payload.capacidades is not None:
-        instrutor.capacidades = payload.capacidades
 
     if payload.disponibilidade is not None:
         instrutor.set_disponibilidade(payload.disponibilidade)
@@ -339,62 +335,4 @@ def listar_areas_atuacao():
     
     return jsonify(areas)
 
-@instrutor_bp.route('/instrutores/capacidades-sugeridas', methods=['GET'])
-def listar_capacidades_sugeridas():
-    """
-    Lista capacidades técnicas sugeridas para instrutores.
-    Retorna capacidades gerais se nenhuma área for informada.
-    """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-
-    area = request.args.get('area')
-
-    capacidades_por_area = {
-        'automacao_industrial': [
-            'Programação de CLP', 'Instrumentação Industrial', 'Controle de Processos'
-        ],
-        'eletromecanica': [
-            'Manutenção Eletromecânica', 'Comandos Elétricos', 'Desenho Mecânico'
-        ],
-        'eletrotecnica': [
-            'Instalações Elétricas', 'Projetos Elétricos', 'NR10'
-        ],
-        'mecanica': [
-            'Usinagem', 'Metrologia', 'Desenho Técnico'
-        ],
-        'metalurgia': [
-            'Soldagem', 'Processos de Fundição', 'Tratamento Térmico'
-        ],
-        'mineracao': [
-            'Operação de Mina', 'Beneficiamento Mineral', 'Segurança em Mineração'
-        ],
-        'informatica': [
-            'Desenvolvimento de Sistemas', 'Redes de Computadores', 'Suporte e Manutenção'
-        ],
-        'logistica': [
-            'Gestão de Estoques', 'Transporte e Distribuição', 'Logística Reversa'
-        ],
-        'administracao': [
-            'Gestão Empresarial', 'Recursos Humanos', 'Planejamento Financeiro'
-        ],
-        'seguranca_trabalho': [
-            'Normas Regulamentadoras', 'Higiene Ocupacional', 'Prevenção de Riscos'
-        ],
-        'meio_ambiente': [
-            'Gestão Ambiental', 'Sustentabilidade', 'Tratamento de Resíduos'
-        ],
-        'outros': [
-            'Comunicação', 'Empreendedorismo'
-        ]
-    }
-
-    if area and area in capacidades_por_area:
-        capacidades = capacidades_por_area[area]
-    else:
-        # Junta todas as capacidades disponíveis
-        capacidades = sorted({c for lista in capacidades_por_area.values() for c in lista})
-
-    return jsonify(capacidades)
 
