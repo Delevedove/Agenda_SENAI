@@ -428,11 +428,13 @@ def remover_ocupacao(id):
         return jsonify({'erro': 'Permissão negada'}), 403
     
     try:
+        somente_dia = request.args.get('somente_dia', default=False, type=lambda v: str(v).lower() == 'true')
         grupo_id = ocupacao.grupo_ocupacao_id
-        if grupo_id:
-            ocupacoes = Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).all()
-        else:
+
+        if somente_dia or not grupo_id:
             ocupacoes = [ocupacao]
+        else:
+            ocupacoes = Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).all()
 
         quantidade = len(ocupacoes)
         for oc in ocupacoes:

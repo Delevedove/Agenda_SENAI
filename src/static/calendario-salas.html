@@ -253,8 +253,7 @@
                     <h5 class="modal-title" id="modalResumoDiaLabel">Resumo de Ocupação</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="conteudoResumoDia">
-                </div>
+                <div class="modal-body" id="conteudoResumoDia"></div>
             </div>
         </div>
     </div>
@@ -268,15 +267,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Tem certeza que deseja excluir este agendamento completo?</p>
-                    <div id="resumoOcupacaoExcluir"></div>
-                    <p class="text-muted small mt-3">Esta ação não pode ser desfeita.</p>
+                    <p>Você está prestes a excluir a ocupação do curso <strong id="resumoOcupacaoExcluir"></strong>. Esta ação não pode ser desfeita.</p>
+                    <p class="mt-2">Como deseja prosseguir?</p>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" onclick="confirmarExclusaoOcupacao('dia')">Excluir Somente Este Dia</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmarExclusaoOcupacao('total')">Excluir Todo o Período Agendado</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" onclick="confirmarExclusaoOcupacao()">
-                        <i class="bi bi-trash me-1"></i>Excluir
-                    </button>
                 </div>
             </div>
         </div>
