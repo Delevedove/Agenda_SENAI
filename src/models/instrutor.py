@@ -107,6 +107,8 @@ class Instrutor(db.Model):
             'email': self.email,
             'telefone': self.telefone,
             'area_atuacao': self.area_atuacao,
+            'capacidades': self.capacidades or [],
+            'observacoes': self.observacoes,
             'disponibilidade': self.get_disponibilidade(),
             'status': self.status,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,

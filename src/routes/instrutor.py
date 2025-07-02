@@ -92,6 +92,8 @@ def criar_instrutor():
             disponibilidade=payload.disponibilidade,
             status=status
         )
+        novo_instrutor.capacidades = payload.capacidades or []
+        novo_instrutor.observacoes = payload.observacoes
         
         db.session.add(novo_instrutor)
         db.session.commit()
@@ -142,7 +144,10 @@ def atualizar_instrutor(id):
     
     if payload.area_atuacao is not None:
         instrutor.area_atuacao = payload.area_atuacao
-    
+
+    if payload.capacidades is not None:
+        instrutor.capacidades = payload.capacidades
+
     if payload.disponibilidade is not None:
         instrutor.set_disponibilidade(payload.disponibilidade)
     
@@ -151,6 +156,9 @@ def atualizar_instrutor(id):
         if payload.status not in status_validos:
             return jsonify({'erro': f'Status deve ser um dos seguintes: {", ".join(status_validos)}'}), 400
         instrutor.status = payload.status
+
+    if payload.observacoes is not None:
+        instrutor.observacoes = payload.observacoes
     
     
     try:
