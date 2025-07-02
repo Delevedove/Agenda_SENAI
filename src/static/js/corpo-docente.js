@@ -56,32 +56,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function carregarInstrutores() {
         try {
-            // CORREÇÃO DO ERRO 404: Usar o endpoint correto.
-            instrutoresData = await chamarAPI('/api/instrutores', 'GET');
+            // CORREÇÃO DO ERRO 404: Garanta que o endpoint está correto.
+            const dados = await chamarAPI('/api/instrutores', 'GET');
+            instrutoresData = dados; // Atualiza o estado global
             renderizarTabela();
         } catch (error) {
             exibirAlerta(`Erro ao carregar instrutores: ${error.message}`, 'danger');
+            // Limpa a tabela e mostra o erro
+            const colCount = document
+                .getElementById('tabelaCorpoDocente')
+                .closest('table')
+                .querySelector('thead tr').childElementCount;
+            document.getElementById('tabelaCorpoDocente').innerHTML =
+                `<tr><td colspan="${colCount}" class="text-center py-4 text-danger">Falha ao carregar dados.</td></tr>`;
         }
     }
 
     async function salvarDados(id, editRow) {
-        // Recolher dados da linha de edição
+        // Recolher dados da linha de edição...
         const disponibilidade = [];
         if (editRow.querySelector('[data-field="disp-manha"]').checked) disponibilidade.push('manha');
         if (editRow.querySelector('[data-field="disp-tarde"]').checked) disponibilidade.push('tarde');
         if (editRow.querySelector('[data-field="disp-noite"]').checked) disponibilidade.push('noite');
 
+        // Supondo que a API espera todos os campos, mesmo para atualização
         const dados = {
             nome: editRow.querySelector('[data-field="nome"]').value,
             area_atuacao: editRow.querySelector('[data-field="area_atuacao"]').value,
             status: editRow.querySelector('[data-field="status"]').value,
             disponibilidade: disponibilidade,
-            // Adicionar campos que faltam mas que a API exige (mesmo que vazios)
-            email: `temp-${Date.now()}@fiemg.com.br`, // Email temporário se for obrigatório
+            // Adicionando campos obrigatórios que podem não estar na UI de edição inline
+            email: `instrutor${id || Date.now()}@fiemg.com.br`,
             telefone: '(00) 00000-0000'
         };
 
-        const isEdicao = id !== '';
+        const isEdicao = id && id !== '';
         const url = isEdicao ? `/api/instrutores/${id}` : '/api/instrutores';
         const method = isEdicao ? 'PUT' : 'POST';
 
@@ -91,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             carregarInstrutores(); // Recarrega toda a lista
         } catch (error) {
             exibirAlerta(`Erro ao salvar: ${error.message}`, 'danger');
-            carregarInstrutores(); // Restaura a tabela em caso de erro
+            carregarInstrutores(); // Restaura a tabela em caso de erro para evitar que a linha de edição fique presa
         }
     }
 
