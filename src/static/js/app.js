@@ -263,34 +263,36 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
             throw new Error('Sessão expirada');
         }
 
-        const data = await response.json().catch(() => ({}));
-
         if (!response.ok) {
             let mensagemErro = `Erro ${response.status}`; // Mensagem padrão
 
-            // Extrai o detalhe do erro do corpo da resposta
+            const data = await response.json().catch(() => ({})); // Tenta obter o JSON, mesmo em erro
             const detalhe = data.erro || data.detail;
 
-            // Verifica se o detalhe é uma lista (erro de validação do Pydantic)
+            // Verifica se o detalhe do erro é uma lista (padrão de erros de validação da API)
             if (Array.isArray(detalhe)) {
-                // Mapeia cada objeto de erro para uma string legível e junta-as
+                // Mapeia a lista de objetos de erro para uma única string legível
                 mensagemErro = detalhe
                     .map(e => {
-                        if (typeof e === 'string') return e;
-                        // Formata a mensagem mostrando o campo e o erro
-                        if (e.msg && e.loc) return `${e.loc.join('.')}: ${e.msg}`;
-                        // Fallback para outros formatos de objeto de erro
+                        // Se o erro for um objeto com localização (loc) e mensagem (msg)
+                        if (e.loc && e.msg) {
+                            // Junta o caminho do campo e exibe com a mensagem
+                            return `${e.loc.join(' → ')}: ${e.msg}`;
+                        }
+                        // Fallback para outros tipos de erro na lista
                         return JSON.stringify(e);
                     })
                     .join('; '); // Junta múltiplos erros com ponto e vírgula
             } else if (detalhe) {
-                // Se não for uma lista, usa o detalhe como está
+                // Se o detalhe do erro não for uma lista, usa o valor diretamente
                 mensagemErro = detalhe;
             }
 
+            // Lança a exceção com a mensagem de erro formatada
             throw new Error(mensagemErro);
         }
 
+        const data = await response.json().catch(() => ({}));
         return data;
     } catch (error) {
         console.error(`Erro na chamada à API ${url}:`, error);
