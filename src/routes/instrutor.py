@@ -24,7 +24,6 @@ def listar_instrutores():
     # Parâmetros de filtro
     status = request.args.get('status')
     area_atuacao = request.args.get('area_atuacao')
-    capacidade = request.args.get('capacidade')  # Busca por capacidade específica
     
     # Constrói a query base
     query = Instrutor.query
@@ -36,10 +35,6 @@ def listar_instrutores():
     if area_atuacao:
         query = query.filter(Instrutor.area_atuacao.ilike(f'%{area_atuacao}%'))
     
-    if capacidade:
-        # Busca instrutores que podem ministrar um curso específico
-        # Cast para texto para evitar erros com coluna JSON
-        query = query.filter(db.cast(Instrutor.capacidades, db.Text).ilike(f'%{capacidade}%'))
     
     # Ordena por nome
     instrutores = query.order_by(Instrutor.nome).all()
@@ -93,11 +88,9 @@ def criar_instrutor():
             nome=payload.nome,
             email=payload.email,
             telefone=payload.telefone,
-            capacidades=payload.capacidades,
             area_atuacao=payload.area_atuacao,
             disponibilidade=payload.disponibilidade,
-            status=status,
-            observacoes=payload.observacoes
+            status=status
         )
         
         db.session.add(novo_instrutor)
@@ -147,9 +140,6 @@ def atualizar_instrutor(id):
     if payload.telefone is not None:
         instrutor.telefone = payload.telefone
     
-    if payload.capacidades is not None:
-        instrutor.set_capacidades(payload.capacidades)
-    
     if payload.area_atuacao is not None:
         instrutor.area_atuacao = payload.area_atuacao
     
@@ -162,8 +152,6 @@ def atualizar_instrutor(id):
             return jsonify({'erro': f'Status deve ser um dos seguintes: {", ".join(status_validos)}'}), 400
         instrutor.status = payload.status
     
-    if payload.observacoes is not None:
-        instrutor.observacoes = payload.observacoes
     
     try:
         db.session.commit()
@@ -316,42 +304,6 @@ def listar_ocupacoes_instrutor(id):
         'ocupacoes': [ocupacao.to_dict() for ocupacao in ocupacoes]
     })
 
-@instrutor_bp.route('/instrutores/<int:id>/capacidades', methods=['PUT'])
-def atualizar_capacidades_instrutor(id):
-    """
-    Atualiza as capacidades técnicas de um instrutor.
-    Apenas administradores podem atualizar capacidades.
-    """
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-    
-    if not verificar_admin(user):
-        return jsonify({'erro': 'Permissão negada'}), 403
-    
-    instrutor = db.session.get(Instrutor, id)
-    if not instrutor:
-        return jsonify({'erro': 'Instrutor não encontrado'}), 404
-    
-    data = request.json
-    
-    if 'capacidades' not in data:
-        return jsonify({'erro': 'Lista de capacidades é obrigatória'}), 400
-    
-    if not isinstance(data['capacidades'], list):
-        return jsonify({'erro': 'Capacidades deve ser uma lista'}), 400
-    
-    try:
-        instrutor.set_capacidades(data['capacidades'])
-        db.session.commit()
-        
-        return jsonify({
-            'mensagem': 'Capacidades atualizadas com sucesso',
-            'instrutor': instrutor.to_dict()
-        })
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return handle_internal_error(e)
 
 @instrutor_bp.route('/instrutores/areas-atuacao', methods=['GET'])
 def listar_areas_atuacao():
