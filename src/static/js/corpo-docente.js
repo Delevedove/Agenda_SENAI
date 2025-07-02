@@ -1,154 +1,220 @@
-// Em: src/static/js/corpo-docente.js
-document.addEventListener('DOMContentLoaded', () => {
-    const tabelaBody = document.getElementById('tabelaCorpoDocente');
-    const editRowTemplate = document.getElementById('edit-row-template');
-    const btnAdicionarNovo = document.getElementById('btnAdicionarNovo');
-    let instrutoresData = [];
+class GerenciadorInstrutores {
+    constructor() {
+        this.instrutores = [];
+        this.instrutorAtual = null;
+        this.instrutorParaExcluir = null;
+        this.capacidadesSugeridas = [];
 
-    // --- FUNÇÕES DE RENDERIZAÇÃO ---
+        this.tabelaBody = document.getElementById('tabelaCorpoDocente');
+        this.btnAdicionar = document.getElementById('btnAdicionarNovo');
+        this.modalInstrutor = new bootstrap.Modal(document.getElementById('modalInstrutor'));
+        this.modalExcluir = new bootstrap.Modal(document.getElementById('modalExcluirInstrutor'));
+        this.form = document.getElementById('formInstrutor');
+        this.btnSalvar = document.getElementById('btnSalvarInstrutor');
 
-    function createViewRow(instrutor) {
-        const disp = instrutor.disponibilidade || [];
-        const dispBadges = `
+        this.registrarEventos();
+        this.carregarAreas();
+        this.carregarCapacidades();
+        this.carregarInstrutores();
+    }
+
+    registrarEventos() {
+        this.btnAdicionar.addEventListener('click', () => this.novoInstrutor());
+        this.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarInstrutor();
+        });
+        this.tabelaBody.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.btn-editar');
+            const delBtn = e.target.closest('.btn-excluir');
+            if (editBtn) {
+                const id = editBtn.closest('tr').dataset.id;
+                this.abrirEdicao(id);
+            }
+            if (delBtn) {
+                const row = delBtn.closest('tr');
+                const id = row.dataset.id;
+                const nome = row.querySelector('td').textContent.trim();
+                this.excluirInstrutor(id, nome);
+            }
+        });
+        document.getElementById('confirmarExcluirInstrutor')
+            .addEventListener('click', () => this.confirmarExclusao());
+    }
+
+    async carregarAreas() {
+        try {
+            const areas = await chamarAPI('/instrutores/areas-atuacao');
+            const select = document.getElementById('instrutorArea');
+            select.innerHTML = '<option value="">Selecione...</option>';
+            areas.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.valor;
+                opt.textContent = a.nome;
+                select.appendChild(opt);
+            });
+        } catch (e) {
+            console.error('Erro ao carregar áreas', e);
+        }
+    }
+
+    async carregarCapacidades(area = null) {
+        try {
+            const caps = await chamarAPI(`/instrutores/capacidades-sugeridas${area ? `?area=${area}` : ''}`);
+            this.capacidadesSugeridas = caps;
+            const select = document.getElementById('instrutorCapacidades');
+            select.innerHTML = '';
+            caps.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                select.appendChild(opt);
+            });
+        } catch (e) {
+            console.error('Erro ao carregar capacidades', e);
+        }
+    }
+
+    badgesDisponibilidade(list) {
+        const disp = list || [];
+        return `
             <span class="badge ${disp.includes('manha') ? 'bg-success' : 'bg-light text-dark'}">M</span>
             <span class="badge ${disp.includes('tarde') ? 'bg-success' : 'bg-light text-dark'}">T</span>
             <span class="badge ${disp.includes('noite') ? 'bg-success' : 'bg-light text-dark'}">N</span>
         `;
-        const statusBadge = `<span class="badge ${instrutor.status === 'ativo' ? 'bg-success' : 'bg-secondary'}">${instrutor.status}</span>`;
-
-        const row = document.createElement('tr');
-        row.dataset.id = instrutor.id;
-        row.innerHTML = `
-            <td><strong>${escapeHTML(instrutor.nome)}</strong><br><small class="text-muted">${escapeHTML(instrutor.email || '')}</small></td>
-            <td>${escapeHTML(instrutor.area_atuacao || '')}</td>
-            <td>${statusBadge}</td>
-            <td><div class="d-flex gap-1">${dispBadges}</div></td>
-            <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary btn-edit"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-sm btn-outline-danger btn-delete"><i class="bi bi-trash"></i></button>
-            </td>
-        `;
-        return row;
     }
 
-    function createEditRow(instrutor = {}) {
-        const editRow = document.importNode(editRowTemplate.content, true).firstElementChild;
-        editRow.dataset.id = instrutor.id || ''; // Se for novo, o ID é vazio
-
-        // Preencher campos
-        editRow.querySelector('[data-field="nome"]').value = instrutor.nome || '';
-        editRow.querySelector('[data-field="area_atuacao"]').value = instrutor.area_atuacao || '';
-        editRow.querySelector('[data-field="status"]').value = instrutor.status || 'ativo';
-        const disp = instrutor.disponibilidade || [];
-        editRow.querySelector('[data-field="disp-manha"]').checked = disp.includes('manha');
-        editRow.querySelector('[data-field="disp-tarde"]').checked = disp.includes('tarde');
-        editRow.querySelector('[data-field="disp-noite"]').checked = disp.includes('noite');
-        
-        return editRow;
-    }
-    
-    function renderizarTabela() {
-        tabelaBody.innerHTML = '';
-        instrutoresData.forEach(instrutor => tabelaBody.appendChild(createViewRow(instrutor)));
+    renderizarTabela() {
+        this.tabelaBody.innerHTML = '';
+        this.instrutores.forEach(inst => {
+            const row = document.createElement('tr');
+            row.dataset.id = inst.id;
+            row.innerHTML = `
+                <td><strong>${escapeHTML(inst.nome)}</strong><br><small class="text-muted">${escapeHTML(inst.email || '')}</small></td>
+                <td>${escapeHTML(inst.area_atuacao || '')}</td>
+                <td><span class="badge ${inst.status === 'ativo' ? 'bg-success' : 'bg-secondary'}">${inst.status}</span></td>
+                <td><div class="d-flex gap-1">${this.badgesDisponibilidade(inst.disponibilidade)}</div></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary btn-editar"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger btn-excluir"><i class="bi bi-trash"></i></button>
+                </td>`;
+            this.tabelaBody.appendChild(row);
+        });
     }
 
-    // --- FUNÇÕES DE DADOS E API ---
-
-    async function carregarInstrutores() {
-        const colCount = tabelaBody.closest('table').querySelector('thead tr').childElementCount;
-
-        // Exibe spinner de carregamento enquanto busca os dados
-        tabelaBody.innerHTML = `
-            <tr>
-                <td colspan="${colCount}" class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Carregando...</span>
-                    </div>
-                </td>
-            </tr>`;
-
+    async carregarInstrutores() {
         try {
-            // CORREÇÃO DO ERRO 404: endpoint sem prefixo duplicado
-            const dados = await chamarAPI('/instrutores', 'GET');
-            instrutoresData = dados;
-            renderizarTabela();
-        } catch (error) {
-            exibirAlerta('Erro ao carregar dados. Verifique sua conexão ou fale com o suporte.', 'danger');
-            tabelaBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4 text-danger">Falha ao carregar dados.</td></tr>`;
+            const dados = await chamarAPI('/instrutores');
+            this.instrutores = dados;
+            this.renderizarTabela();
+        } catch (err) {
+            exibirAlerta('Erro ao carregar instrutores', 'danger');
         }
     }
 
-    async function salvarDados(id, editRow) {
-        // Recolher dados da linha de edição...
-        const disponibilidade = [];
-        if (editRow.querySelector('[data-field="disp-manha"]').checked) disponibilidade.push('manha');
-        if (editRow.querySelector('[data-field="disp-tarde"]').checked) disponibilidade.push('tarde');
-        if (editRow.querySelector('[data-field="disp-noite"]').checked) disponibilidade.push('noite');
+    novoInstrutor() {
+        this.instrutorAtual = null;
+        this.form.reset();
+        document.getElementById('instrutorId').value = '';
+        document.getElementById('modalInstrutorLabel').textContent = 'Novo Instrutor';
+        this.btnSalvar.querySelector('.btn-text').textContent = 'Salvar';
+        this.modalInstrutor.show();
+    }
 
-        // Supondo que a API espera todos os campos, mesmo para atualização
-        const dados = {
-            nome: editRow.querySelector('[data-field="nome"]').value,
-            area_atuacao: editRow.querySelector('[data-field="area_atuacao"]').value,
-            status: editRow.querySelector('[data-field="status"]').value,
-            disponibilidade: disponibilidade,
-            // Adicionando campos obrigatórios que podem não estar na UI de edição inline
-            email: `instrutor${id || Date.now()}@fiemg.com.br`,
-            telefone: '(00) 00000-0000'
+    preencherFormulario(instr) {
+        document.getElementById('instrutorId').value = instr.id;
+        document.getElementById('instrutorNome').value = instr.nome || '';
+        document.getElementById('instrutorEmail').value = instr.email || '';
+        document.getElementById('instrutorArea').value = instr.area_atuacao || '';
+        document.getElementById('instrutorStatus').value = instr.status || 'ativo';
+        document.getElementById('instrutorObservacoes').value = instr.observacoes || '';
+
+        const capsSelect = document.getElementById('instrutorCapacidades');
+        [...capsSelect.options].forEach(opt => {
+            opt.selected = Array.isArray(instr.capacidades) && instr.capacidades.includes(opt.value);
+        });
+
+        const disp = instr.disponibilidade || [];
+        document.getElementById('dispManha').checked = disp.includes('manha');
+        document.getElementById('dispTarde').checked = disp.includes('tarde');
+        document.getElementById('dispNoite').checked = disp.includes('noite');
+    }
+
+    async abrirEdicao(id) {
+        try {
+            const instrutor = await chamarAPI(`/instrutores/${id}`);
+            this.instrutorAtual = instrutor;
+            this.preencherFormulario(instrutor);
+            document.getElementById('modalInstrutorLabel').textContent = 'Editar Instrutor';
+            this.btnSalvar.querySelector('.btn-text').textContent = 'Atualizar';
+            this.modalInstrutor.show();
+        } catch (e) {
+            exibirAlerta('Erro ao carregar dados do instrutor', 'danger');
+        }
+    }
+
+    coletarFormData() {
+        const formData = {
+            nome: document.getElementById('instrutorNome').value.trim(),
+            email: document.getElementById('instrutorEmail').value.trim(),
+            area_atuacao: document.getElementById('instrutorArea').value,
+            status: document.getElementById('instrutorStatus').value,
+            capacidades: Array.from(document.getElementById('instrutorCapacidades').selectedOptions).map(o => o.value),
+            observacoes: document.getElementById('instrutorObservacoes').value.trim(),
+            disponibilidade: []
         };
-
-        const isEdicao = id && id !== '';
-        const url = isEdicao ? `/instrutores/${id}` : '/instrutores';
-        const method = isEdicao ? 'PUT' : 'POST';
-
-        try {
-            await chamarAPI(url, method, dados);
-            exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'criado'} com sucesso!`, 'success');
-            carregarInstrutores(); // Recarrega toda a lista
-        } catch (error) {
-            exibirAlerta(`Erro ao salvar: ${error.message}`, 'danger');
-            carregarInstrutores(); // Restaura a tabela em caso de erro para evitar que a linha de edição fique presa
-        }
+        if (document.getElementById('dispManha').checked) formData.disponibilidade.push('manha');
+        if (document.getElementById('dispTarde').checked) formData.disponibilidade.push('tarde');
+        if (document.getElementById('dispNoite').checked) formData.disponibilidade.push('noite');
+        return formData;
     }
 
-    // --- EVENT LISTENERS ---
-
-    // CORREÇÃO DO BOTÃO ADICIONAR
-    btnAdicionarNovo.addEventListener('click', () => {
-        // Impede adicionar outra linha se uma já estiver a ser editada/criada
-        if (tabelaBody.querySelector('.btn-save')) {
-            exibirAlerta('Salve ou cancele a edição atual antes de adicionar um novo instrutor.', 'warning');
+    async salvarInstrutor() {
+        const dados = this.coletarFormData();
+        if (!dados.nome || !dados.email || dados.capacidades.length === 0) {
+            exibirAlerta('Preencha nome, e-mail e ao menos uma capacidade.', 'warning');
             return;
         }
-        const newEditRow = createEditRow();
-        tabelaBody.prepend(newEditRow);
-    });
+        const spinner = this.btnSalvar.querySelector('.spinner-border');
+        this.btnSalvar.disabled = true;
+        spinner.classList.remove('d-none');
 
-    // Event Delegation para toda a tabela
-    tabelaBody.addEventListener('click', async (e) => {
-        const editButton = e.target.closest('.btn-edit');
-        const saveButton = e.target.closest('.btn-save');
-        const cancelButton = e.target.closest('.btn-cancel');
-
-        if (editButton) {
-            const viewRow = editButton.closest('tr');
-            const id = viewRow.dataset.id;
-            const instrutor = instrutoresData.find(i => i.id == id);
-            const editRow = createEditRow(instrutor);
-            viewRow.replaceWith(editRow);
+        const isEdicao = !!this.instrutorAtual;
+        const endpoint = isEdicao ? `/instrutores/${this.instrutorAtual.id}` : '/instrutores';
+        const method = isEdicao ? 'PUT' : 'POST';
+        try {
+            await chamarAPI(endpoint, method, dados);
+            exibirAlerta(`Instrutor ${isEdicao ? 'atualizado' : 'cadastrado'} com sucesso!`, 'success');
+            this.modalInstrutor.hide();
+            this.carregarInstrutores();
+        } catch (e) {
+            exibirAlerta(e.message, 'danger');
+        } finally {
+            this.btnSalvar.disabled = false;
+            spinner.classList.add('d-none');
         }
+    }
 
-        if (saveButton) {
-            const editRow = saveButton.closest('tr');
-            const id = editRow.dataset.id;
-            await salvarDados(id, editRow);
+    excluirInstrutor(id, nome) {
+        this.instrutorParaExcluir = id;
+        document.getElementById('nomeInstrutorExcluir').textContent = nome;
+        this.modalExcluir.show();
+    }
+
+    async confirmarExclusao() {
+        try {
+            await chamarAPI(`/instrutores/${this.instrutorParaExcluir}`, 'DELETE');
+            exibirAlerta('Instrutor excluído com sucesso!', 'success');
+            this.modalExcluir.hide();
+            this.carregarInstrutores();
+        } catch (e) {
+            exibirAlerta(e.message, 'danger');
         }
+    }
+}
 
-        if (cancelButton) {
-            // Simplesmente recarrega a tabela para descartar as alterações
-            renderizarTabela();
-        }
-    });
-
-    // --- INICIALIZAÇÃO ---
-    carregarInstrutores();
+document.addEventListener('DOMContentLoaded', () => {
+    verificarAutenticacao();
+    verificarPermissaoAdmin();
+    window.gerenciadorInstrutores = new GerenciadorInstrutores();
 });
