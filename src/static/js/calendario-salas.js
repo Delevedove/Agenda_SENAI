@@ -200,7 +200,7 @@ function mostrarResumoDia(dataStr) {
     const modal = new bootstrap.Modal(modalEl);
     const container = document.getElementById('conteudoResumoDia');
 
-    document.getElementById('modalResumoDiaLabel').textContent = 'Resumo de Ocupação – ' + formatarData(dataStr);
+    document.getElementById('modalResumoDiaLabel').textContent = '📊 Resumo de Ocupação – ' + formatarData(dataStr);
     container.innerHTML = '';
 
     ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
@@ -211,64 +211,85 @@ function mostrarResumoDia(dataStr) {
             ev.extendedProps.data === dataStr && ev.extendedProps.turno === turno
         );
 
-        const section = document.createElement('div');
-        section.className = 'resumo-turno';
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
 
-        section.innerHTML = sanitizeHTML(`
-            <h5 class="d-flex justify-content-between align-items-center">
-                <span>${escapeHTML(turno)}</span>
-                <span class="badge bg-secondary">${info.ocupadas} / ${info.total_salas} Salas</span>
-            </h5>
-            <div class="row mt-2">
-                <div class="col-md-7">
-                    <h6>Salas Ocupadas:</h6>
-                    <div class="ocupadas-list"></div>
-                </div>
-                <div class="col-md-5">
-                    <h6>Salas Livres:</h6>
-                    <div class="livres-list"></div>
-                </div>
-            </div>
-        `);
+        const header = document.createElement('div');
+        header.className = 'card-header bg-light d-flex justify-content-between align-items-center';
+        header.innerHTML = `
+            <h6 class="mb-0">${escapeHTML(turno)}</h6>
+            <span class="badge bg-secondary">${escapeHTML(info.ocupadas)} / ${escapeHTML(info.total_salas)} Salas</span>
+        `;
+        card.appendChild(header);
 
-        const ocupadasContainer = section.querySelector('.ocupadas-list');
-        const livresContainer = section.querySelector('.livres-list');
+        const body = document.createElement('div');
+        body.className = 'card-body';
 
+        let htmlCorpo = '<div class="row">';
+
+        htmlCorpo += '<div class="col-md-7">';
+        htmlCorpo += '<h6><i class="bi bi-door-closed-fill text-danger"></i> Salas Ocupadas:</h6>';
         if (ocupacoesTurno.length) {
+            htmlCorpo += '<ul class="list-group list-group-flush">';
             ocupacoesTurno.forEach(ev => {
                 const props = ev.extendedProps;
-                const instr = props.instrutor_nome ? `<small class="text-muted"><i class="bi bi-person"></i> ${escapeHTML(props.instrutor_nome)}</small>` : '';
-                const div = document.createElement('div');
-                div.className = 'd-flex justify-content-between align-items-start mb-2 resumo-ocupada-item';
-                div.innerHTML = sanitizeHTML(`
-                    <div>
-                        <strong>${escapeHTML(props.sala_nome)}</strong><br>
-                        <small class="text-muted">${escapeHTML(props.curso_evento)}</small><br>
-                        ${instr}
-                    </div>
-                    <div>
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editarOcupacao(${ev.id})"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="excluirOcupacao(${ev.id}, '${escapeHTML(props.curso_evento).replace(/'/g, '\\&#39;')}', '${props.grupo_ocupacao_id || ''}')"><i class="bi bi-trash"></i></button>
-                    </div>
-                `);
-                ocupadasContainer.appendChild(div);
+                const instr = props.instrutor_nome ? `<br><small class="text-muted"><i class="bi bi-person"></i> ${escapeHTML(props.instrutor_nome)}</small>` : '';
+                htmlCorpo += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${escapeHTML(props.sala_nome)}:</strong> ${escapeHTML(props.curso_evento)}
+                            ${instr}
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary btn-editar-ocupacao" title="Editar" data-id="${ev.id}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-excluir-ocupacao" title="Excluir" data-id="${ev.id}" data-nome="${escapeHTML(props.curso_evento)}" data-grupo-id="${props.grupo_ocupacao_id || ''}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </li>
+                `;
             });
+            htmlCorpo += '</ul>';
         } else {
-            ocupadasContainer.innerHTML = '<p class="text-muted"><em>Nenhuma sala ocupada neste turno.</em></p>';
+            htmlCorpo += '<p class="fst-italic text-muted">Nenhuma sala ocupada neste turno.</p>';
         }
+        htmlCorpo += '</div>';
 
+        htmlCorpo += '<div class="col-md-5">';
+        htmlCorpo += '<h6><i class="bi bi-door-open-fill text-success"></i> Salas Livres:</h6>';
         if (info.salas_livres.length) {
-            info.salas_livres.forEach(nome => {
-                const span = document.createElement('span');
-                span.className = 'badge bg-light text-dark border me-1 mb-1';
-                span.textContent = nome;
-                livresContainer.appendChild(span);
+            info.salas_livres.forEach(salaNome => {
+                htmlCorpo += `<span class="badge bg-light text-dark border me-1 mb-1">${escapeHTML(salaNome)}</span>`;
             });
         } else {
-            livresContainer.innerHTML = '<p class="text-muted"><em>Nenhuma sala livre.</em></p>';
+            htmlCorpo += '<p class="fst-italic text-muted">Todas as salas estão ocupadas.</p>';
         }
+        htmlCorpo += '</div>';
 
-        container.appendChild(section);
+        htmlCorpo += '</div>';
+
+        body.innerHTML = sanitizeHTML(htmlCorpo);
+        card.appendChild(body);
+        container.appendChild(card);
+    });
+
+    container.querySelectorAll('.btn-editar-ocupacao').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const ocupacaoId = e.currentTarget.getAttribute('data-id');
+            editarOcupacao(ocupacaoId);
+        });
+    });
+
+    container.querySelectorAll('.btn-excluir-ocupacao').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const el = e.currentTarget;
+            const ocupacaoId = el.getAttribute('data-id');
+            const nome = el.getAttribute('data-nome');
+            const grupoId = el.getAttribute('data-grupo-id');
+            excluirOcupacao(ocupacaoId, nome, grupoId);
+        });
     });
 
     modal.show();
