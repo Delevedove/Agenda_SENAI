@@ -55,20 +55,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FUNÇÕES DE DADOS E API ---
 
     async function carregarInstrutores() {
+        const colCount = tabelaBody.closest('table').querySelector('thead tr').childElementCount;
+
+        // Exibe spinner de carregamento enquanto busca os dados
+        tabelaBody.innerHTML = `
+            <tr>
+                <td colspan="${colCount}" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </td>
+            </tr>`;
+
         try {
-            // CORREÇÃO DO ERRO 404: Garanta que o endpoint está correto.
-            const dados = await chamarAPI('/api/instrutores', 'GET');
-            instrutoresData = dados; // Atualiza o estado global
+            // CORREÇÃO DO ERRO 404: endpoint sem prefixo duplicado
+            const dados = await chamarAPI('/instrutores', 'GET');
+            instrutoresData = dados;
             renderizarTabela();
         } catch (error) {
-            exibirAlerta(`Erro ao carregar instrutores: ${error.message}`, 'danger');
-            // Limpa a tabela e mostra o erro
-            const colCount = document
-                .getElementById('tabelaCorpoDocente')
-                .closest('table')
-                .querySelector('thead tr').childElementCount;
-            document.getElementById('tabelaCorpoDocente').innerHTML =
-                `<tr><td colspan="${colCount}" class="text-center py-4 text-danger">Falha ao carregar dados.</td></tr>`;
+            exibirAlerta('Erro ao carregar dados. Verifique sua conexão ou fale com o suporte.', 'danger');
+            tabelaBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4 text-danger">Falha ao carregar dados.</td></tr>`;
         }
     }
 
@@ -91,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const isEdicao = id && id !== '';
-        const url = isEdicao ? `/api/instrutores/${id}` : '/api/instrutores';
+        const url = isEdicao ? `/instrutores/${id}` : '/instrutores';
         const method = isEdicao ? 'PUT' : 'POST';
 
         try {
