@@ -145,16 +145,47 @@ async function carregarResumoPeriodo(dataInicio, dataFim) {
 function atualizarResumoNoCalendario() {
     document.querySelectorAll('.fc-daygrid-day').forEach(cell => {
         const dateStr = cell.getAttribute('data-date');
-        cell.querySelectorAll('.resumo-turno').forEach(e => e.remove());
+        cell.querySelectorAll('.pill-turno').forEach(e => e.remove());
+
         const resumoDia = resumoOcupacoes[dateStr];
         if (resumoDia) {
+            const popoverParts = [];
             ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
                 const info = resumoDia[turno];
                 if (!info) return;
+
                 const div = document.createElement('div');
-                div.className = `resumo-turno resumo-${slugifyTurno(turno)}`;
-                div.textContent = `${turno}: ${info.livres} - ${info.ocupadas} / ${info.total_salas}`;
+                div.classList.add('pill-turno');
+
+                if (info.ocupadas === 0) {
+                    div.classList.add('turno-livre');
+                } else if (info.ocupadas === info.total_salas) {
+                    div.classList.add('turno-cheio');
+                } else {
+                    div.classList.add('turno-parcial');
+                }
+
+                div.textContent = `${turno}: ${info.ocupadas}/${info.total_salas}`;
                 cell.appendChild(div);
+
+                const ocupadasNomes = info.salas_ocupadas.map(s => s.sala_nome).join(', ') || 'Nenhuma';
+                const livresNomes = info.salas_livres.join(', ') || 'Nenhuma';
+                popoverParts.push(
+                    `<div><strong>${escapeHTML(turno)}</strong><br>` +
+                    `Salas Ocupadas: ${escapeHTML(ocupadasNomes)}<br>` +
+                    `Salas Livres: ${escapeHTML(livresNomes)}</div>`
+                );
+            });
+
+            const popoverContent = popoverParts.join('<hr>');
+            const existing = bootstrap.Popover.getInstance(cell);
+            if (existing) existing.dispose();
+            new bootstrap.Popover(cell, {
+                html: true,
+                trigger: 'hover focus',
+                container: 'body',
+                content: sanitizeHTML(popoverContent),
+                placement: 'auto'
             });
         }
     });
