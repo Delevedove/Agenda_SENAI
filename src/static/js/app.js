@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '/dashboard-salas.html',
             '/calendario-salas.html',
             '/gerenciar-salas.html',
-            '/gerenciar-instrutores.html',
+            '/corpo-docente.html',
             '/novo-agendamento-sala.html',
             '/perfil-salas.html',
             '/usuarios.html',
