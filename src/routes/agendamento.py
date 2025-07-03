@@ -333,48 +333,60 @@ def agendamentos_calendario_periodo():
 
 
 @agendamento_bp.route('/agendamentos/resumo-calendario', methods=['GET'])
-def resumo_calendario():
-    """Calcula resumo de laboratórios ocupados por dia e turno."""
+def agendamentos_resumo_calendario():
+    """
+    Retorna um resumo de agendamentos para o novo calendário, espelhando a lógica do resumo de ocupações.
+    """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
 
-    data_inicio_str = request.args.get('data_inicio')
-    data_fim_str = request.args.get('data_fim')
-    if not data_inicio_str or not data_fim_str:
-        return jsonify({'erro': 'Parâmetros de data inválidos'}), 400
     try:
-        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
-        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
-    except ValueError:
-        return jsonify({'erro': 'Formato de data inválido'}), 400
+        data_inicio = datetime.strptime(request.args.get('data_inicio'), '%Y-%m-%d').date()
+        data_fim = datetime.strptime(request.args.get('data_fim'), '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return jsonify({'erro': 'Parâmetros de data inválidos ou ausentes'}), 400
 
-    total_labs = Laboratorio.query.count()
+    # Filtros
+    laboratorio_filtro = request.args.get('laboratorio')
+    turno_filtro = request.args.get('turno')
 
-    resumo = {}
-    dia = data_inicio
-    while dia <= data_fim:
-        resumo[dia.isoformat()] = {
-            'Manhã': {'ocupados': 0},
-            'Tarde': {'ocupados': 0},
-            'Noite': {'ocupados': 0},
-        }
-        dia += timedelta(days=1)
+    # Query base para os laboratórios
+    labs_query = Laboratorio.query
+    if laboratorio_filtro:
+        labs_query = labs_query.filter(Laboratorio.nome == laboratorio_filtro)
 
-    query = Agendamento.query.filter(
-        Agendamento.data >= data_inicio,
-        Agendamento.data <= data_fim
+    total_laboratorios = labs_query.count()
+
+    # Query base para os agendamentos
+    agendamentos_query = db.session.query(
+        Agendamento.data,
+        Agendamento.turno,
+        db.func.count(Agendamento.id).label('ocupados')
+    ).filter(
+        Agendamento.data.between(data_inicio, data_fim)
     )
 
-    if not verificar_admin(user):
-        query = query.filter(Agendamento.usuario_id == user.id)
+    # Aplica filtros à query de agendamentos
+    if laboratorio_filtro:
+        agendamentos_query = agendamentos_query.filter(Agendamento.laboratorio == laboratorio_filtro)
+    if turno_filtro:
+        agendamentos_query = agendamentos_query.filter(Agendamento.turno == turno_filtro)
 
-    for ag in query.all():
-        info = resumo.get(ag.data.isoformat())
-        if info and ag.turno in info:
-            info[ag.turno]['ocupados'] += 1
+    q = agendamentos_query.group_by(Agendamento.data, Agendamento.turno).all()
 
-    return jsonify({'total_laboratorios': total_labs, 'resumo': resumo})
+    # Monta o objeto de resumo
+    resumo = {}
+    for data, turno, ocupados in q:
+        data_iso = data.isoformat()
+        if data_iso not in resumo:
+            resumo[data_iso] = {}
+        resumo[data_iso][turno] = {'ocupados': ocupados}
+
+    return jsonify({
+        "total_recursos": total_laboratorios,
+        "resumo": resumo
+    })
 
 @agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
