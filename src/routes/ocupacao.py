@@ -19,6 +19,13 @@ from sqlalchemy import and_, or_, func, extract
 
 ocupacao_bp = Blueprint('ocupacao', __name__)
 
+# Desabilita cache para todas as respostas deste blueprint para evitar que o
+# navegador utilize dados antigos ao atualizar ou excluir ocupações.
+@ocupacao_bp.after_request
+def add_no_cache_headers(response):
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
 TURNOS_PADRAO = {
     'Manhã': (time.fromisoformat('08:00'), time.fromisoformat('12:00')),
     'Tarde': (time.fromisoformat('13:30'), time.fromisoformat('17:30')),

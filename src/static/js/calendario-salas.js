@@ -628,7 +628,9 @@ async function confirmarExclusaoOcupacao(modo) {
             const modal = bootstrap.Modal.getInstance(document.getElementById('modalExcluirOcupacao'));
             modal.hide();
 
-            // Atualiza o calendário e o resumo
+            // Remove evento imediatamente e atualiza dados
+            const ev = calendar.getEventById(ocupacaoId);
+            if (ev) ev.remove();
             calendar.refetchEvents();
             await carregarResumoPeriodo(
                 calendar.view.activeStart.toISOString().split('T')[0],
