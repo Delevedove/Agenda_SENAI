@@ -377,32 +377,62 @@ small, .small {
   border-left: 3px solid #512DA8;
 }
 
-/* Estilos para pílulas de ocupação no calendário */
+/* ================================================= */
+/* ESTILOS UNIFICADOS PARA PÍLULAS E LEGENDAS        */
+/* ================================================= */
+
+/* Estilo base para as pílulas de turno nos calendários */
 .pill-turno {
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 12px;
-  font-size: 0.75em;
-  margin-bottom: 4px;
+  font-size: 0.8em;
+  font-weight: 500;
+  margin: 2px auto;
   display: block;
   text-align: center;
   border: 1px solid transparent;
+  max-width: 120px;
 }
 
+/* Estilos para a legenda de status */
+.legenda-cores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legenda-cor-status {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* --- Cores por Status de Ocupação --- */
+
+/* ESTILO LIVRE (0% Ocupado) */
 .turno-livre {
-  background-color: #FFFFFF;
+  background-color: #f8f9fa; /* Cinza bem claro */
   color: #6c757d;
   border-color: #dee2e6;
 }
 
+/* ESTILO PARCIAL (1-99% Ocupado) */
 .turno-parcial {
-  background-color: #FF8A00;
+  background-color: #FF8A00; /* Laranja SENAI */
   color: #FFFFFF;
-  font-weight: bold;
+  border-color: #FF8A00;
 }
 
+/* ESTILO CHEIO (100% Ocupado) */
 .turno-cheio {
-  background-color: #00539F;
+  background-color: #00539F; /* Azul SENAI */
   color: #FFFFFF;
+  border-color: #00539F;
 }
 
 
@@ -739,23 +769,6 @@ footer {
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 20px;
-}
-.legenda-cores {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  align-items: center;
-}
-.legenda-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.9em;
-}
-.legenda-cor {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
 }
 
 /* Estilos do formulário de nova ocupação */
