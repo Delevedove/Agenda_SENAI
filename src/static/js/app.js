@@ -264,31 +264,26 @@ async function chamarAPI(endpoint, method = 'GET', body = null, requerAuth = tru
         }
 
         if (!response.ok) {
-            let mensagemErro = `Erro ${response.status}`; // Mensagem padrão
+            let mensagemErro = `Erro ${response.status}`;
 
-            const data = await response.json().catch(() => ({})); // Tenta obter o JSON, mesmo em erro
+            const data = await response.json().catch(() => ({}));
             const detalhe = data.erro || data.detail;
 
-            // Verifica se o detalhe do erro é uma lista (padrão de erros de validação da API)
+            // Verifica se o detalhe do erro é uma lista (padrão de erros de validação)
             if (Array.isArray(detalhe)) {
                 // Mapeia a lista de objetos de erro para uma única string legível
                 mensagemErro = detalhe
                     .map(e => {
-                        // Se o erro for um objeto com localização (loc) e mensagem (msg)
                         if (e.loc && e.msg) {
-                            // Junta o caminho do campo e exibe com a mensagem
                             return `${e.loc.join(' → ')}: ${e.msg}`;
                         }
-                        // Fallback para outros tipos de erro na lista
                         return JSON.stringify(e);
                     })
-                    .join('; '); // Junta múltiplos erros com ponto e vírgula
+                    .join('; ');
             } else if (detalhe) {
-                // Se o detalhe do erro não for uma lista, usa o valor diretamente
                 mensagemErro = detalhe;
             }
 
-            // Lança a exceção com a mensagem de erro formatada
             throw new Error(mensagemErro);
         }
 
