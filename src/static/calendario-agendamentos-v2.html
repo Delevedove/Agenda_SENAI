@@ -27,18 +27,22 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/index.html">
                             <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="/calendario-agendamentos-v2.html">
                             <i class="bi bi-calendar3 me-1"></i> Calendário
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/novo-agendamento.html">
                             <i class="bi bi-plus-circle me-1"></i> Novo Agendamento
+                        </a>
                     </li>
                     <li class="nav-item admin-only">
                         <a class="nav-link" href="/laboratorios-turmas.html">
                             <i class="bi bi-building me-1"></i> Laboratórios e Turmas
+                        </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
@@ -46,6 +50,7 @@
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle me-1"></i>
                             <span id="userName">Usuário</span>
+                        </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/perfil.html"><i class="bi bi-person me-2"></i>Meu Perfil</a></li>
                             <li><hr class="dropdown-divider"></li>
@@ -64,25 +69,19 @@
                 <div class="sidebar rounded shadow-sm">
                     <h5 class="mb-3">Menu Principal</h5>
                     <div class="nav flex-column">
-                        <a class="nav-link" href="/dashboard-salas.html">
+                        <a class="nav-link" href="/index.html">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
-                        <a class="nav-link active" href="/calendario-salas.html">
+                        <a class="nav-link active" href="/calendario-agendamentos-v2.html">
                             <i class="bi bi-calendar3"></i> Calendário
                         </a>
-                        <a class="nav-link" href="/gerenciar-salas.html">
-                            <i class="bi bi-building"></i> Gerenciar Salas
+                        <a class="nav-link" href="/novo-agendamento.html">
+                            <i class="bi bi-plus-circle"></i> Novo Agendamento
                         </a>
-                        <a class="nav-link" href="/corpo-docente.html">
-                            <i class="bi bi-person-badge"></i> Corpo Docente
+                        <a class="nav-link admin-only" href="/laboratorios-turmas.html">
+                            <i class="bi bi-building"></i> Laboratórios e Turmas
                         </a>
-                        <a class="nav-link" href="/gerenciar-turmas.html">
-                            <i class="bi bi-building"></i> Gerenciar Turmas
-                        </a>
-                        <a class="nav-link" href="/novo-agendamento-sala.html">
-                            <i class="bi bi-plus-circle"></i> Nova Ocupação
-                        </a>
-                        <a class="nav-link" href="/perfil-salas.html">
+                        <a class="nav-link" href="/perfil.html">
                             <i class="bi bi-person"></i> Meu Perfil
                         </a>
                     </div>
@@ -154,23 +153,24 @@
 
                 <!-- Legenda de Ocupação -->
                 <div class="card mb-3">
-    <div class="card-body py-2">
-        <div class="legenda-cores">
-            <div class="legenda-item">
-                <div class="legenda-cor-status turno-livre"></div>
-                <span>Livre</span>
-            </div>
-            <div class="legenda-item">
-                <div class="legenda-cor-status turno-parcial"></div>
-                <span>Parcial</span>
-            </div>
-            <div class="legenda-item">
-                <div class="legenda-cor-status turno-cheio"></div>
-                <span>Cheio</span>
-            </div>
-        </div>
-    </div>
-</div>
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Legenda</h6>
+                        <div class="legenda-turnos">
+                            <div class="legenda-item">
+                                <div class="pill-turno turno-livre"></div>
+                                <span>Livre</span>
+                            </div>
+                            <div class="legenda-item">
+                                <div class="pill-turno turno-parcial"></div>
+                                <span>Parcial</span>
+                            </div>
+                            <div class="legenda-item">
+                                <div class="pill-turno turno-cheio"></div>
+                                <span>Cheio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Calendário -->
                 <div class="card">
                     <div class="card-body">
@@ -178,7 +178,7 @@
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Carregando...</span>
                             </div>
-                            <p class="mt-2">Carregando agendamentos...</p>
+                            <p class="mt-2">Carregando ocupações...</p>
                         </div>
 
                         <div id="calendario" style="display: none;"></div>
@@ -194,22 +194,22 @@
         </div>
     </div>
 
-    <!-- Modal de Detalhes da Ocupação -->
-    <div class="modal fade" id="modalDetalhesOcupacao" tabindex="-1" aria-labelledby="modalDetalhesOcupacaoLabel" aria-hidden="true">
+    <!-- Modal de Detalhes do Agendamento -->
+    <div class="modal fade" id="modalDetalhesAgendamento" tabindex="-1" aria-labelledby="modalDetalhesAgendamentoLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalDetalhesOcupacaoLabel">Detalhes da Ocupação</h5>
+                    <h5 class="modal-title" id="modalDetalhesAgendamentoLabel">Detalhes do Agendamento</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="detalhesOcupacaoContent">
+                    <div id="detalhesAgendamentoContent">
                         <!-- Conteúdo será preenchido via JavaScript -->
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <div id="acoesOcupacao">
+                    <div id="acoesAgendamento">
                         <!-- Botões de ação serão adicionados via JavaScript -->
                     </div>
                 </div>
@@ -222,7 +222,7 @@
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalResumoDiaLabel">Resumo de Ocupação</h5>
+                    <h5 class="modal-title" id="modalResumoDiaLabel">Resumo de Agendamentos</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="conteudoResumoDia"></div>
@@ -231,15 +231,15 @@
     </div>
 
     <!-- Modal de Confirmação de Exclusão -->
-    <div class="modal fade" id="modalExcluirOcupacao" tabindex="-1" aria-labelledby="modalExcluirOcupacaoLabel" aria-hidden="true">
+    <div class="modal fade" id="modalExcluirAgendamento" tabindex="-1" aria-labelledby="modalExcluirAgendamentoLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalExcluirOcupacaoLabel">Confirmar Exclusão</h5>
+                    <h5 class="modal-title" id="modalExcluirAgendamentoLabel">Confirmar Exclusão</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Você está prestes a excluir a ocupação do curso <strong id="resumoOcupacaoExcluir"></strong>. Esta ação não pode ser desfeita.</p>
+                    <p>Você está prestes a excluir o agendamento do curso <strong id="resumoAgendamentoExcluir"></strong>. Esta ação não pode ser desfeita.</p>
                     <p class="mt-2">Como deseja prosseguir?</p>
                 </div>
                 <div class="modal-footer">
@@ -258,7 +258,7 @@
     <script src="/js/app.js"></script>
     <script src="/js/calendario-labs.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener("DOMContentLoaded", function() {
             verificarAutenticacao();
             carregarLaboratoriosParaFiltro("#filtroLaboratorio");
             carregarLaboratoriosParaFiltro("#filtroLaboratorioMobile");
