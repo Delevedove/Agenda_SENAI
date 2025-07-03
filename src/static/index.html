@@ -254,7 +254,6 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.4/dist/purify.min.js"></script>
     <script src="/js/app.js"></script>
     <script>
-        let agendamentoModal;
         document.addEventListener('DOMContentLoaded', function() {
             // Verifica autenticação
             verificarAutenticacao();
@@ -272,7 +271,7 @@
             let agendamentoSelecionadoId = null;
             
             // Modal de detalhes do agendamento
-            agendamentoModal = new bootstrap.Modal(document.getElementById('agendamentoModal'));
+            const agendamentoModal = new bootstrap.Modal(document.getElementById('agendamentoModal'));
             const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
             
             // Botões do modal
