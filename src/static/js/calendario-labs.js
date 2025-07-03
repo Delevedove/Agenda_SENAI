@@ -131,10 +131,12 @@ function renderizarPillulas(resumo, totalRecursos) {
         if (totalRecursos > 0) {
             ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
                 const ocupados = diaResumo && diaResumo[turno] ? diaResumo[turno].ocupados : 0;
-                let statusClass = 'turno-livre';
+                
+                let statusClass = 'turno-livre'; // Padrão é livre
                 if (ocupados > 0) {
                     statusClass = ocupados >= totalRecursos ? 'turno-cheio' : 'turno-parcial';
                 }
+                
                 html += `<div class="pill-turno ${statusClass}">${turno}: ${ocupados}/${totalRecursos}</div>`;
             });
         }
