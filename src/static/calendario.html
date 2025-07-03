@@ -78,37 +78,32 @@
                 <div class="sidebar rounded shadow-sm">
                     <h5 class="mb-3">Menu Principal</h5>
                     <div class="nav flex-column">
-                        <a class="nav-link" href="/dashboard-salas.html">
+                        <a class="nav-link" href="/index.html">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                         <a class="nav-link active" href="/calendario.html">
                             <i class="bi bi-calendar3"></i> Calendário
                         </a>
-                        <a class="nav-link" href="/gerenciar-salas.html">
-                            <i class="bi bi-building"></i> Gerenciar Salas
-                        </a>
-                        <a class="nav-link" href="/corpo-docente.html">
-                            <i class="bi bi-person-badge"></i> Corpo Docente
-                        </a>
-                        <a class="nav-link" href="/gerenciar-turmas.html">
-                            <i class="bi bi-building"></i> Gerenciar Turmas
-                        </a>
                         <a class="nav-link" href="/novo-agendamento.html">
                             <i class="bi bi-plus-circle"></i> Novo Agendamento
+                        </a>
+                        <a class="nav-link admin-only" href="/laboratorios-turmas.html">
+                            <i class="bi bi-building"></i> Laboratórios e Turmas
                         </a>
                         <a class="nav-link" href="/perfil.html">
                             <i class="bi bi-person"></i> Meu Perfil
                         </a>
                     </div>
-
+                    
                     <hr>
-
+                    
                     <h5 class="mb-3">Filtros</h5>
                     <form id="filtrosForm">
                         <div class="mb-3">
                             <label for="filtroLaboratorio" class="form-label">Laboratório</label>
                             <select class="form-select" id="filtroLaboratorio">
-                                <option value="">Todos os laboratórios</option>
+                                <option value="">Todos</option>
+                                <!-- Opções serão carregadas dinamicamente -->
                             </select>
                         </div>
                         <div class="mb-3">
@@ -126,45 +121,12 @@
                     </form>
                 </div>
             </div>
-
+            
             <!-- Conteúdo principal -->
-            <main class="col-lg-9">
+            <div class="col-lg-9">
                 <h2 class="mb-4">Calendário de Agendamentos</h2>
 
                 <div id="alertContainer"></div>
-
-                <!-- Filtros em telas menores -->
-                <div class="d-lg-none mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Filtros</h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="filtrosMobileForm" class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="filtroLaboratorioMobile" class="form-label">Laboratório</label>
-                                    <select class="form-select" id="filtroLaboratorioMobile">
-                                        <option value="">Todos os laboratórios</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="filtroTurnoMobile" class="form-label">Turno</label>
-                                    <select class="form-select" id="filtroTurnoMobile">
-                                        <option value="">Todos</option>
-                                        <option value="Manhã">Manhã</option>
-                                        <option value="Tarde">Tarde</option>
-                                        <option value="Noite">Noite</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="bi bi-funnel me-2"></i>Filtrar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="card mb-3">
                     <div class="card-body">
@@ -203,7 +165,7 @@
                         <i class="bi bi-plus-circle me-2"></i>Novo Agendamento
                     </a>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
     
@@ -222,57 +184,55 @@
     </footer>
 
     <!-- Modal de Detalhes do Agendamento -->
-    <div class="modal fade" id="modalDetalhesAgendamento" tabindex="-1" aria-labelledby="modalDetalhesAgendamentoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="agendamentoModal" tabindex="-1" aria-labelledby="agendamentoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalDetalhesAgendamentoLabel">Detalhes do Agendamento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="agendamentoModalLabel">Detalhes do Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-                <div class="modal-body">
-                    <div id="detalhesAgendamentoContent">
-                        <!-- Conteúdo será preenchido via JavaScript -->
-                    </div>
+                <div class="modal-body" id="agendamentoModalBody">
+                    <!-- Conteúdo preenchido via JavaScript -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <div id="acoesAgendamento">
-                        <!-- Botões de ação serão adicionados via JavaScript -->
-                    </div>
+                    <button type="button" class="btn btn-primary" id="btnEditarAgendamento">Editar</button>
+                    <button type="button" class="btn btn-danger" id="btnExcluirAgendamento">Excluir</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Resumo do Dia -->
-    <div class="modal fade" id="modalResumoDia" tabindex="-1" aria-labelledby="modalResumoDiaLabel" aria-hidden="true">
+    <!-- Modal Resumo de Agendamentos -->
+    <div class="modal fade" id="modalResumoAgendamentos" tabindex="-1" aria-labelledby="modalResumoAgendamentosLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalResumoDiaLabel">Resumo de Agendamentos</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="modalResumoAgendamentosLabel">Resumo de Agendamentos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
-                <div class="modal-body" id="conteudoResumoDia"></div>
+                <div class="modal-body" id="conteudoResumoAgendamentos"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Modal de Confirmação de Exclusão -->
-    <div class="modal fade" id="modalExcluirAgendamento" tabindex="-1" aria-labelledby="modalExcluirAgendamentoLabel" aria-hidden="true">
+    <div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalExcluirAgendamentoLabel">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="confirmacaoModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Você está prestes a excluir o agendamento <strong id="resumoAgendamentoExcluir"></strong>. Esta ação não pode ser desfeita.</p>
-                    <p class="mt-2">Como deseja prosseguir?</p>
+                    <p>Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-danger" onclick="confirmarExclusaoOcupacao('dia')">Excluir Somente Este Dia</button>
-                    <button type="button" class="btn btn-danger" onclick="confirmarExclusaoOcupacao('total')">Excluir Todo o Período Agendado</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
                 </div>
             </div>
         </div>
