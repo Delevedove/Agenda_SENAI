@@ -286,8 +286,10 @@ async function salvarOcupacao() {
             formData.instrutor_id = parseInt(instrutorId);
         }
         
-        const isEdicao = ocupacaoEditando !== null;
-        const url = isEdicao ? `${API_URL}/ocupacoes/${ocupacaoEditando.id}` : `${API_URL}/ocupacoes`;
+        const urlParams = new URLSearchParams(window.location.search);
+        const editarId = urlParams.get('editar');
+        const isEdicao = editarId !== null;
+        const url = isEdicao ? `${API_URL}/ocupacoes/${editarId}` : `${API_URL}/ocupacoes`;
         const method = isEdicao ? 'PUT' : 'POST';
         
         await verificarDisponibilidade();
@@ -385,4 +387,15 @@ function exibirAlerta(mensagem, tipo) {
         }
     }, 5000);
 }
+
+// Garante envio correto do formulário em modo de edição ou criação
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('formNovaOcupacao');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await salvarOcupacao();
+        });
+    }
+});
 

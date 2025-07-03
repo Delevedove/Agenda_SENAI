@@ -1,5 +1,5 @@
 """Rotas para gerenciamento de ocupacoes de salas."""
-from flask import Blueprint, request, jsonify, make_response, send_file
+from flask import Blueprint, request, jsonify, make_response, send_file, current_app
 from src.models import db
 from src.models.ocupacao import Ocupacao
 from src.models.sala import Sala
@@ -311,120 +311,79 @@ def criar_ocupacao():
         db.session.rollback()
         return handle_internal_error(e)
 
-@ocupacao_bp.route('/ocupacoes/<int:id>', methods=['PUT'])
-def atualizar_ocupacao(id):
-    """
-    Atualiza uma ocupação existente.
-    """
+@ocupacao_bp.route('/ocupacoes/<int:ocupacao_id>', methods=['PUT'])
+def update_ocupacao(ocupacao_id):
+    """Atualiza uma ocupação existente."""
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
-    
-    ocupacao = db.session.get(Ocupacao, id)
-    if not ocupacao:
-        return jsonify({'erro': 'Ocupação não encontrada'}), 404
-    
-    # Verifica permissões
+
+    ocupacao = Ocupacao.query.get_or_404(ocupacao_id)
+    dados = request.get_json() or {}
+
     if not ocupacao.pode_ser_editada_por(user):
         return jsonify({'erro': 'Permissão negada'}), 403
-    
-    data = request.json or {}
-    try:
-        payload = OcupacaoUpdateSchema(**data)
-    except ValidationError as e:
-        return jsonify({'erro': e.errors()}), 400
-    
-    try:
-        # Atualiza sala se fornecida
-        if payload.sala_id is not None:
-            sala = db.session.get(Sala, payload.sala_id)
-            if not sala:
-                return jsonify({'erro': 'Sala não encontrada'}), 404
-            ocupacao.sala_id = payload.sala_id
-        
-        # Atualiza instrutor se fornecido
-        if payload.instrutor_id is not None:
-            if payload.instrutor_id:
-                instrutor = db.session.get(Instrutor, payload.instrutor_id)
-                if not instrutor:
-                    return jsonify({'erro': 'Instrutor não encontrado'}), 404
-            ocupacao.instrutor_id = payload.instrutor_id
-        
-        # Atualiza data e horários se fornecidos
-        data_ocupacao = ocupacao.data
-        horario_inicio = ocupacao.horario_inicio
-        horario_fim = ocupacao.horario_fim
 
-        if payload.data_inicio is not None:
-            data_ocupacao = datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
-            ocupacao.data = data_ocupacao
-        elif payload.data is not None:
-            data_ocupacao = datetime.strptime(payload.data, '%Y-%m-%d').date()
-            ocupacao.data = data_ocupacao
+    sala_id = dados.get('sala_id', ocupacao.sala_id)
+    data_inicio_str = dados.get('data_inicio', ocupacao.data.isoformat())
+    data_fim_str = dados.get('data_fim', ocupacao.data.isoformat())
+    turno = dados.get('turno', ocupacao.get_turno())
+    instrutor_id = dados.get('instrutor_id') or None
 
-        if payload.turno is not None:
-            if payload.turno not in TURNOS_PADRAO:
-                return jsonify({'erro': 'Turno inválido'}), 400
-            horario_inicio, horario_fim = TURNOS_PADRAO[payload.turno]
-            ocupacao.horario_inicio = horario_inicio
-            ocupacao.horario_fim = horario_fim
-        else:
-            if payload.horario_inicio is not None:
-                horario_inicio = datetime.strptime(payload.horario_inicio, '%H:%M').time()
-                ocupacao.horario_inicio = horario_inicio
-            if payload.horario_fim is not None:
-                horario_fim = datetime.strptime(payload.horario_fim, '%H:%M').time()
-                ocupacao.horario_fim = horario_fim
-        
-        # Validação de horários
-        if horario_inicio >= horario_fim:
-            return jsonify({'erro': 'Horário de início deve ser anterior ao horário de fim'}), 400
-        
-        # Verifica disponibilidade da sala (excluindo a ocupação atual)
-        sala = db.session.get(Sala, ocupacao.sala_id)
-        grupo_id = ocupacao.grupo_ocupacao_id
-        if not sala.is_disponivel(data_ocupacao, horario_inicio, horario_fim, ocupacao.id, grupo_id):
-            conflitos = Ocupacao.buscar_conflitos(
-                ocupacao.sala_id,
-                data_ocupacao,
+    try:
+        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'erro': 'Formato de data inválido. Use AAAA-MM-DD.'}), 400
+
+    if turno not in TURNOS_PADRAO:
+        return jsonify({'erro': 'Turno inválido'}), 400
+
+    horario_inicio, horario_fim = TURNOS_PADRAO[turno]
+
+    conflitos = []
+    dia = data_inicio
+    while dia <= data_fim:
+        conflitos.extend(
+            Ocupacao.buscar_conflitos(
+                sala_id,
+                dia,
                 horario_inicio,
                 horario_fim,
                 ocupacao.id,
-                grupo_id
+                ocupacao.grupo_ocupacao_id,
             )
-            return jsonify({
-                'erro': 'Sala não disponível no horário solicitado',
-                'conflitos': [c.to_dict(include_relations=False) for c in conflitos]
-            }), 409
-        
-        # Atualiza outros campos
-        if payload.curso_evento is not None:
-            ocupacao.curso_evento = payload.curso_evento
-        
-        if payload.tipo_ocupacao is not None:
-            tipos_validos = ['aula_regular', 'evento_especial', 'reuniao', 'manutencao', 'reserva_especial']
-            if payload.tipo_ocupacao not in tipos_validos:
-                return jsonify({'erro': f'Tipo de ocupação deve ser um dos seguintes: {", ".join(tipos_validos)}'}), 400
-            ocupacao.tipo_ocupacao = payload.tipo_ocupacao
-        
-        if payload.status is not None:
-            status_validos = ['confirmado', 'pendente', 'cancelado']
-            if payload.status not in status_validos:
-                return jsonify({'erro': f'Status deve ser um dos seguintes: {", ".join(status_validos)}'}), 400
-            ocupacao.status = payload.status
-        
-        if payload.observacoes is not None:
-            ocupacao.observacoes = payload.observacoes
-        
-        db.session.commit()
-        return jsonify(ocupacao.to_dict())
-        
-    except ValueError:
-        return jsonify({'erro': 'Formato de data ou horário inválido'}), 400
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return handle_internal_error(e)
+        )
+        dia += timedelta(days=1)
 
+    if conflitos:
+        return (
+            jsonify({
+                'erro': 'Conflito de agendamento detectado.',
+                'detalhes': [c.to_dict(include_relations=False) for c in conflitos]
+            }),
+            409,
+        )
+
+    ocupacao.sala_id = sala_id
+    ocupacao.curso_evento = dados.get('curso_evento', ocupacao.curso_evento)
+    ocupacao.tipo_ocupacao = dados.get('tipo_ocupacao', ocupacao.tipo_ocupacao)
+    ocupacao.data = data_inicio
+    ocupacao.horario_inicio = horario_inicio
+    ocupacao.horario_fim = horario_fim
+    ocupacao.instrutor_id = instrutor_id
+    ocupacao.observacoes = dados.get('observacoes', ocupacao.observacoes)
+
+    try:
+        db.session.commit()
+        return jsonify({
+            'mensagem': 'Ocupação atualizada com sucesso!',
+            'ocupacao': ocupacao.to_dict()
+        }), 200
+    except Exception as e:  # pragma: no cover - log apenas
+        db.session.rollback()
+        current_app.logger.error(f'Erro ao atualizar ocupação: {e}')
+        return jsonify({'erro': 'Ocorreu um erro interno ao salvar as alterações.'}), 500
 @ocupacao_bp.route('/ocupacoes/<int:id>', methods=['DELETE'])
 def remover_ocupacao(id):
     """
