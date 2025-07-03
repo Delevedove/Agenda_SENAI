@@ -204,11 +204,9 @@ class GerenciadorSalas {
 
     // Retorna lista de recursos marcados no formulario da sala
     coletarRecursosSelecionados() {
-        const recursos = [];
-        document
-            .querySelectorAll('#formSala input[name="recursos"]:checked')
-            .forEach(cb => recursos.push(cb.value));
-        return recursos;
+        return Array.from(
+            document.querySelectorAll('#formSala input[name="recursos"]:checked')
+        ).map(cb => cb.value);
     }
 
 // Edita uma sala existente
