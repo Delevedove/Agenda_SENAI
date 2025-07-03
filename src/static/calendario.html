@@ -125,44 +125,9 @@
             <!-- Conteúdo principal -->
             <div class="col-lg-9">
                 <h2 class="mb-4">Calendário de Agendamentos</h2>
-                
+
                 <div id="alertContainer"></div>
-                
-                <!-- Filtros em telas menores -->
-                <div class="d-lg-none mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Filtros</h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="filtrosMobileForm" class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="filtroLaboratorioMobile" class="form-label">Laboratório</label>
-                                    <select class="form-select" id="filtroLaboratorioMobile">
-                                        <option value="">Todos</option>
-                                        <!-- Opções serão carregadas dinamicamente -->
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="filtroTurnoMobile" class="form-label">Turno</label>
-                                    <select class="form-select" id="filtroTurnoMobile">
-                                        <option value="">Todos</option>
-                                        <option value="Manhã">Manhã</option>
-                                        <option value="Tarde">Tarde</option>
-                                        <option value="Noite">Noite</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="bi bi-funnel me-2"></i>Filtrar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Legenda de Status -->
+
                 <div class="card mb-3">
                     <div class="card-body">
                         <h6 class="card-subtitle mb-2 text-muted">Legenda</h6>
@@ -182,8 +147,7 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Calendário -->
+
                 <div class="card">
                     <div class="card-body">
                         <div id="loadingCalendario" class="text-center py-4">
@@ -192,11 +156,10 @@
                             </div>
                             <p class="mt-2">Carregando agendamentos...</p>
                         </div>
-
                         <div id="calendario" style="display: none;"></div>
                     </div>
                 </div>
-                
+
                 <div class="d-flex justify-content-end mt-4">
                     <a href="/novo-agendamento.html" class="btn btn-primary">
                         <i class="bi bi-plus-circle me-2"></i>Novo Agendamento
