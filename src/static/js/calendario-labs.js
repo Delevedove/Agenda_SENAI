@@ -219,24 +219,27 @@ function configurarFiltros() {
 
 // Esta função auxiliar desenha as pílulas e deve estar no mesmo ficheiro.
 function renderizarPillulas(resumo, totalLabs) {
-    if (!resumo || totalLabs === 0) return;
+    if (!resumo || totalLabs === 0) {
+        // Limpa o calendário se não houver dados
+        document.querySelectorAll('.day-pills-container').forEach(c => c.innerHTML = '');
+        return;
+    };
 
-    // Limpa pílulas antigas para evitar duplicatas ao navegar
-    document.querySelectorAll('.day-pills-container').forEach(c => c.innerHTML = '');
-
-    for (const dataStr in resumo) {
-        const container = document.querySelector(`.day-pills-container[data-date="${dataStr}"]`);
-        if (!container) continue;
-
+    document.querySelectorAll('.day-pills-container').forEach(container => {
+        const dataStr = container.getAttribute('data-date');
+        const diaResumo = resumo[dataStr];
         let html = '';
+
         ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
-            const ocupados = resumo[dataStr][turno] ? resumo[dataStr][turno].ocupados : 0;
-            let statusClass = 'turno-livre';
+            const ocupados = diaResumo && diaResumo[turno] ? diaResumo[turno].ocupados : 0;
+
+            let statusClass = 'turno-livre'; // Padrão é livre
             if (ocupados > 0) {
-                statusClass = ocupados === totalLabs ? 'turno-cheio' : 'turno-parcial';
+                statusClass = ocupados >= totalLabs ? 'turno-cheio' : 'turno-parcial';
             }
+
             html += `<div class="pill-turno ${statusClass}">${turno}: ${ocupados}/${totalLabs}</div>`;
         });
         container.innerHTML = html;
-    }
+    });
 }
