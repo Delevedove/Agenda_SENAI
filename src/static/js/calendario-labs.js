@@ -1,11 +1,9 @@
 // Calendário de agendamentos com resumo por turno
 let calendar;
-let resumoDias = {};
-let totalLaboratorios = 0;
 
 function inicializarCalendario() {
-    const el = document.getElementById('calendario');
-    calendar = new FullCalendar.Calendar(el, {
+    const calendarEl = document.getElementById('calendario');
+    calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'pt-br',
         headerToolbar: {
@@ -13,65 +11,68 @@ function inicializarCalendario() {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        buttonText: {
-            today: 'Hoje',
-            month: 'Mês',
-            week: 'Semana',
-            day: 'Dia'
-        },
         height: 'auto',
-        events: (info, success, failure) => {
-            carregarResumoCalendario(info.startStr, info.endStr)
-                .then(() => {
-                    success([]);
-                    calendar.rerenderDates();
-                })
-                .catch(err => {
-                    console.error('Erro ao carregar resumo:', err);
-                    failure(err);
+
+        dayCellContent: function(arg) {
+            return { html: `
+                <div class="fc-daygrid-day-number">${arg.dayNumberText}</div>
+                <div class="day-pills-container" data-date="${arg.date.toISOString().slice(0,10)}">
+                    </div>`
+            };
+        },
+
+        events: async function(fetchInfo, successCallback, failureCallback) {
+            try {
+                const params = new URLSearchParams({
+                    data_inicio: fetchInfo.startStr.slice(0, 10),
+                    data_fim: fetchInfo.endStr.slice(0, 10)
                 });
+
+                const response = await fetch(`${API_URL}/agendamentos/resumo-calendario?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+
+                if (!response.ok) throw new Error('Falha ao carregar resumo do calendário');
+
+                const data = await response.json();
+
+                document.querySelectorAll('.day-pills-container').forEach(c => c.innerHTML = '');
+
+                renderizarPillulas(data.resumo, data.total_laboratorios);
+
+                successCallback([]);
+            } catch (error) {
+                console.error(error);
+                failureCallback(error);
+            }
         },
-        dayCellContent: arg => {
-            const dateStr = arg.date.toISOString().split('T')[0];
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = `<div class="fc-daygrid-day-number">${arg.dayNumberText}</div>`;
-            const resumo = resumoDias[dateStr];
-            ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
-                const info = resumo ? resumo[turno] : null;
-                const ocup = info ? info.ocupados : 0;
-                const div = document.createElement('div');
-                div.classList.add('pill-turno');
-                if (ocup === 0) {
-                    div.classList.add('turno-livre');
-                } else if (ocup === totalLaboratorios) {
-                    div.classList.add('turno-cheio');
-                } else {
-                    div.classList.add('turno-parcial');
-                }
-                div.textContent = `${turno}: ${ocup}/${totalLaboratorios}`;
-                wrapper.appendChild(div);
-            });
-            return { domNodes: [wrapper] };
-        },
-        dateClick: info => mostrarResumoAgendamentos(info.dateStr)
+
+        // ... (outras funções como eventClick, dateClick)
     });
+
     calendar.render();
     document.getElementById('loadingCalendario').style.display = 'none';
     document.getElementById('calendario').style.display = 'block';
 }
 
-async function carregarResumoCalendario(inicio, fim) {
-    const params = new URLSearchParams({
-        data_inicio: inicio.split('T')[0],
-        data_fim: fim.split('T')[0]
-    });
-    const resp = await fetch(`${API_URL}/agendamentos/resumo-calendario?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-    });
-    if (!resp.ok) throw new Error('Erro ao obter resumo');
-    const dados = await resp.json();
-    resumoDias = dados.resumo || {};
-    totalLaboratorios = dados.total_laboratorios || 0;
+function renderizarPillulas(resumo, totalLabs) {
+    if (totalLabs === 0) return;
+
+    for (const data in resumo) {
+        const container = document.querySelector(`.day-pills-container[data-date="${data}"]`);
+        if (!container) continue;
+
+        let html = '';
+        ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+            const ocupados = resumo[data][turno] ? resumo[data][turno].ocupados : 0;
+            let statusClass = 'turno-livre';
+            if (ocupados > 0) {
+                statusClass = ocupados === totalLabs ? 'turno-cheio' : 'turno-parcial';
+            }
+            html += `<div class="pill-turno ${statusClass}">${turno}: ${ocupados}/${totalLabs}</div>`;
+        });
+        container.innerHTML = html;
+    }
 }
 
 async function mostrarResumoAgendamentos(dataStr) {
