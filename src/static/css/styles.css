@@ -945,3 +945,70 @@ input, select, textarea {
   padding-left: 1rem;
   margin-bottom: 1rem;
 }
+/* ======================================================= */
+/* == ESTILOS DEFINITIVOS PARA OS CALENDÁRIOS (UNIFICADO) == */
+/* ======================================================= */
+
+/* Container que segura as pílulas dentro de cada dia */
+.day-pills-container {
+    padding-top: 4px;
+}
+
+/* Estilo base para as pílulas de resumo (Manhã, Tarde, Noite) */
+.pill-turno {
+    padding: 4px 8px;
+    margin: 3px auto;
+    border-radius: 4px;
+    font-size: 13px; /* Tamanho da fonte ajustado para leitura */
+    font-weight: 500;
+    display: block;
+    text-align: center;
+    border: 1px solid transparent;
+    max-width: 120px;
+    line-height: 1.4;
+}
+
+/* --- Legenda --- */
+.legenda-cores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+.legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+.legenda-cor-status {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+}
+
+/* --- Cores e Estilos por Status de Ocupação --- */
+
+/* ESTILO LIVRE (0% Ocupado) */
+.turno-livre {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border-color: #e9ecef;
+}
+
+/* ESTILO PARCIAL (1-99% Ocupado) */
+.turno-parcial {
+    background-color: #FF8A00; /* Laranja SENAI */
+    color: #FFFFFF; /* Texto branco para contraste */
+    border-color: #E67B00;
+    font-weight: 600;
+}
+
+/* ESTILO CHEIO (100% Ocupado) */
+.turno-cheio {
+    background-color: #00539F; /* Azul SENAI */
+    color: #FFFFFF; /* Texto branco para contraste */
+    border-color: #00407d;
+    font-weight: 600;
+}
+
