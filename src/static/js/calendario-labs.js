@@ -2,6 +2,7 @@
 let calendar;
 let resumoDias = {};
 let totalLaboratorios = 0;
+let diaResumoAtual = null;
 
 function inicializarCalendario() {
     const calendarEl = document.getElementById('calendario');
@@ -91,6 +92,7 @@ async function carregarResumoCalendario(inicio, fim) {
 }
 
 async function mostrarResumoAgendamentos(dataStr) {
+    diaResumoAtual = dataStr;
     const modalEl = document.getElementById('modalResumoAgendamentos');
     const modal = new bootstrap.Modal(modalEl);
     const container = document.getElementById('conteudoResumoAgendamentos');
@@ -174,6 +176,14 @@ function excluirAgendamento(id) {
             confirmModal.hide();
             exibirAlerta('Agendamento excluído com sucesso!', 'success');
             calendar.refetchEvents();
+            await carregarResumoCalendario(
+                calendar.view.activeStart.toISOString(),
+                calendar.view.activeEnd.toISOString()
+            );
+            renderizarPillulas(resumoDias, totalLaboratorios);
+            if (diaResumoAtual) {
+                mostrarResumoAgendamentos(diaResumoAtual);
+            }
         } catch (error) {
             exibirAlerta(`Erro ao excluir agendamento: ${error.message}`, 'danger');
         }
