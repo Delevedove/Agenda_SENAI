@@ -1,6 +1,6 @@
 """Rotas de agendamento de laboratorios."""
 from flask import Blueprint, request, jsonify, make_response, send_file
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import json
 import csv
 from io import StringIO, BytesIO
@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from src.models import db
 from src.models.agendamento import Agendamento
+from src.models.laboratorio_turma import Laboratorio
 from src.models.user import User
 from src.routes.user import verificar_autenticacao, verificar_admin
 from sqlalchemy.exc import SQLAlchemyError
@@ -329,6 +330,51 @@ def agendamentos_calendario_periodo():
             'extendedProps': a.to_dict()
         })
     return jsonify(eventos)
+
+
+@agendamento_bp.route('/agendamentos/resumo-calendario', methods=['GET'])
+def resumo_calendario():
+    """Calcula resumo de laboratórios ocupados por dia e turno."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    data_inicio_str = request.args.get('data_inicio')
+    data_fim_str = request.args.get('data_fim')
+    if not data_inicio_str or not data_fim_str:
+        return jsonify({'erro': 'Parâmetros de data inválidos'}), 400
+    try:
+        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'erro': 'Formato de data inválido'}), 400
+
+    total_labs = Laboratorio.query.count()
+
+    resumo = {}
+    dia = data_inicio
+    while dia <= data_fim:
+        resumo[dia.isoformat()] = {
+            'Manhã': {'ocupados': 0},
+            'Tarde': {'ocupados': 0},
+            'Noite': {'ocupados': 0},
+        }
+        dia += timedelta(days=1)
+
+    query = Agendamento.query.filter(
+        Agendamento.data >= data_inicio,
+        Agendamento.data <= data_fim
+    )
+
+    if not verificar_admin(user):
+        query = query.filter(Agendamento.usuario_id == user.id)
+
+    for ag in query.all():
+        info = resumo.get(ag.data.isoformat())
+        if info and ag.turno in info:
+            info[ag.turno]['ocupados'] += 1
+
+    return jsonify({'total_laboratorios': total_labs, 'resumo': resumo})
 
 @agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
