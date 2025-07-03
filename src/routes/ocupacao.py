@@ -311,79 +311,102 @@ def criar_ocupacao():
         db.session.rollback()
         return handle_internal_error(e)
 
-@ocupacao_bp.route('/ocupacoes/<int:ocupacao_id>', methods=['PUT'])
-def update_ocupacao(ocupacao_id):
-    """Atualiza uma ocupação existente."""
+@ocupacao_bp.route('/ocupacoes/<int:id>', methods=['PUT'])
+def atualizar_ocupacao(id):
+    """
+    Atualiza uma ocupação existente. Para garantir a consistência de agendamentos
+    de múltiplos dias, esta função adota a estratégia de "apagar e recriar".
+    """
     autenticado, user = verificar_autenticacao(request)
     if not autenticado:
         return jsonify({'erro': 'Não autenticado'}), 401
 
-    ocupacao = Ocupacao.query.get_or_404(ocupacao_id)
-    dados = request.get_json() or {}
+    # 1. Encontra a ocupação original para obter o grupo.
+    ocupacao_original = db.session.get(Ocupacao, id)
+    if not ocupacao_original:
+        return jsonify({'erro': 'Ocupação não encontrada'}), 404
 
-    if not ocupacao.pode_ser_editada_por(user):
+    # 2. Verifica as permissões do usuário.
+    if not ocupacao_original.pode_ser_editada_por(user):
         return jsonify({'erro': 'Permissão negada'}), 403
 
-    sala_id = dados.get('sala_id', ocupacao.sala_id)
-    data_inicio_str = dados.get('data_inicio', ocupacao.data.isoformat())
-    data_fim_str = dados.get('data_fim', ocupacao.data.isoformat())
-    turno = dados.get('turno', ocupacao.get_turno())
-    instrutor_id = dados.get('instrutor_id') or None
-
+    # 3. Valida os novos dados recebidos do formulário.
+    data = request.json or {}
     try:
-        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
-        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
-    except ValueError:
-        return jsonify({'erro': 'Formato de data inválido. Use AAAA-MM-DD.'}), 400
+        payload = OcupacaoUpdateSchema(**data)
+    except ValidationError as e:
+        return jsonify({'erro': e.errors()}), 400
 
-    if turno not in TURNOS_PADRAO:
-        return jsonify({'erro': 'Turno inválido'}), 400
+    # 4. Pega o grupo_id original. Se não existir, usa um novo.
+    grupo_id = ocupacao_original.grupo_ocupacao_id
+    if not grupo_id:
+        import uuid
+        grupo_id = uuid.uuid4().hex
 
-    horario_inicio, horario_fim = TURNOS_PADRAO[turno]
+    # ----- Início da Transação Atómica -----
+    try:
+        # 5. Apaga TODAS as ocupações antigas que pertencem ao mesmo grupo.
+        Ocupacao.query.filter_by(grupo_ocupacao_id=grupo_id).delete()
 
-    conflitos = []
-    dia = data_inicio
-    while dia <= data_fim:
-        conflitos.extend(
-            Ocupacao.buscar_conflitos(
-                sala_id,
-                dia,
-                horario_inicio,
-                horario_fim,
-                ocupacao.id,
-                ocupacao.grupo_ocupacao_id,
+        # 6. Prepara os dados para a recriação.
+        sala_id = payload.sala_id if payload.sala_id is not None else ocupacao_original.sala_id
+        instrutor_id = payload.instrutor_id if payload.instrutor_id is not None else ocupacao_original.instrutor_id
+        data_inicio = datetime.strptime(payload.data_inicio, '%Y-%m-%d').date()
+        data_fim = datetime.strptime(payload.data_fim, '%Y-%m-%d').date()
+        turno = payload.turno if payload.turno is not None else ocupacao_original.get_turno()
+
+        if data_inicio > data_fim:
+            raise ValueError("Data de início não pode ser posterior à data de fim.")
+
+        if turno not in TURNOS_PADRAO:
+            raise ValueError("Turno inválido.")
+        horario_inicio, horario_fim = TURNOS_PADRAO[turno]
+
+        # 7. Verifica conflitos com outras ocupações, ignorando o grupo atual (que já foi apagado).
+        conflitos = Ocupacao.query.filter(
+            Ocupacao.sala_id == sala_id,
+            Ocupacao.data.between(data_inicio, data_fim),
+            Ocupacao.horario_inicio == horario_inicio,
+            # Adicionar verificação de conflito de instrutor se necessário
+        ).all()
+
+        if conflitos:
+             raise ValueError("Conflito de horário detectado. A sala já está ocupada neste novo período.")
+
+        # 8. Recria as novas ocupações com os dados atualizados.
+        ocupacoes_criadas = []
+        dia_atual = data_inicio
+        while dia_atual <= data_fim:
+            nova_ocupacao = Ocupacao(
+                sala_id=sala_id,
+                instrutor_id=instrutor_id,
+                usuario_id=user.id,
+                curso_evento=payload.curso_evento,
+                data=dia_atual,
+                horario_inicio=horario_inicio,
+                horario_fim=horario_fim,
+                tipo_ocupacao=payload.tipo_ocupacao,
+                recorrencia=payload.recorrencia,
+                status=payload.status,
+                observacoes=payload.observacoes,
+                grupo_ocupacao_id=grupo_id  # Reutiliza o mesmo ID de grupo
             )
-        )
-        dia += timedelta(days=1)
-
-    if conflitos:
-        return (
-            jsonify({
-                'erro': 'Conflito de agendamento detectado.',
-                'detalhes': [c.to_dict(include_relations=False) for c in conflitos]
-            }),
-            409,
-        )
-
-    ocupacao.sala_id = sala_id
-    ocupacao.curso_evento = dados.get('curso_evento', ocupacao.curso_evento)
-    ocupacao.tipo_ocupacao = dados.get('tipo_ocupacao', ocupacao.tipo_ocupacao)
-    ocupacao.data = data_inicio
-    ocupacao.horario_inicio = horario_inicio
-    ocupacao.horario_fim = horario_fim
-    ocupacao.instrutor_id = instrutor_id
-    ocupacao.observacoes = dados.get('observacoes', ocupacao.observacoes)
-
-    try:
+            db.session.add(nova_ocupacao)
+            ocupacoes_criadas.append(nova_ocupacao)
+            dia_atual += timedelta(days=1)
+        
+        # 9. Comita a transação.
         db.session.commit()
+        
         return jsonify({
             'mensagem': 'Ocupação atualizada com sucesso!',
-            'ocupacao': ocupacao.to_dict()
+            'ocupacoes': [o.to_dict() for o in ocupacoes_criadas]
         }), 200
-    except Exception as e:  # pragma: no cover - log apenas
+
+    except Exception as e:
+        # 10. Se qualquer passo falhar, desfaz tudo (rollback).
         db.session.rollback()
-        current_app.logger.error(f'Erro ao atualizar ocupação: {e}')
-        return jsonify({'erro': 'Ocorreu um erro interno ao salvar as alterações.'}), 500
+        return jsonify({'erro': f'Falha ao atualizar a ocupação: {str(e)}'}), 500
 @ocupacao_bp.route('/ocupacoes/<int:id>', methods=['DELETE'])
 def remover_ocupacao(id):
     """
