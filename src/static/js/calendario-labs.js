@@ -4,8 +4,8 @@ let resumoDias = {};
 let totalLaboratorios = 0;
 
 function inicializarCalendario() {
-    const el = document.getElementById('calendario');
-    calendar = new FullCalendar.Calendar(el, {
+    const calendarEl = document.getElementById('calendario');
+    calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'pt-br',
         headerToolbar: {
@@ -20,41 +20,57 @@ function inicializarCalendario() {
             day: 'Dia'
         },
         height: 'auto',
-        events: (info, success, failure) => {
-            carregarResumoCalendario(info.startStr, info.endStr)
-                .then(() => {
-                    success([]);
-                    calendar.rerenderDates();
-                })
-                .catch(err => {
-                    console.error('Erro ao carregar resumo:', err);
-                    failure(err);
+
+        // 1. Injeta um container nas células do calendário para receber as pílulas.
+        dayCellContent: function(arg) {
+            const dateStr = arg.date.toISOString().slice(0, 10);
+            return {
+                html: `<div class="fc-daygrid-day-number">${arg.dayNumberText}</div>
+                       <div class="day-pills-container" data-date="${dateStr}"></div>`
+            };
+        },
+
+        // 2. A propriedade 'events' não será usada para buscar dados, apenas para eventos pontuais se necessário.
+        events: function(fetchInfo, successCallback, failureCallback) {
+            // Devolvemos um array vazio porque a nossa renderização é customizada.
+            successCallback([]);
+        },
+
+        // 3. USA-SE O 'datesSet' PARA BUSCAR DADOS E RENDERIZAR AS PÍLULAS.
+        // Este evento é acionado sempre que a faixa de datas do calendário muda.
+        datesSet: async function(dateInfo) {
+            try {
+                const params = new URLSearchParams({
+                    data_inicio: dateInfo.startStr.slice(0, 10),
+                    data_fim: dateInfo.endStr.slice(0, 10)
                 });
-        },
-        dayCellContent: arg => {
-            const dateStr = arg.date.toISOString().split('T')[0];
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = `<div class="fc-daygrid-day-number">${arg.dayNumberText}</div>`;
-            const resumo = resumoDias[dateStr];
-            ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
-                const info = resumo ? resumo[turno] : null;
-                const ocup = info ? info.ocupados : 0;
-                const div = document.createElement('div');
-                div.classList.add('pill-turno');
-                if (ocup === 0) {
-                    div.classList.add('turno-livre');
-                } else if (ocup === totalLaboratorios) {
-                    div.classList.add('turno-cheio');
-                } else {
-                    div.classList.add('turno-parcial');
+
+                const response = await fetch(`${API_URL}/agendamentos/resumo-calendario?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar resumo do calendário');
                 }
-                div.textContent = `${turno}: ${ocup}/${totalLaboratorios}`;
-                wrapper.appendChild(div);
-            });
-            return { domNodes: [wrapper] };
+
+                const data = await response.json();
+                renderizarPillulas(data.resumo, data.total_laboratorios);
+
+            } catch (error) {
+                console.error("Erro ao buscar ou renderizar resumo de agendamentos:", error);
+                // Opcional: exibir um alerta de erro para o usuário.
+            }
         },
-        dateClick: info => mostrarResumoAgendamentos(info.dateStr)
+        
+        // 4. A função de clique no dia abre o modal de resumo, como antes.
+        dateClick: function(info) {
+             // Esta função deve chamar o seu modal de resumo.
+             // Se o modal já funciona, esta parte está correta.
+             // Exemplo: mostrarResumoAgendamentos(info.dateStr);
+             mostrarResumoAgendamentos(info.dateStr);
+        }
     });
+    
     calendar.render();
     document.getElementById('loadingCalendario').style.display = 'none';
     document.getElementById('calendario').style.display = 'block';
@@ -188,5 +204,29 @@ function configurarFiltros() {
             document.getElementById('filtroTurno').value = document.getElementById('filtroTurnoMobile').value;
             aplicarFiltrosCalendario();
         });
+    }
+}
+
+// Esta função auxiliar desenha as pílulas e deve estar no mesmo ficheiro.
+function renderizarPillulas(resumo, totalLabs) {
+    if (!resumo || totalLabs === 0) return;
+
+    // Limpa pílulas antigas para evitar duplicatas ao navegar
+    document.querySelectorAll('.day-pills-container').forEach(c => c.innerHTML = '');
+
+    for (const dataStr in resumo) {
+        const container = document.querySelector(`.day-pills-container[data-date="${dataStr}"]`);
+        if (!container) continue;
+
+        let html = '';
+        ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+            const ocupados = resumo[dataStr][turno] ? resumo[dataStr][turno].ocupados : 0;
+            let statusClass = 'turno-livre';
+            if (ocupados > 0) {
+                statusClass = ocupados === totalLabs ? 'turno-cheio' : 'turno-parcial';
+            }
+            html += `<div class="pill-turno ${statusClass}">${turno}: ${ocupados}/${totalLabs}</div>`;
+        });
+        container.innerHTML = html;
     }
 }
