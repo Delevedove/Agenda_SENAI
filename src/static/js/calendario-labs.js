@@ -1,11 +1,11 @@
-// Calendário de agendamentos de laboratórios usando FullCalendar
-
+// Calendário de agendamentos com resumo por turno
 let calendar;
-let agendamentosData = [];
+let resumoDias = {};
+let totalLaboratorios = 0;
 
 function inicializarCalendario() {
-    const calendarEl = document.getElementById('calendario');
-    calendar = new FullCalendar.Calendar(calendarEl, {
+    const el = document.getElementById('calendario');
+    calendar = new FullCalendar.Calendar(el, {
         initialView: 'dayGridMonth',
         locale: 'pt-br',
         headerToolbar: {
@@ -20,62 +20,148 @@ function inicializarCalendario() {
             day: 'Dia'
         },
         height: 'auto',
-        eventDisplay: 'block',
-        dayMaxEvents: 3,
-        moreLinkText: num => `+${num} mais`,
-        eventClick: info => mostrarDetalhesAgendamento(info.event.extendedProps),
-        dateClick: info => {
-            window.location.href = `/novo-agendamento.html?data=${info.dateStr}`;
-        },
-        events: (fetchInfo, successCallback, failureCallback) => {
-            carregarAgendamentos(fetchInfo.startStr, fetchInfo.endStr)
-                .then(successCallback)
+        events: (info, success, failure) => {
+            carregarResumoCalendario(info.startStr, info.endStr)
+                .then(() => {
+                    success([]);
+                    calendar.rerenderDates();
+                })
                 .catch(err => {
-                    console.error('Erro ao carregar eventos:', err);
-                    failureCallback(err);
+                    console.error('Erro ao carregar resumo:', err);
+                    failure(err);
                 });
-        }
+        },
+        dayCellContent: arg => {
+            const dateStr = arg.date.toISOString().split('T')[0];
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = `<div class="fc-daygrid-day-number">${arg.dayNumberText}</div>`;
+            const resumo = resumoDias[dateStr];
+            ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+                const info = resumo ? resumo[turno] : null;
+                const ocup = info ? info.ocupados : 0;
+                const div = document.createElement('div');
+                div.classList.add('pill-turno');
+                if (ocup === 0) {
+                    div.classList.add('turno-livre');
+                } else if (ocup === totalLaboratorios) {
+                    div.classList.add('turno-cheio');
+                } else {
+                    div.classList.add('turno-parcial');
+                }
+                div.textContent = `${turno}: ${ocup}/${totalLaboratorios}`;
+                wrapper.appendChild(div);
+            });
+            return { domNodes: [wrapper] };
+        },
+        dateClick: info => mostrarResumoAgendamentos(info.dateStr)
     });
     calendar.render();
     document.getElementById('loadingCalendario').style.display = 'none';
     document.getElementById('calendario').style.display = 'block';
 }
 
-async function carregarAgendamentos(dataInicio, dataFim) {
+async function carregarResumoCalendario(inicio, fim) {
+    const params = new URLSearchParams({
+        data_inicio: inicio.split('T')[0],
+        data_fim: fim.split('T')[0]
+    });
+    const resp = await fetch(`${API_URL}/agendamentos/resumo-calendario?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    if (!resp.ok) throw new Error('Erro ao obter resumo');
+    const dados = await resp.json();
+    resumoDias = dados.resumo || {};
+    totalLaboratorios = dados.total_laboratorios || 0;
+}
+
+async function mostrarResumoAgendamentos(dataStr) {
+    const modalEl = document.getElementById('modalResumoAgendamentos');
+    const modal = new bootstrap.Modal(modalEl);
+    const container = document.getElementById('conteudoResumoAgendamentos');
+    document.getElementById('modalResumoAgendamentosLabel').textContent = 'Resumo de Agendamentos – ' + formatarData(dataStr);
+    container.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>';
     try {
-        const params = new URLSearchParams({
-            data_inicio: dataInicio.split('T')[0],
-            data_fim: dataFim.split('T')[0]
+        const [agendamentos, laboratorios] = await Promise.all([
+            chamarAPI(`/agendamentos/calendario?data_inicio=${dataStr}&data_fim=${dataStr}`),
+            chamarAPI('/laboratorios')
+        ]);
+        const nomesLabs = laboratorios.map(l => l.nome);
+        container.innerHTML = '';
+        ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+            const eventos = agendamentos.filter(e => e.extendedProps.turno === turno);
+            const ocupados = eventos.map(e => e.extendedProps.laboratorio);
+            const livres = nomesLabs.filter(n => !ocupados.includes(n));
+            const card = document.createElement('div');
+            card.className = 'card mb-3';
+            const header = document.createElement('div');
+            header.className = 'card-header bg-light d-flex justify-content-between align-items-center';
+            header.innerHTML = `<h6 class="mb-0">${escapeHTML(turno)}</h6><span class="badge bg-secondary">${eventos.length} / ${nomesLabs.length} Laboratórios</span>`;
+            card.appendChild(header);
+            const body = document.createElement('div');
+            body.className = 'card-body';
+            let html = '<div class="row">';
+            html += '<div class="col-md-7">';
+            html += '<h6><i class="bi bi-flask text-danger"></i> Laboratórios Ocupados:</h6>';
+            if (eventos.length) {
+                html += '<ul class="list-group list-group-flush">';
+                eventos.forEach(ev => {
+                    const p = ev.extendedProps;
+                    html += `<li class="list-group-item d-flex justify-content-between align-items-center">` +
+                             `<div><strong>${escapeHTML(p.laboratorio)}:</strong> ${escapeHTML(p.turma)}</div>` +
+                             `<div class="btn-group">` +
+                             `<button class="btn btn-sm btn-outline-primary btn-editar-agendamento" data-id="${ev.id}" title="Editar"><i class="bi bi-pencil"></i></button>` +
+                             `<button class="btn btn-sm btn-outline-danger btn-excluir-agendamento" data-id="${ev.id}" title="Excluir"><i class="bi bi-trash"></i></button>` +
+                             `</div></li>`;
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="fst-italic text-muted">Nenhum laboratório ocupado neste turno.</p>';
+            }
+            html += '</div>';
+            html += '<div class="col-md-5">';
+            html += '<h6><i class="bi bi-flask-fill text-success"></i> Laboratórios Livres:</h6>';
+            if (livres.length) {
+                livres.forEach(n => {
+                    html += `<span class="badge bg-light text-dark border me-1 mb-1">${escapeHTML(n)}</span>`;
+                });
+            } else {
+                html += '<p class="fst-italic text-muted">Todos os laboratórios estão ocupados.</p>';
+            }
+            html += '</div></div>';
+            body.innerHTML = sanitizeHTML(html);
+            card.appendChild(body);
+            container.appendChild(card);
         });
-        const laboratorio = document.getElementById('filtroLaboratorio').value;
-        const turno = document.getElementById('filtroTurno').value;
-        if (laboratorio) params.append('laboratorio', laboratorio);
-        if (turno) params.append('turno', turno);
-
-        const response = await fetch(`${API_URL}/agendamentos/calendario?${params.toString()}`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
+        container.querySelectorAll('.btn-editar-agendamento').forEach(btn => {
+            btn.addEventListener('click', e => editarAgendamento(e.currentTarget.getAttribute('data-id')));
         });
-
-        if (response.ok) {
-            const eventos = await response.json();
-            agendamentosData = eventos;
-            return eventos.map(ev => ({
-                id: ev.id,
-                title: ev.title,
-                start: ev.start,
-                end: ev.end,
-                backgroundColor: ev.backgroundColor,
-                borderColor: ev.borderColor,
-                className: getClasseTurno(ev.extendedProps.turno),
-                extendedProps: ev.extendedProps
-            }));
-        } else {
-            throw new Error('Erro ao carregar agendamentos');
-        }
-    } catch (error) {
-        console.error('Erro ao carregar agendamentos:', error);
-        return [];
+        container.querySelectorAll('.btn-excluir-agendamento').forEach(btn => {
+            btn.addEventListener('click', e => excluirAgendamento(e.currentTarget.getAttribute('data-id')));
+        });
+    } catch (err) {
+        console.error('Erro ao carregar resumo', err);
+        container.innerHTML = '<p class="text-danger">Erro ao carregar dados.</p>';
     }
+    modal.show();
+}
+
+function editarAgendamento(id) {
+    window.location.href = `/novo-agendamento.html?id=${id}`;
+}
+
+function excluirAgendamento(id) {
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
+    confirmModal.show();
+    document.getElementById('btnConfirmarExclusao').onclick = async () => {
+        try {
+            await chamarAPI(`/agendamentos/${id}`, 'DELETE');
+            confirmModal.hide();
+            exibirAlerta('Agendamento excluído com sucesso!', 'success');
+            calendar.refetchEvents();
+        } catch (error) {
+            exibirAlerta(`Erro ao excluir agendamento: ${error.message}`, 'danger');
+        }
+    };
 }
 
 function aplicarFiltrosCalendario() {
@@ -84,58 +170,9 @@ function aplicarFiltrosCalendario() {
     }
 }
 
-function mostrarDetalhesAgendamento(agendamento) {
-    const modal = new bootstrap.Modal(document.getElementById('agendamentoModal'));
-    const modalBody = document.getElementById('agendamentoModalBody');
-
-    let horariosFormatados = '';
-    try {
-        const horarios = JSON.parse(agendamento.horarios);
-        horariosFormatados = horarios.map(h => escapeHTML(h)).join('<br>');
-    } catch (e) {
-        horariosFormatados = escapeHTML(agendamento.horarios);
-    }
-
-    modalBody.innerHTML = `
-        <div class="mb-3"><strong>Laboratório:</strong> ${escapeHTML(agendamento.laboratorio)}</div>
-        <div class="mb-3"><strong>Turma:</strong> ${escapeHTML(agendamento.turma)}</div>
-        <div class="mb-3"><strong>Data:</strong> ${escapeHTML(formatarData(agendamento.data))}</div>
-        <div class="mb-3"><strong>Turno:</strong> <span class="badge ${getClasseTurno(agendamento.turno)}">${escapeHTML(agendamento.turno)}</span></div>
-        <div class="mb-3"><strong>Horários:</strong><br>${horariosFormatados}</div>
-        <div class="mb-3"><strong>Agendado por:</strong> ${escapeHTML(agendamento.usuario_nome || 'Não informado')}</div>
-    `;
-
-    const usuario = getUsuarioLogado();
-    const podeEditar = isAdmin() || (usuario && agendamento.usuario_id === usuario.id);
-    document.getElementById('btnEditarAgendamento').style.display = podeEditar ? '' : 'none';
-    document.getElementById('btnExcluirAgendamento').style.display = podeEditar ? '' : 'none';
-    document.getElementById('btnEditarAgendamento').onclick = () => {
-        window.location.href = `/novo-agendamento.html?id=${agendamento.id}`;
-    };
-    document.getElementById('btnExcluirAgendamento').onclick = () => {
-        modal.hide();
-        const confirmModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
-        confirmModal.show();
-        document.getElementById('btnConfirmarExclusao').onclick = async () => {
-            try {
-                await chamarAPI(`/agendamentos/${agendamento.id}`, 'DELETE');
-                confirmModal.hide();
-                exibirAlerta('Agendamento excluído com sucesso!', 'success');
-                calendar.refetchEvents();
-            } catch (error) {
-                exibirAlerta(`Erro ao excluir agendamento: ${error.message}`, 'danger');
-            }
-        };
-    };
-
-    modal.show();
-}
- 
-// Configurações de filtros
 function configurarFiltros() {
     const form = document.getElementById('filtrosForm');
     const formMobile = document.getElementById('filtrosMobileForm');
-
     if (form) {
         form.addEventListener('submit', e => {
             e.preventDefault();
@@ -144,7 +181,6 @@ function configurarFiltros() {
             aplicarFiltrosCalendario();
         });
     }
-
     if (formMobile) {
         formMobile.addEventListener('submit', e => {
             e.preventDefault();
