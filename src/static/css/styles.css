@@ -854,3 +854,81 @@ input, select, textarea {
   margin: 8px 0;
   box-sizing: border-box;
 }
+
+/* ========================================= */
+/* ESTILOS PARA O NOVO DASHBOARD             */
+/* ========================================= */
+
+/* Estilo geral para os cartões do dashboard */
+.card {
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background-color: #FFFFFF;
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid #f0f0f0;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #333;
+}
+
+/* Estilo para os cards de KPI (indicadores) */
+.kpi-card {
+  transition: transform 0.2s ease-in-out;
+}
+.kpi-card:hover {
+  transform: translateY(-5px);
+}
+.kpi-title {
+  color: #6c757d; /* Cinza sóbrio */
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.kpi-number {
+  color: #00539F; /* Azul SENAI */
+  font-weight: 700;
+}
+.kpi-icon {
+  font-size: 2.5rem;
+  color: #00539F; /* Azul SENAI */
+  opacity: 0.7;
+}
+
+/* Estilo para as pastilhas de Ações Rápidas */
+.action-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  color: #333;
+  background-color: #f8f9fa; /* Fundo cinza claro */
+  border: 1px solid #dee2e6;
+  height: 100%;
+  transition: background-color 0.2s, color 0.2s;
+}
+.action-tile:hover {
+  background-color: #00539F; /* Azul SENAI */
+  color: #FFFFFF;
+  border-color: #00539F;
+}
+.action-tile i {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.action-tile span {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Melhoria na lista de Próximas Ocupações */
+.ocupacao-item {
+  border-left: 4px solid #00539F; /* Barra azul padrão */
+  padding-left: 1rem;
+  margin-bottom: 1rem;
+}
