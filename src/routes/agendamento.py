@@ -332,49 +332,6 @@ def agendamentos_calendario_periodo():
     return jsonify(eventos)
 
 
-@agendamento_bp.route('/agendamentos/resumo-calendario', methods=['GET'])
-def resumo_calendario():
-    """Calcula resumo de laboratórios ocupados por dia e turno."""
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-
-    data_inicio_str = request.args.get('data_inicio')
-    data_fim_str = request.args.get('data_fim')
-    if not data_inicio_str or not data_fim_str:
-        return jsonify({'erro': 'Parâmetros de data inválidos'}), 400
-    try:
-        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
-        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
-    except ValueError:
-        return jsonify({'erro': 'Formato de data inválido'}), 400
-
-    total_labs = Laboratorio.query.count()
-
-    resumo = {}
-    dia = data_inicio
-    while dia <= data_fim:
-        resumo[dia.isoformat()] = {
-            'Manhã': {'ocupados': 0},
-            'Tarde': {'ocupados': 0},
-            'Noite': {'ocupados': 0},
-        }
-        dia += timedelta(days=1)
-
-    query = Agendamento.query.filter(
-        Agendamento.data >= data_inicio,
-        Agendamento.data <= data_fim
-    )
-
-    if not verificar_admin(user):
-        query = query.filter(Agendamento.usuario_id == user.id)
-
-    for ag in query.all():
-        info = resumo.get(ag.data.isoformat())
-        if info and ag.turno in info:
-            info[ag.turno]['ocupados'] += 1
-
-    return jsonify({'total_laboratorios': total_labs, 'resumo': resumo})
 
 @agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
@@ -529,3 +486,51 @@ def verificar_conflitos_horarios(data, laboratorio, horarios_list, agendamento_i
             pass
     
     return conflitos
+
+from src.models.laboratorio_turma import Laboratorio
+
+@agendamento_bp.route('/agendamentos/resumo-calendario', methods=['GET'])
+def agendamentos_resumo_calendario():
+    """
+    Retorna um resumo de agendamentos para o novo calendário com pílulas.
+    Calcula o total de laboratórios e quantos estão ocupados por dia e turno.
+    """
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    try:
+        data_inicio_str = request.args.get('data_inicio')
+        data_fim_str = request.args.get('data_fim')
+        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
+        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return jsonify({'erro': 'Parâmetros de data inválidos ou ausentes'}), 400
+
+    # Conta o total de laboratórios cadastrados para ter uma referência
+    total_laboratorios = Laboratorio.query.count()
+
+    # Agrupa os agendamentos por data e turno para contagem
+    q = db.session.query(
+        Agendamento.data,
+        Agendamento.turno,
+        db.func.count(Agendamento.id).label('ocupados')
+    ).filter(
+        Agendamento.data.between(data_inicio, data_fim)
+    ).group_by(
+        Agendamento.data,
+        Agendamento.turno
+    ).all()
+
+    # Monta o objeto de resumo
+    resumo = {}
+    for data, turno, ocupados in q:
+        data_iso = data.isoformat()
+        if data_iso not in resumo:
+            resumo[data_iso] = {}
+        resumo[data_iso][turno] = {'ocupados': ocupados}
+
+    return jsonify({
+        "total_laboratorios": total_laboratorios,
+        "resumo": resumo
+    })
