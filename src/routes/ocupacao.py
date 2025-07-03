@@ -375,8 +375,16 @@ def atualizar_ocupacao(id):
         
         # Verifica disponibilidade da sala (excluindo a ocupação atual)
         sala = db.session.get(Sala, ocupacao.sala_id)
-        if not sala.is_disponivel(data_ocupacao, horario_inicio, horario_fim, ocupacao.id):
-            conflitos = Ocupacao.buscar_conflitos(ocupacao.sala_id, data_ocupacao, horario_inicio, horario_fim, ocupacao.id)
+        grupo_id = ocupacao.grupo_ocupacao_id
+        if not sala.is_disponivel(data_ocupacao, horario_inicio, horario_fim, ocupacao.id, grupo_id):
+            conflitos = Ocupacao.buscar_conflitos(
+                ocupacao.sala_id,
+                data_ocupacao,
+                horario_inicio,
+                horario_fim,
+                ocupacao.id,
+                grupo_id
+            )
             return jsonify({
                 'erro': 'Sala não disponível no horário solicitado',
                 'conflitos': [c.to_dict(include_relations=False) for c in conflitos]
