@@ -14,16 +14,16 @@ class OcupacaoCreateSchema(BaseModel):
     observacoes: Optional[str] = None
 
 class OcupacaoUpdateSchema(BaseModel):
-    sala_id: Optional[int]
-    instrutor_id: Optional[int]
-    curso_evento: Optional[str]
-    data_inicio: Optional[str]
-    data_fim: Optional[str]
-    data: Optional[str]
-    turno: Optional[str]
-    horario_inicio: Optional[str]
-    horario_fim: Optional[str]
-    tipo_ocupacao: Optional[str]
-    recorrencia: Optional[str]
-    status: Optional[str]
-    observacoes: Optional[str]
+    sala_id: Optional[int] = None
+    instrutor_id: Optional[int] = None
+    curso_evento: Optional[str] = None
+    data_inicio: Optional[str] = None
+    data_fim: Optional[str] = None
+    data: Optional[str] = None
+    turno: Optional[str] = None
+    horario_inicio: Optional[str] = None
+    horario_fim: Optional[str] = None
+    tipo_ocupacao: Optional[str] = None
+    recorrencia: Optional[str] = None
+    status: Optional[str] = None
+    observacoes: Optional[str] = None
