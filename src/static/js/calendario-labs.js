@@ -1,36 +1,42 @@
-// CÓDIGO COMPLETO E ADAPTADO PARA calendario-labs.js
+// CÓDIGO COMPLETO E ADAPTADO PARA O FICHEIRO calendario-labs.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    if (!verificarAutenticacao()) return;
-
-    // Atualiza nome do usuário na navbar
+    // Garante que o usuário está autenticado
+    if (!estaAutenticado()) {
+        window.location.href = '/admin-login.html';
+        return;
+    }
+    
+    // Atualiza o nome do usuário na navbar
     const usuario = getUsuarioLogado();
-    if(usuario) document.getElementById('userName').textContent = usuario.nome;
-
-    // Carrega filtros e inicializa o calendário
+    if(usuario) {
+        const userNameElement = document.getElementById('userName') || document.getElementById('nomeUsuarioNav');
+        if(userNameElement) userNameElement.textContent = usuario.nome;
+    }
+    
+    // Carrega os dados para os filtros e depois inicializa o calendário
     carregarLaboratoriosParaFiltro();
     configurarFiltros();
     inicializarCalendario();
 });
 
-let calendar;
+let calendar; // Variável global para o calendário
 
 function inicializarCalendario() {
     const calendarEl = document.getElementById('calendario');
+    if (!calendarEl) {
+        console.error("Elemento do calendário não encontrado!");
+        return;
+    }
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'pt-br',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            right: 'dayGridMonth,timeGridWeek,day'
         },
-        buttonText: {
-            today: 'Hoje',
-            month: 'Mês',
-            week: 'Semana',
-            day: 'Dia'
-        },
+        buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana', day: 'Dia' },
         height: 'auto',
 
         dayCellContent: function(arg) {
@@ -41,8 +47,16 @@ function inicializarCalendario() {
             };
         },
 
-        datesSet: async function(dateInfo) {
+        // Evento que dispara sempre que a visualização do calendário é alterada
+        datesSet: function(dateInfo) {
             aplicarFiltrosCalendario();
+        },
+        
+        // Adicionar evento de clique para abrir o modal de resumo
+        dateClick: function(info) {
+             // A função que abre o modal será implementada aqui ou chamada
+             console.log("Clicou no dia: ", info.dateStr);
+             // Ex: mostrarResumoAgendamentos(info.dateStr);
         }
     });
     
@@ -55,7 +69,8 @@ async function carregarLaboratoriosParaFiltro() {
     try {
         const laboratorios = await chamarAPI('/laboratorios');
         const select = document.getElementById('filtroLaboratorio');
-        select.innerHTML = '<option value="">Todos</option>';
+        if (!select) return;
+        select.innerHTML = '<option value="">Todos os laboratórios</option>';
         laboratorios.forEach(lab => {
             select.innerHTML += `<option value="${lab.nome}">${lab.nome}</option>`;
         });
@@ -65,14 +80,20 @@ async function carregarLaboratoriosParaFiltro() {
 }
 
 function configurarFiltros() {
-    document.getElementById('filtrosForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        aplicarFiltrosCalendario();
-    });
+    const form = document.getElementById('filtrosForm') || document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            aplicarFiltrosCalendario();
+        });
+    }
 }
 
 async function aplicarFiltrosCalendario() {
     if (!calendar) return;
+
+    const loadingEl = document.getElementById('loadingCalendario');
+    if(loadingEl) loadingEl.style.display = 'block';
 
     try {
         const params = new URLSearchParams({
@@ -80,23 +101,24 @@ async function aplicarFiltrosCalendario() {
             data_fim: calendar.view.activeEnd.toISOString().slice(0, 10),
         });
 
-        // Adiciona filtros selecionados aos parâmetros
+        // Adaptação para os filtros de Agendamento
         const laboratorio = document.getElementById('filtroLaboratorio').value;
         const turno = document.getElementById('filtroTurno').value;
         if (laboratorio) params.append('laboratorio', laboratorio);
         if (turno) params.append('turno', turno);
 
-        const response = await fetch(`${API_URL}/agendamentos/resumo-calendario?${params.toString()}`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
-        });
-
-        if (!response.ok) throw new Error('Falha ao carregar resumo do calendário');
-
-        const data = await response.json();
-        renderizarPillulas(data.resumo, data.total_recursos);
+        // Chamada à API correta
+        const data = await chamarAPI(`/agendamentos/resumo-calendario?${params.toString()}`);
+        
+        if (data && data.resumo) {
+            renderizarPillulas(data.resumo, data.total_recursos);
+        }
         
     } catch (error) {
-        console.error("Erro ao buscar ou renderizar resumo de agendamentos:", error);
+        console.error("Erro ao aplicar filtros e buscar resumo:", error);
+        exibirAlerta("Não foi possível carregar os dados do calendário.", "danger");
+    } finally {
+        if(loadingEl) loadingEl.style.display = 'none';
     }
 }
 
