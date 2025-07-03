@@ -8,6 +8,19 @@ let tiposOcupacaoData = [];
 let ocupacaoEditando = null;
 let disponibilidadeAtual = null;
 
+// Converte o retorno de erros da API em uma mensagem legível
+function formatarErros(erro) {
+    if (Array.isArray(erro)) {
+        return erro.map(e => {
+            if (e.loc && e.msg) {
+                return `${e.loc.join(' \u2192 ')}: ${e.msg}`;
+            }
+            return JSON.stringify(e);
+        }).join('; ');
+    }
+    return erro;
+}
+
 // Retorna o turno baseado nos horários
 function obterTurnoPorHorario(inicio, fim) {
     const mapa = {
@@ -244,7 +257,7 @@ async function verificarDisponibilidade() {
                 statusEl.className = 'text-danger';
             }
         } else {
-            throw new Error(resultado.erro || 'Erro ao verificar disponibilidade');
+            throw new Error(formatarErros(resultado.erro) || 'Erro ao verificar disponibilidade');
         }
     } catch (error) {
         statusEl.textContent = error.message;
@@ -297,7 +310,7 @@ async function salvarOcupacao() {
             exibirAlerta('Ocupação salva com sucesso.', 'success');
             window.location.href = '/calendario-salas.html';
         } else {
-            throw new Error(resultado.erro || 'Erro ao salvar ocupação');
+            throw new Error(formatarErros(resultado.erro) || 'Erro ao salvar ocupação');
         }
     } catch (error) {
         console.error('Erro ao salvar ocupação:', error);
