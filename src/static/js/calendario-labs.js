@@ -1,22 +1,25 @@
-// CÓDIGO COMPLETO E ADAPTADO PARA calendario-labs.js
+// Funções para o calendário de ocupações de salas
 
-document.addEventListener('DOMContentLoaded', function() {
-    if (!verificarAutenticacao()) return;
-
-    // Atualiza nome do usuário na navbar
-    const usuario = getUsuarioLogado();
-    if(usuario) document.getElementById('userName').textContent = usuario.nome;
-
-    // Carrega filtros e inicializa o calendário
-    carregarLaboratoriosParaFiltro();
-    configurarFiltros();
-    inicializarCalendario();
-});
-
+// Variáveis globais
 let calendar;
+let ocupacoesData = [];
+let salasData = [];
+let tiposOcupacao = [];
+let resumoOcupacoes = {};
+let diaResumoAtual = null;
 
+// Converte o nome do turno em um identificador CSS sem acentos
+function slugifyTurno(turno) {
+    return turno
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '');
+}
+
+// Inicializa o calendário
 function inicializarCalendario() {
     const calendarEl = document.getElementById('calendario');
+    
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'pt-br',
@@ -32,90 +35,616 @@ function inicializarCalendario() {
             day: 'Dia'
         },
         height: 'auto',
-
-        dayCellContent: function(arg) {
-            const dateStr = arg.date.toISOString().slice(0, 10);
-            return {
-                html: `<div class="fc-daygrid-day-number">${arg.dayNumberText}</div>
-                       <div class="day-pills-container" data-date="${dateStr}"></div>`
-            };
+        eventDisplay: 'block',
+        dayMaxEvents: 3,
+        moreLinkText: function(num) {
+            return `+${num} mais`;
         },
-
-        datesSet: async function(dateInfo) {
-            aplicarFiltrosCalendario();
+        eventClick: function(info) {
+            mostrarDetalhesOcupacao(info.event.extendedProps);
+        },
+        dateClick: function(info) {
+            mostrarResumoDia(info.dateStr);
+        },
+        datesSet: function(info) {
+            carregarResumoPeriodo(info.startStr, info.endStr);
+        },
+        events: function(fetchInfo, successCallback, failureCallback) {
+            carregarOcupacoes(fetchInfo.startStr, fetchInfo.endStr)
+                .then(eventos => successCallback(eventos))
+                .catch(error => {
+                    console.error('Erro ao carregar eventos:', error);
+                    failureCallback(error);
+                });
         }
     });
     
     calendar.render();
+    
+    // Esconde loading e mostra calendário
     document.getElementById('loadingCalendario').style.display = 'none';
     document.getElementById('calendario').style.display = 'block';
 }
 
-async function carregarLaboratoriosParaFiltro() {
+// Carrega ocupações do servidor
+async function carregarOcupacoes(dataInicio, dataFim) {
     try {
-        const laboratorios = await chamarAPI('/laboratorios');
-        const select = document.getElementById('filtroLaboratorio');
-        select.innerHTML = '<option value="">Todos</option>';
-        laboratorios.forEach(lab => {
-            select.innerHTML += `<option value="${lab.nome}">${lab.nome}</option>`;
+        // Constrói parâmetros de filtro
+        const params = new URLSearchParams({
+            data_inicio: dataInicio.split('T')[0],
+            data_fim: dataFim.split('T')[0]
         });
+        
+        // Aplica filtros ativos
+        const laboratorio = document.getElementById('filtroLaboratorio').value;
+        const turno = document.getElementById('filtroTurno').value;
+
+        if (laboratorio) params.append('laboratorio', laboratorio);
+        if (turno) params.append('turno', turno);
+        
+        const response = await fetch(`${API_URL}/agendamentos/calendario?${params.toString()}`, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        
+        if (response.ok) {
+            const eventos = await response.json();
+            ocupacoesData = eventos;
+            return eventos.map(evento => ({
+                id: evento.id,
+                title: evento.title,
+                start: evento.start,
+                end: evento.end,
+                className: getClasseTurno(evento.extendedProps.turno),
+                extendedProps: evento.extendedProps
+            }));
+        } else {
+            throw new Error('Erro ao carregar ocupações');
+        }
     } catch (error) {
-        console.error('Erro ao carregar laboratórios:', error);
+        console.error('Erro ao carregar ocupações:', error);
+        return [];
     }
 }
 
-function configurarFiltros() {
-    document.getElementById('filtrosForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        aplicarFiltrosCalendario();
-    });
-}
-
-async function aplicarFiltrosCalendario() {
-    if (!calendar) return;
-
+// Carrega resumo de ocupações por período
+async function carregarResumoPeriodo(dataInicio, dataFim) {
     try {
         const params = new URLSearchParams({
-            data_inicio: calendar.view.activeStart.toISOString().slice(0, 10),
-            data_fim: calendar.view.activeEnd.toISOString().slice(0, 10),
+            data_inicio: dataInicio.split('T')[0],
+            data_fim: dataFim.split('T')[0]
         });
 
-        // Adiciona filtros selecionados aos parâmetros
         const laboratorio = document.getElementById('filtroLaboratorio').value;
         const turno = document.getElementById('filtroTurno').value;
+
         if (laboratorio) params.append('laboratorio', laboratorio);
         if (turno) params.append('turno', turno);
 
         const response = await fetch(`${API_URL}/agendamentos/resumo-calendario?${params.toString()}`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
         });
 
-        if (!response.ok) throw new Error('Falha ao carregar resumo do calendário');
-
-        const data = await response.json();
-        renderizarPillulas(data.resumo, data.total_recursos);
-        
+        if (response.ok) {
+            resumoOcupacoes = await response.json();
+            atualizarResumoNoCalendario();
+        }
     } catch (error) {
-        console.error("Erro ao buscar ou renderizar resumo de agendamentos:", error);
+        console.error('Erro ao carregar resumo:', error);
     }
 }
 
-function renderizarPillulas(resumo, totalRecursos) {
-    document.querySelectorAll('.day-pills-container').forEach(container => {
-        const dataStr = container.getAttribute('data-date');
-        const diaResumo = resumo ? resumo[dataStr] : null;
-        let html = '';
+function atualizarResumoNoCalendario() {
+    document.querySelectorAll('.fc-daygrid-day').forEach(cell => {
+        const dateStr = cell.getAttribute('data-date');
+        cell.querySelectorAll('.pill-turno').forEach(e => e.remove());
 
-        if (totalRecursos > 0) {
+        const resumoDia = resumoOcupacoes[dateStr];
+        if (resumoDia) {
+            const popoverParts = [];
             ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
-                const ocupados = diaResumo && diaResumo[turno] ? diaResumo[turno].ocupados : 0;
-                let statusClass = 'turno-livre';
-                if (ocupados > 0) {
-                    statusClass = ocupados >= totalRecursos ? 'turno-cheio' : 'turno-parcial';
+                const info = resumoDia[turno];
+                if (!info) return;
+
+                const div = document.createElement('div');
+                div.classList.add('pill-turno');
+
+                if (info.ocupadas === 0) {
+                    div.classList.add('turno-livre');
+                } else if (info.ocupadas === info.total_salas) {
+                    div.classList.add('turno-cheio');
+                } else {
+                    div.classList.add('turno-parcial');
                 }
-                html += `<div class="pill-turno ${statusClass}">${turno}: ${ocupados}/${totalRecursos}</div>`;
+
+                div.textContent = `${turno}: ${info.ocupadas}/${info.total_salas}`;
+                cell.appendChild(div);
+
+                const ocupadasNomes = info.salas_ocupadas.map(s => s.sala_nome).join(', ') || 'Nenhuma';
+                const livresNomes = info.salas_livres.join(', ') || 'Nenhuma';
+                popoverParts.push(
+                    `<div><strong>${escapeHTML(turno)}</strong><br>` +
+                    `Salas Ocupadas: ${escapeHTML(ocupadasNomes)}<br>` +
+                    `Salas Livres: ${escapeHTML(livresNomes)}</div>`
+                );
+            });
+
+            const popoverContent = popoverParts.join('<hr>');
+            const existing = bootstrap.Popover.getInstance(cell);
+            if (existing) existing.dispose();
+            new bootstrap.Popover(cell, {
+                html: true,
+                trigger: 'hover focus',
+                container: 'body',
+                content: sanitizeHTML(popoverContent),
+                placement: 'auto'
             });
         }
-        container.innerHTML = html;
     });
 }
+
+function mostrarResumoDia(dataStr) {
+    diaResumoAtual = dataStr;
+    const resumoDia = resumoOcupacoes[dataStr];
+    if (!resumoDia) return;
+
+    const modalEl = document.getElementById('modalResumoDia');
+    const modal = new bootstrap.Modal(modalEl);
+    const container = document.getElementById('conteudoResumoDia');
+
+    document.getElementById('modalResumoDiaLabel').textContent = '📊 Resumo de Agendamentos – ' + formatarData(dataStr);
+    container.innerHTML = '';
+
+    ['Manhã', 'Tarde', 'Noite'].forEach(turno => {
+        const info = resumoDia[turno];
+        if (!info) return;
+
+        const ocupacoesTurno = calendar.getEvents().filter(ev =>
+            ev.extendedProps.data === dataStr && ev.extendedProps.turno === turno
+        );
+
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
+
+        const header = document.createElement('div');
+        header.className = 'card-header bg-light d-flex justify-content-between align-items-center';
+        header.innerHTML = `
+            <h6 class="mb-0">${escapeHTML(turno)}</h6>
+            <span class="badge bg-secondary">${escapeHTML(info.ocupadas)} / ${escapeHTML(info.total_salas)} Salas</span>
+        `;
+        card.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'card-body';
+
+        let htmlCorpo = '<div class="row">';
+
+        htmlCorpo += '<div class="col-md-7">';
+        htmlCorpo += '<h6><i class="bi bi-door-closed-fill text-danger"></i> Salas Ocupadas:</h6>';
+        if (ocupacoesTurno.length) {
+            htmlCorpo += '<ul class="list-group list-group-flush">';
+            ocupacoesTurno.forEach(ev => {
+                const props = ev.extendedProps;
+                const instr = props.instrutor_nome ? `<br><small class="text-muted"><i class="bi bi-person"></i> ${escapeHTML(props.instrutor_nome)}</small>` : '';
+                htmlCorpo += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${escapeHTML(props.sala_nome)}:</strong> ${escapeHTML(props.curso_evento)}
+                            ${instr}
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary btn-editar-ocupacao" title="Editar" data-id="${ev.id}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-excluir-ocupacao" title="Excluir" data-id="${ev.id}" data-nome="${escapeHTML(props.curso_evento)}" data-grupo-id="${props.grupo_ocupacao_id || ''}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </li>
+                `;
+            });
+            htmlCorpo += '</ul>';
+        } else {
+            htmlCorpo += '<p class="fst-italic text-muted">Nenhuma sala ocupada neste turno.</p>';
+        }
+        htmlCorpo += '</div>';
+
+        htmlCorpo += '<div class="col-md-5">';
+        htmlCorpo += '<h6><i class="bi bi-door-open-fill text-success"></i> Salas Livres:</h6>';
+        if (info.salas_livres.length) {
+            info.salas_livres.forEach(salaNome => {
+                htmlCorpo += `<span class="badge bg-light text-dark border me-1 mb-1">${escapeHTML(salaNome)}</span>`;
+            });
+        } else {
+            htmlCorpo += '<p class="fst-italic text-muted">Todas as salas estão ocupadas.</p>';
+        }
+        htmlCorpo += '</div>';
+
+        htmlCorpo += '</div>';
+
+        body.innerHTML = sanitizeHTML(htmlCorpo);
+        card.appendChild(body);
+        container.appendChild(card);
+    });
+
+    container.querySelectorAll('.btn-editar-ocupacao').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const ocupacaoId = e.currentTarget.getAttribute('data-id');
+            editarOcupacao(ocupacaoId);
+        });
+    });
+
+    container.querySelectorAll('.btn-excluir-ocupacao').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const el = e.currentTarget;
+            const ocupacaoId = el.getAttribute('data-id');
+            const nome = el.getAttribute('data-nome');
+            const grupoId = el.getAttribute('data-grupo-id');
+            excluirOcupacao(ocupacaoId, nome, grupoId);
+        });
+    });
+
+    modal.show();
+}
+
+// Carrega salas para filtro
+async function carregarLaboratoriosParaFiltro() {
+    try {
+        const response = await fetch(`${API_URL}/laboratorios?status=ativo`, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+
+        if (response.ok) {
+            salasData = await response.json();
+
+            const select = document.getElementById('filtroLaboratorio');
+            select.innerHTML = '<option value="">Todos os laboratórios</option>';
+
+            salasData.forEach(sala => {
+                select.innerHTML += `<option value="${sala.id}">${sala.nome}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar salas:', error);
+    }
+}
+
+
+// Carrega tipos de ocupação
+async function carregarTiposOcupacao() {
+    try {
+        const response = await fetch(`${API_URL}/ocupacoes/tipos`, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        
+        if (response.ok) {
+            tiposOcupacao = await response.json();
+        }
+    } catch (error) {
+        console.error('Erro ao carregar tipos de ocupação:', error);
+    }
+}
+
+// Aplica filtros no calendário
+function aplicarFiltrosCalendario() {
+    if (calendar) {
+        calendar.refetchEvents();
+    }
+}
+
+// Configura formulários de filtros (desktop e mobile)
+function configurarFiltros() {
+    const form = document.getElementById('filtrosForm');
+    const formMobile = document.getElementById('filtrosMobileForm');
+
+    if (form) {
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            document.getElementById('filtroLaboratorioMobile').value = document.getElementById('filtroLaboratorio').value;
+            document.getElementById('filtroTurnoMobile').value = document.getElementById('filtroTurno').value;
+            aplicarFiltrosCalendario();
+        });
+    }
+
+    if (formMobile) {
+        formMobile.addEventListener('submit', e => {
+            e.preventDefault();
+            document.getElementById('filtroLaboratorio').value = document.getElementById('filtroLaboratorioMobile').value;
+            document.getElementById('filtroTurno').value = document.getElementById('filtroTurnoMobile').value;
+            aplicarFiltrosCalendario();
+        });
+    }
+}
+
+// Aplica filtros da URL (quando vem de outras páginas)
+function aplicarFiltrosURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    const salaId = urlParams.get('laboratorio');
+    const turnoParam = urlParams.get('turno');
+    const mesParam = urlParams.get('mes');
+    
+    if (salaId) {
+        document.getElementById('filtroLaboratorio').value = salaId;
+    }
+
+    if (turnoParam) {
+        document.getElementById('filtroTurno').value = turnoParam;
+    }
+
+    if (mesParam && calendar) {
+        const dataMes = new Date(mesParam + '-01');
+        calendar.gotoDate(dataMes);
+    }
+
+    // Aplica filtros se houver
+    if (salaId || turnoParam) {
+        setTimeout(() => aplicarFiltrosCalendario(), 1000);
+    }
+}
+
+// Mostra detalhes da ocupação
+function mostrarDetalhesOcupacao(ocupacao) {
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalhesAgendamento'));
+
+    // Preenche conteúdo do modal
+    const content = document.getElementById('detalhesAgendamentoContent');
+    const acoes = document.getElementById('acoesAgendamento');
+    
+    const tipoNome = tiposOcupacao.find(t => t.valor === ocupacao.tipo_ocupacao)?.nome || ocupacao.tipo_ocupacao;
+    const salaNome = salasData.find(s => s.id === ocupacao.sala_id)?.nome || 'Sala não encontrada';
+    const instrutorNome = ocupacao.instrutor_nome || 'Nenhum instrutor';
+    
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Curso/Evento</h6>
+                <p class="mb-3">${ocupacao.curso_evento}</p>
+                
+                <h6>Tipo</h6>
+                <p class="mb-3">
+                    <span class="badge" style="background-color: ${getTipoCorPorValor(ocupacao.tipo_ocupacao)};">
+                        ${tipoNome}
+                    </span>
+                </p>
+                
+                <h6>Status</h6>
+                <p class="mb-3">
+                    <span class="badge ${getStatusBadgeClass(ocupacao.status)}">
+                        ${getStatusNome(ocupacao.status)}
+                    </span>
+                </p>
+            </div>
+            <div class="col-md-6">
+                <h6>Data e Horário</h6>
+                <p class="mb-3">
+                    <i class="bi bi-calendar me-1"></i>
+                    ${formatarData(ocupacao.data)}<br>
+                    <i class="bi bi-clock me-1"></i>
+                    ${ocupacao.horario_inicio} às ${ocupacao.horario_fim}
+                </p>
+                
+                <h6>Sala</h6>
+                <p class="mb-3">
+                    <i class="bi bi-building me-1"></i>
+                    ${salaNome}
+                </p>
+                
+                <h6>Instrutor</h6>
+                <p class="mb-3">
+                    <i class="bi bi-person-badge me-1"></i>
+                    ${instrutorNome}
+                </p>
+            </div>
+        </div>
+        
+        ${ocupacao.observacoes ? `
+            <div class="row">
+                <div class="col-12">
+                    <h6>Observações</h6>
+                    <p class="mb-0">${ocupacao.observacoes}</p>
+                </div>
+            </div>
+        ` : ''}
+    `;
+    
+    // Configura ações baseadas nas permissões
+    const usuario = getUsuarioLogado();
+    const podeEditar = isAdmin() || ocupacao.usuario_id === usuario.id;
+    
+    acoes.innerHTML = '';
+    
+    if (podeEditar) {
+        const btnEditar = document.createElement('button');
+        btnEditar.type = 'button';
+        btnEditar.className = 'btn btn-primary me-2';
+        btnEditar.innerHTML = '<i class="bi bi-pencil me-1"></i>Editar';
+        btnEditar.addEventListener('click', () => editarOcupacao(ocupacao.id));
+
+        const btnExcluir = document.createElement('button');
+        btnExcluir.type = 'button';
+        btnExcluir.className = 'btn btn-danger';
+        btnExcluir.innerHTML = '<i class="bi bi-trash me-1"></i>Excluir';
+        btnExcluir.addEventListener('click', () => excluirOcupacao(ocupacao.id, ocupacao.curso_evento, ocupacao.grupo_ocupacao_id || ''));
+
+        acoes.appendChild(btnEditar);
+        acoes.appendChild(btnExcluir);
+    }
+    
+    modal.show();
+}
+
+// Retorna cor do tipo por valor
+function getTipoCorPorValor(valor) {
+    const tipo = tiposOcupacao.find(t => t.valor === valor);
+    return tipo ? tipo.cor : '#6c757d';
+}
+
+// Retorna classe do badge de status
+function getStatusBadgeClass(status) {
+    const classes = {
+        'confirmado': 'bg-success',
+        'pendente': 'bg-warning',
+        'cancelado': 'bg-danger'
+    };
+    return classes[status] || 'bg-secondary';
+}
+
+// Retorna nome do status
+function getStatusNome(status) {
+    const nomes = {
+        'confirmado': 'Confirmado',
+        'pendente': 'Pendente',
+        'cancelado': 'Cancelado'
+    };
+    return nomes[status] || status;
+}
+
+// Formata data para exibição
+function formatarData(dataStr) {
+    const data = new Date(dataStr + 'T00:00:00');
+    return data.toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+// Edita ocupação
+function editarOcupacao(id) {
+    // Fecha modais abertos antes de redirecionar
+    const detalhesEl = document.getElementById('modalDetalhesAgendamento');
+    const detalhesModal = detalhesEl ? bootstrap.Modal.getInstance(detalhesEl) : null;
+    if (detalhesModal) detalhesModal.hide();
+
+    const resumoEl = document.getElementById('modalResumoDia');
+    const resumoModal = resumoEl ? bootstrap.Modal.getInstance(resumoEl) : null;
+    if (resumoModal) resumoModal.hide();
+
+    // Redireciona para edição (implementar página de edição)
+    window.location.href = `/novo-agendamento.html?editar=${id}`;
+}
+
+// Exclui ocupação a partir do resumo do dia
+function excluirOcupacaoResumo(id) {
+    const evento = calendar.getEventById(id);
+    if (!evento) return;
+    const props = evento.extendedProps;
+    excluirOcupacao(id, props.curso_evento, props.grupo_ocupacao_id || '');
+}
+
+// Exclui ocupação
+function excluirOcupacao(id, nome, grupoId) {
+    // Fecha modais que possam estar abertos
+    const detalhesEl = document.getElementById('modalDetalhesAgendamento');
+    const detalhesModal = detalhesEl ? bootstrap.Modal.getInstance(detalhesEl) : null;
+    if (detalhesModal) detalhesModal.hide();
+
+    const resumoEl = document.getElementById('modalResumoDia');
+    const resumoModal = resumoEl ? bootstrap.Modal.getInstance(resumoEl) : null;
+    if (resumoModal) resumoModal.hide();
+
+    // Configura modal de exclusão
+    document.getElementById('resumoAgendamentoExcluir').textContent = nome;
+    const modalEl = document.getElementById('modalExcluirAgendamento');
+    modalEl.setAttribute('data-ocupacao-id', id);
+    modalEl.setAttribute('data-grupo-id', grupoId);
+    
+    // Mostra modal de confirmação
+    const modalExcluir = new bootstrap.Modal(document.getElementById('modalExcluirAgendamento'));
+    modalExcluir.show();
+}
+
+// Confirma exclusão da ocupação
+async function confirmarExclusaoOcupacao(modo) {
+    try {
+    const modalEl = document.getElementById('modalExcluirAgendamento');
+        const ocupacaoId = modalEl.getAttribute('data-ocupacao-id');
+        const grupoId = modalEl.getAttribute('data-grupo-id');
+        const somenteDia = modo === 'dia';
+
+        const url = somenteDia ?
+            `${API_URL}/agendamentos/${ocupacaoId}?somente_dia=true` :
+            `${API_URL}/agendamentos/${ocupacaoId}`;
+
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            exibirAlerta('Agendamento excluído com sucesso!', 'success');
+
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalExcluirAgendamento'));
+            modal.hide();
+
+            // Remove evento imediatamente e atualiza dados
+            const ev = calendar.getEventById(ocupacaoId);
+            if (ev) ev.remove();
+            calendar.refetchEvents();
+            await carregarResumoPeriodo(
+                calendar.view.activeStart.toISOString().split('T')[0],
+                calendar.view.activeEnd.toISOString().split('T')[0]
+            );
+            if (diaResumoAtual) {
+                mostrarResumoDia(diaResumoAtual);
+            }
+        } else {
+            throw new Error(result.erro || 'Erro ao excluir agendamento');
+        }
+    } catch (error) {
+        console.error('Erro ao excluir agendamento:', error);
+        exibirAlerta(error.message, 'danger');
+    }
+}
+
+// Função para exibir alertas
+function exibirAlerta(mensagem, tipo) {
+    // Remove alertas existentes
+    const alertasExistentes = document.querySelectorAll('.alert-auto-dismiss');
+    alertasExistentes.forEach(alerta => alerta.remove());
+
+    // Cria novo alerta
+    const alerta = document.createElement('div');
+    alerta.className = `alert alert-${tipo} alert-dismissible fade show alert-auto-dismiss`;
+    alerta.textContent = mensagem;
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'btn-close';
+    closeBtn.setAttribute('data-bs-dismiss', 'alert');
+    closeBtn.setAttribute('aria-label', 'Close');
+    alerta.appendChild(closeBtn);
+    
+    // Insere no início do main
+    const main = document.querySelector('main');
+    main.insertBefore(alerta, main.firstChild);
+    
+    // Remove automaticamente após 5 segundos
+    setTimeout(() => {
+        if (alerta.parentNode) {
+            alerta.remove();
+        }
+    }, 5000);
+}
+
+function formatarDataCurta(dataStr) {
+    const data = new Date(dataStr + 'T00:00:00');
+    return data.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit'
+    });
+}
+
