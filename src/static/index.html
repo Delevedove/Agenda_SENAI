@@ -254,6 +254,11 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.4/dist/purify.min.js"></script>
     <script src="/js/app.js"></script>
     <script>
+        // Variáveis globais usadas nos callbacks
+        let agendamentoSelecionadoId = null;
+        let agendamentoModal;
+        let confirmacaoModal;
+
         document.addEventListener('DOMContentLoaded', function() {
             // Verifica autenticação
             verificarAutenticacao();
@@ -267,12 +272,9 @@
             // Carrega o resumo de utilização
             carregarResumoUtilizacao();
             
-            // Variável para armazenar o ID do agendamento selecionado
-            let agendamentoSelecionadoId = null;
-            
-            // Modal de detalhes do agendamento
-            const agendamentoModal = new bootstrap.Modal(document.getElementById('agendamentoModal'));
-            const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
+            // Instancia os modais de confirmação e de detalhes
+            agendamentoModal = new bootstrap.Modal(document.getElementById('agendamentoModal'));
+            confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
             
             // Botões do modal
             document.getElementById('btnEditarAgendamento').addEventListener('click', function() {
