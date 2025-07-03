@@ -283,6 +283,10 @@ def criar_ocupacao():
         ocupacoes_criadas = []
         dia = data_inicio
         while dia <= data_fim:
+            # Se o tipo de ocupação for 'aula_regular' e o dia for sábado ou domingo, ignora
+            if payload.tipo_ocupacao == 'aula_regular' and dia.weekday() >= 5:
+                dia += timedelta(days=1)
+                continue
             nova_ocupacao = Ocupacao(
                 sala_id=payload.sala_id,
                 instrutor_id=payload.instrutor_id,
@@ -377,6 +381,10 @@ def atualizar_ocupacao(id):
         ocupacoes_criadas = []
         dia_atual = data_inicio
         while dia_atual <= data_fim:
+            # Se o tipo de ocupação for 'aula_regular' e o dia for sábado ou domingo, ignora
+            if payload.tipo_ocupacao == 'aula_regular' and dia_atual.weekday() >= 5:
+                dia_atual += timedelta(days=1)
+                continue
             nova_ocupacao = Ocupacao(
                 sala_id=sala_id,
                 instrutor_id=instrutor_id,

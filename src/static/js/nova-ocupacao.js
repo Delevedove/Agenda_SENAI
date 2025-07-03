@@ -388,6 +388,30 @@ function exibirAlerta(mensagem, tipo) {
     }, 5000);
 }
 
+// Exibe aviso quando "Aula Regular" é selecionada
+function monitorarSelecaoAulaRegular() {
+    const tipoOcupacaoSelect = document.getElementById('tipoOcupacao');
+    const dataInicioInput = document.getElementById('dataInicio');
+    const dataFimInput = document.getElementById('dataFim');
+
+    const avisoDiv = document.createElement('div');
+    avisoDiv.className = 'form-text text-muted mt-2';
+    avisoDiv.id = 'aviso-fim-de-semana';
+    dataFimInput.parentNode.appendChild(avisoDiv);
+
+    const verificarAviso = () => {
+        if (tipoOcupacaoSelect.value === 'aula_regular') {
+            avisoDiv.innerHTML = '<i class="bi bi-info-circle"></i> Lembrete: Sábados e domingos serão ignorados para agendamentos de Aulas Regulares.';
+            avisoDiv.style.display = 'block';
+        } else {
+            avisoDiv.style.display = 'none';
+        }
+    };
+
+    tipoOcupacaoSelect.addEventListener('change', verificarAviso);
+    verificarAviso();
+}
+
 // Garante envio correto do formulário em modo de edição ou criação
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('formNovaOcupacao');
@@ -397,5 +421,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await salvarOcupacao();
         });
     }
+
+    // Inicia monitoramento para avisos de "Aula Regular"
+    monitorarSelecaoAulaRegular();
 });
 
