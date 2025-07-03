@@ -117,102 +117,61 @@
 
                 <!-- Estatísticas Gerais -->
                 <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="card card-stat text-white bg-primary">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card kpi-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h5 class="card-title">Salas Ativas</h5>
-                                        <h2 class="mb-0" id="totalSalasAtivas">-</h2>
+                                        <h6 class="kpi-title text-uppercase">Salas Ativas</h6>
+                                        <h2 class="kpi-number" id="totalSalasAtivas">-</h2>
                                     </div>
-                                    <i class="bi bi-building stat-icon"></i>
+                                    <i class="bi bi-building kpi-icon"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card card-stat text-white bg-success">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card kpi-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h5 class="card-title">Instrutores Ativos</h5>
-                                        <h2 class="mb-0" id="totalInstrutoresAtivos">-</h2>
+                                        <h6 class="kpi-title text-uppercase">Instrutores Ativos</h6>
+                                        <h2 class="kpi-number" id="totalInstrutoresAtivos">-</h2>
                                     </div>
-                                    <i class="bi bi-person-badge stat-icon"></i>
+                                    <i class="bi bi-person-badge kpi-icon"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card card-stat text-white bg-info">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card kpi-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h5 class="card-title">Ocupações Hoje</h5>
-                                        <h2 class="mb-0" id="ocupacoesHoje">-</h2>
+                                        <h6 class="kpi-title text-uppercase">Ocupações Hoje</h6>
+                                        <h2 class="kpi-number" id="ocupacoesHoje">-</h2>
                                     </div>
-                                    <i class="bi bi-calendar-check stat-icon"></i>
+                                    <i class="bi bi-calendar-check kpi-icon"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card card-stat text-white bg-warning">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card kpi-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h5 class="card-title">Esta Semana</h5>
-                                        <h2 class="mb-0" id="ocupacoesSemana">-</h2>
+                                        <h6 class="kpi-title text-uppercase">Esta Semana</h6>
+                                        <h2 class="kpi-number" id="ocupacoesSemana">-</h2>
                                     </div>
-                                    <i class="bi bi-calendar-week stat-icon"></i>
+                                    <i class="bi bi-calendar-week kpi-icon"></i>
                                 </div>
                             </div>
                         </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Indicadores Mensais de Salas -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Salas - Mês Anterior</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-1">Total de Salas: <span id="totalSalasMesAnterior">-</span></p>
-                            <p class="mb-1">Salas Ocupadas: <span id="salasOcupadasMesAnterior">-</span></p>
-                            <p class="mb-3">Salas Livres: <span id="salasLivresMesAnterior">-</span></p>
-                            <a id="linkMesAnterior" href="#">Ver Detalhes</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Salas - Mês Atual</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-1">Total de Salas: <span id="totalSalasMesAtual">-</span></p>
-                            <p class="mb-1">Salas Ocupadas: <span id="salasOcupadasMesAtual">-</span></p>
-                            <p class="mb-3">Salas Livres: <span id="salasLivresMesAtual">-</span></p>
-                            <a id="linkMesAtual" href="#">Ver Detalhes</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Salas - Mês Seguinte</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-1">Total de Salas: <span id="totalSalasMesSeguinte">-</span></p>
-                            <p class="mb-1">Salas Reservadas: <span id="salasOcupadasMesSeguinte">-</span></p>
-                            <p class="mb-3">Salas Livres: <span id="salasLivresMesSeguinte">-</span></p>
-                            <a id="linkMesSeguinte" href="#">Ver Detalhes</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Ações Rápidas -->
             <div class="row mb-4">
@@ -225,45 +184,29 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <div class="d-grid">
-                                            <button type="button" class="btn btn-outline-primary quick-action" onclick="window.location.href='/novo-agendamento-sala.html'">
-                                                <i class="bi bi-plus-circle d-block mb-2" style="font-size: 2rem;"></i>
-                                                Nova Ocupação
-                                            </button>
-                                        </div>
+                                    <div class="col-6 col-md-4 col-lg-3 mb-3">
+                                        <a href="/novo-agendamento-sala.html" class="action-tile">
+                                            <i class="bi bi-plus-circle"></i>
+                                            <span>Nova Ocupação</span>
+                                        </a>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <div class="d-grid">
-                                            <button type="button" class="btn btn-outline-success quick-action" onclick="window.location.href='/calendario-salas.html'">
-                                                <i class="bi bi-calendar3 d-block mb-2" style="font-size: 2rem;"></i>
-                                                Ver Calendário
-                                            </button>
-                                        </div>
+                                    <div class="col-6 col-md-4 col-lg-3 mb-3">
+                                        <a href="/calendario-salas.html" class="action-tile">
+                                            <i class="bi bi-calendar3"></i>
+                                            <span>Ver Calendário</span>
+                                        </a>
                                     </div>
-                                    <div class="col-md-3 mb-3" id="acaoGerenciarSalas" style="display: none;">
-                                        <div class="d-grid">
-                                            <button type="button" class="btn btn-outline-info quick-action" onclick="window.location.href='/gerenciar-salas.html'">
-                                                <i class="bi bi-building d-block mb-2" style="font-size: 2rem;"></i>
-                                                Gerenciar Salas
-                                            </button>
-                                        </div>
+                                    <div class="col-6 col-md-4 col-lg-3 mb-3" id="acaoGerenciarSalas" style="display: none;">
+                                        <a href="/gerenciar-salas.html" class="action-tile">
+                                            <i class="bi bi-building-gear"></i>
+                                            <span>Gerenciar Salas</span>
+                                        </a>
                                     </div>
-                                    <div class="col-md-3 mb-3" id="acaoGerenciarInstrutores" style="display: none;">
-                                        <div class="d-grid">
-                                            <button type="button" class="btn btn-outline-warning quick-action" onclick="window.location.href='/corpo-docente.html'">
-                                                <i class="bi bi-person-badge d-block mb-2" style="font-size: 2rem;"></i>
-                                                Corpo Docente
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3 mb-3" id="acaoGerenciarTurmas" style="display: none;">
-                                        <div class="d-grid">
-                                            <button type="button" class="btn btn-outline-secondary quick-action" onclick="window.location.href='/gerenciar-turmas.html'">
-                                                <i class="bi bi-building d-block mb-2" style="font-size: 2rem;"></i>
-                                                Gerenciar Turmas
-                                            </button>
-                                        </div>
+                                    <div class="col-6 col-md-4 col-lg-3 mb-3" id="acaoGerenciarInstrutores" style="display: none;">
+                                        <a href="/gerenciar-instrutores.html" class="action-tile">
+                                            <i class="bi bi-person-badge"></i>
+                                            <span>Gerenciar Instrutores</span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -406,7 +349,6 @@
             if (isAdmin()) {
                 document.getElementById('acaoGerenciarSalas').style.display = 'block';
                 document.getElementById('acaoGerenciarInstrutores').style.display = 'block';
-                document.getElementById('acaoGerenciarTurmas').style.display = 'block';
             }
             
             // Carrega dados do dashboard
