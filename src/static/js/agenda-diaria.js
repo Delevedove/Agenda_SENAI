@@ -3,11 +3,8 @@ function calcularIntervaloDeTempo(horarios) {
     if (!horarios || horarios.length === 0) {
         return '';
     }
-    // Extrai todos os horários de início e fim
-    const tempos = horarios.flatMap(h => h.split(' - '));
-    // Encontra o primeiro horário de início e o último de fim
-    const inicio = tempos[0];
-    const fim = tempos[tempos.length - 1];
+    const inicio = horarios[0].split(' - ')[0];
+    const fim = horarios[horarios.length - 1].split(' - ').pop();
     return `${inicio} - ${fim}`;
 }
 
@@ -38,6 +35,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             await carregarAgendaDiaria();
             loadingEl.style.display = 'none';
             contentEl.style.display = 'block';
+            if (miniCalendar) {
+                miniCalendar.updateSize();
+            }
         } else {
             loadingEl.innerHTML = '<p class="text-muted">Nenhum laboratório cadastrado.</p>';
         }
@@ -106,8 +106,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="card-body">
                     ${agendamentosDoTurno.length > 0
                         ? agendamentosDoTurno.map(ag => {
-                            // Chama a nova função para obter o intervalo de tempo formatado
-                            const intervaloDeTempo = calcularIntervaloDeTempo(JSON.parse(ag.horarios || '[]'));
+                            const horarios = JSON.parse(ag.horarios || '[]');
+                            const intervaloCalculado = calcularIntervaloDeTempo(horarios);
+                            const intervaloDeTempo = (ag.horario_inicio && ag.horario_fim)
+                                ? `${ag.horario_inicio} - ${ag.horario_fim}`
+                                : intervaloCalculado || 'Horário não informado';
 
                             return `
                             <div class="agendamento-item">
@@ -115,8 +118,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     <strong>${escapeHTML(ag.turma_nome)}</strong>
                                     <br>
                                     <span class="text-muted small">
-                                        <i class="bi bi-clock"></i> 
-                                        ${intervaloDeTempo}  </span>
+                                        <i class="bi bi-clock"></i>
+                                        ${intervaloDeTempo}
+                                    </span>
                                 </div>
                                 <div class="agendamento-acoes btn-group">
                                     <button class="btn btn-sm btn-outline-primary" onclick="window.location.href='/novo-agendamento.html?id=${ag.id}'" title="Editar"><i class="bi bi-pencil"></i></button>
