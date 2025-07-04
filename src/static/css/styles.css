@@ -1125,3 +1125,28 @@ input, select, textarea {
 .agendamento-info strong { color: #333; }
 .agendamento-info span { font-size: 0.9em; color: #6c757d; }
 .btn-novo-agendamento-turno { font-weight: 500; }
+
+/* ======================================================= */
+/* == CORREÇÃO VISUAL PARA O MINI-CALENDÁRIO              == */
+/* ======================================================= */
+
+#mini-calendario .fc-daygrid-day-number {
+    color: #333 !important; /* Garante que o número do dia seja visível */
+    text-decoration: none !important;
+    padding: 4px;
+}
+
+#mini-calendario .fc-day-today .fc-daygrid-day-number {
+    color: #fff !important; /* Cor do número do dia "hoje" */
+    background-color: #00539F; /* Fundo azul para o dia "hoje" */
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+    line-height: 16px;
+    text-align: center;
+}
+
+#mini-calendario .fc-daygrid-day-frame:hover {
+    background-color: #f0f0f0;
+}

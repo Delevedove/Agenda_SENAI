@@ -95,8 +95,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ? agendamentosDoTurno.map(ag => `
                             <div class="agendamento-item">
                                 <div class="agendamento-info">
-                                    <strong>${escapeHTML(ag.turma_nome)}</strong><br>
-                                    <span class="text-muted">${ag.horario_inicio} - ${ag.horario_fim}</span>
+                                    <strong>${escapeHTML(ag.turma_nome)}</strong>
+                                    <br>
+                                    <span class="text-muted small">
+                                        <i class="bi bi-clock"></i> 
+                                        ${ag.horario_inicio} - ${ag.horario_fim}
+                                    </span>
                                 </div>
                                 <div class="agendamento-acoes btn-group">
                                     <button class="btn btn-sm btn-outline-primary" onclick="window.location.href='/novo-agendamento.html?id=${ag.id}'" title="Editar"><i class="bi bi-pencil"></i></button>
