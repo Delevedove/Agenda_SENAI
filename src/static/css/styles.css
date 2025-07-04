@@ -1092,18 +1092,49 @@ input, select, textarea {
 /* ===================================== */
 /* ESTILOS PARA A NOVA AGENDA DIÁRIA     */
 /* ===================================== */
+/* CÓDIGO CORRIGIDO PARA O SELETOR DE LABORATÓRIOS */
+
 #seletor-laboratorios .lab-icon {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 12px; border: 1px solid #dee2e6;
-    background-color: #f8f9fa; cursor: pointer; min-width: 110px;
-    border-radius: 4px; transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Centraliza o conteúdo verticalmente */
+
+    /* --- Definição de Tamanho Fixo --- */
+    width: 140px;
+    min-height: 100px;
+
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    text-align: center; /* Centraliza o texto */
+
+    /* --- Regra para Quebra de Linha --- */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
+
 #seletor-laboratorios .lab-icon.active {
-    background-color: #00539F; color: #fff; border-color: #00407d;
-    transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #00539F;
+    color: #fff;
+    border-color: #00407d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-#seletor-laboratorios .lab-icon i { font-size: 1.8rem; }
-#seletor-laboratorios .lab-icon span { font-size: 0.85em; margin-top: 8px; font-weight: 500; }
+
+#seletor-laboratorios .lab-icon i {
+    font-size: 1.8rem;
+    margin-bottom: 8px; /* Espaço entre o ícone e o texto */
+}
+
+#seletor-laboratorios .lab-icon span {
+    font-size: 0.85em;
+    font-weight: 500;
+    line-height: 1.2; /* Melhora a legibilidade do texto em duas linhas */
+}
 
 #mini-calendario { --fc-border-color: #e9ecef; }
 #mini-calendario .fc-daygrid-day-number { font-size: 0.9em; padding: 4px; }
