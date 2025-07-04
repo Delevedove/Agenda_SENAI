@@ -422,6 +422,52 @@ def agendamentos_visao_semanal():
 
     return jsonify(resultado)
 
+
+@agendamento_bp.route('/agendamentos/agenda-diaria', methods=['GET'])
+def agenda_diaria():
+    """Retorna agendamentos de um dia para um laboratório, agrupados por turno."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    lab_id = request.args.get('laboratorio_id', type=int)
+    data_str = request.args.get('data')
+    if not lab_id or not data_str:
+        return jsonify({'erro': 'Parâmetros laboratorio_id e data são obrigatórios'}), 400
+
+    try:
+        data_consulta = datetime.strptime(data_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'erro': 'Formato de data inválido. Use YYYY-MM-DD'}), 400
+
+    laboratorio = db.session.get(Laboratorio, lab_id)
+    if not laboratorio:
+        return jsonify({'erro': 'Laboratório não encontrado'}), 404
+
+    agendamentos = Agendamento.query.filter(
+        Agendamento.data == data_consulta,
+        Agendamento.laboratorio == laboratorio.nome
+    ).all()
+
+    ag_por_turno = {'Manhã': [], 'Tarde': [], 'Noite': []}
+    for ag in agendamentos:
+        horarios = sorted(ag.horarios) if ag.horarios else []
+        info = {
+            'id': ag.id,
+            'turma_nome': ag.turma,
+            'horario_inicio': horarios[0] if horarios else None,
+            'horario_fim': horarios[-1] if horarios else None,
+        }
+        ag_por_turno.setdefault(ag.turno, []).append(info)
+
+    return jsonify({
+        'laboratorio_selecionado': {
+            'id': laboratorio.id,
+            'nome': laboratorio.nome,
+        },
+        'agendamentos': ag_por_turno,
+    })
+
 @agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
     """
