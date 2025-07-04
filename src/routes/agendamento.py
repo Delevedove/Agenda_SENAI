@@ -388,6 +388,40 @@ def agendamentos_resumo_calendario():
         "resumo": resumo
     })
 
+
+@agendamento_bp.route('/agendamentos/visao-semanal', methods=['GET'])
+def agendamentos_visao_semanal():
+    """Retorna agendamentos da semana agrupados por laboratório."""
+    autenticado, user = verificar_autenticacao(request)
+    if not autenticado:
+        return jsonify({'erro': 'Não autenticado'}), 401
+
+    data_ref_str = request.args.get('data_ref')
+    try:
+        data_ref = datetime.strptime(data_ref_str, '%Y-%m-%d').date()
+    except (TypeError, ValueError):
+        return jsonify({'erro': 'Parâmetro data_ref inválido'}), 400
+
+    inicio_semana = data_ref - timedelta(days=data_ref.weekday())
+    fim_semana = inicio_semana + timedelta(days=6)
+
+    query = Agendamento.query.filter(
+        Agendamento.data.between(inicio_semana, fim_semana)
+    )
+    if not verificar_admin(user):
+        query = query.filter(Agendamento.usuario_id == user.id)
+
+    agendamentos = query.all()
+
+    resultado = {}
+    for a in agendamentos:
+        lab = a.laboratorio
+        dia = a.data.isoformat()
+        turno = a.turno
+        resultado.setdefault(lab, {}).setdefault(dia, {}).setdefault(turno, []).append(a.to_dict())
+
+    return jsonify(resultado)
+
 @agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
     """
