@@ -1181,3 +1181,17 @@ input, select, textarea {
 #mini-calendario .fc-daygrid-day-frame:hover {
     background-color: #f0f0f0;
 }
+
+.fc-daygrid-day-frame {
+    position: relative;
+}
+.reserva-indicator {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background-color: #00539F; /* Azul SENAI */
+    border-radius: 50%;
+}

@@ -567,6 +567,31 @@
             }
         });
     </script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        
+        const labId = params.get('lab_id');
+        const data = params.get('data');
+        const turno = params.get('turno');
+        
+        // Espera um pouco para garantir que os selects já foram carregados pela API
+        setTimeout(() => {
+            if (labId) {
+                const labSelect = document.getElementById('laboratorio');
+                // Busca o nome do laboratório pelo ID (assumindo que o value do select é o nome)
+            }
+            if (data) {
+                document.getElementById('data').value = data;
+            }
+            if (turno) {
+                document.getElementById('turno').value = turno;
+                // Dispara um evento de 'change' para carregar os horários do turno
+                document.getElementById('turno').dispatchEvent(new Event('change'));
+            }
+        }, 500); // Atraso de 500ms
+    });
+</script>
 <div aria-live="polite" aria-atomic="true" class="position-relative">
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
 </div>
