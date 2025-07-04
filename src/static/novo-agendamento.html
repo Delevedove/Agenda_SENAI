@@ -256,7 +256,8 @@
                 
                 // Coleta os dados do formulário
                 const data = document.getElementById('data').value;
-                const laboratorio = document.getElementById('laboratorio').value;
+                const labSelect = document.getElementById('laboratorio');
+                const laboratorio = labSelect.options[labSelect.selectedIndex].textContent;
                 const turma = document.getElementById('turma').value;
                 const turno = document.getElementById('turno').value;
                 
@@ -343,7 +344,7 @@
                     } else {
                         laboratorios.forEach(lab => {
                             const option = document.createElement('option');
-                            option.value = lab.nome;
+                            option.value = lab.id;
                             option.textContent = lab.nome;
                             selectLaboratorio.appendChild(option);
                         });
@@ -393,7 +394,9 @@
             // Função para verificar horários disponíveis
             async function verificarHorariosDisponiveis() {
                 const data = document.getElementById('data').value;
-                const laboratorio = document.getElementById('laboratorio').value;
+                const labSelect = document.getElementById('laboratorio');
+                const laboratorioId = labSelect.value;
+                const laboratorio = labSelect.options[labSelect.selectedIndex].textContent;
                 const turno = document.getElementById('turno').value;
                 const horariosInfo = document.getElementById('horariosInfo');
                 
@@ -401,11 +404,11 @@
                 document.getElementById('horariosContainer').innerHTML = '';
                 
                 // Verifica se todos os campos necessários foram preenchidos
-                if (!data || !laboratorio || !turno) {
+                if (!data || !laboratorioId || !turno) {
                     horariosInfo.textContent = 'Selecione um laboratório, data e turno para ver os horários disponíveis.';
                     return;
                 }
-                
+
                 try {
                     // Busca os agendamentos existentes para o laboratório, data e turno selecionados
                     const agendamentosExistentes = await chamarAPI(`/agendamentos/verificar-disponibilidade?data=${data}&laboratorio=${encodeURIComponent(laboratorio)}&turno=${encodeURIComponent(turno)}`);
@@ -534,7 +537,11 @@
                     
                     // Aguarda o carregamento dos laboratórios e turmas antes de selecionar
                     setTimeout(() => {
-                        document.getElementById('laboratorio').value = agendamento.laboratorio;
+                        const labSelect = document.getElementById('laboratorio');
+                        const optionLab = Array.from(labSelect.options).find(o => o.textContent === agendamento.laboratorio);
+                        if (optionLab) {
+                            labSelect.value = optionLab.value;
+                        }
                         document.getElementById('turma').value = agendamento.turma;
                         document.getElementById('turno').value = agendamento.turno;
                         
@@ -570,26 +577,32 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
-        
+
         const labId = params.get('lab_id');
         const data = params.get('data');
         const turno = params.get('turno');
-        
-        // Espera um pouco para garantir que os selects já foram carregados pela API
-        setTimeout(() => {
+
+        // Função para tentar aplicar os valores dos parâmetros
+        const preencherCampos = () => {
             if (labId) {
                 const labSelect = document.getElementById('laboratorio');
-                // Busca o nome do laboratório pelo ID (assumindo que o value do select é o nome)
+                if (labSelect.querySelector(`option[value="${labId}"]`)) {
+                    labSelect.value = labId;
+                }
             }
             if (data) {
                 document.getElementById('data').value = data;
             }
             if (turno) {
-                document.getElementById('turno').value = turno;
-                // Dispara um evento de 'change' para carregar os horários do turno
-                document.getElementById('turno').dispatchEvent(new Event('change'));
+                const turnoSelect = document.getElementById('turno');
+                turnoSelect.value = turno;
+                // Dispara o evento de 'change' para carregar os horários do turno
+                turnoSelect.dispatchEvent(new Event('change'));
             }
-        }, 500); // Atraso de 500ms
+        };
+
+        // Espera um pouco para garantir que o select de laboratórios foi carregado
+        setTimeout(preencherCampos, 500);
     });
 </script>
 <div aria-live="polite" aria-atomic="true" class="position-relative">
