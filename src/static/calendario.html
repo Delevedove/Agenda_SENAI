@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <title>Calendário de Agendamentos - Sistema de Agenda de Laboratório</title>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <main class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                    <div>
+                        <h2 class="text-uppercase mb-0">Calendário de Agendamentos</h2>
+                        <h5 id="periodo-header" class="text-muted fw-normal">Julho de 2025</h5>
+                    </div>
+                    <div class="d-flex align-items-center mt-2 mt-md-0">
+                        <div class="btn-group me-3" role="group">
+                            <button id="nav-anterior" class="btn btn-outline-primary"><i class="bi bi-chevron-left"></i></button>
+                            <button id="nav-hoje" class="btn btn-outline-secondary">Hoje</button>
+                            <button id="nav-seguinte" class="btn btn-outline-primary"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="view-toggle" id="view-mensal" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="view-mensal"><i class="bi bi-calendar3 me-2"></i>Mensal</label>
+                            <input type="radio" class="btn-check" name="view-toggle" id="view-semanal" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="view-semanal"><i class="bi bi-grid-3x3-gap me-2"></i>Semanal</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="loading-view" class="text-center py-5" style="display: none;">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+                </div>
+
+                <div id="visao-mensal-container">
+                    </div>
+
+                <div id="visao-semanal-container" class="table-responsive" style="display: none;">
+                    </div>
+            </main>
+        </div>
+    </div>
+    <script src="/js/calendario-hibrido.js"></script> </body>
+</html>

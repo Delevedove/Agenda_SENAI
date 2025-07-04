@@ -1013,6 +1013,26 @@ input, select, textarea {
 }
 
 /* ======================================================= */
+/* == ESTILOS PARA TABELA DA VISÃO SEMANAL                == */
+/* ======================================================= */
+
+.tabela-semanal th,
+.tabela-semanal td {
+    vertical-align: top;
+    min-width: 120px;
+}
+
+.tabela-semanal td button {
+    width: 100%;
+    margin-bottom: 2px;
+}
+
+.tabela-semanal .ag-card {
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+}
+
+/* ======================================================= */
 /* == REGRAS DE CSS PARA RESPONSIVIDADE (MEDIA QUERIES) == */
 /* ======================================================= */
 
