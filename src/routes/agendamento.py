@@ -457,6 +457,7 @@ def agenda_diaria():
             'turma_nome': ag.turma,
             'horario_inicio': horarios[0] if horarios else None,
             'horario_fim': horarios[-1] if horarios else None,
+            'horarios': json.dumps(horarios)
         }
         ag_por_turno.setdefault(ag.turno, []).append(info)
 
