@@ -1,11 +1,20 @@
 // FUNÇÃO AUXILIAR PARA CALCULAR O INTERVALO DE TEMPO
 function calcularIntervaloDeTempo(horarios) {
-    if (!horarios || horarios.length === 0) {
+    if (!horarios) return '';
+    try {
+        const listaHorarios =
+            typeof horarios === 'string' ? JSON.parse(horarios) : horarios;
+        if (!Array.isArray(listaHorarios) || listaHorarios.length === 0)
+            return '';
+
+        const tempos = listaHorarios.flatMap((h) => h.split(' - '));
+        const inicio = tempos[0];
+        const fim = tempos[tempos.length - 1];
+        return `${inicio} - ${fim}`;
+    } catch (e) {
+        console.error('Erro ao parsear horários:', e, horarios);
         return '';
     }
-    const inicio = horarios[0].split(' - ')[0];
-    const fim = horarios[horarios.length - 1].split(' - ').pop();
-    return `${inicio} - ${fim}`;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -89,37 +98,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const dataFormatada = dataSelecionada.toISOString().split('T')[0];
             const dados = await chamarAPI(`/agendamentos/agenda-diaria?laboratorio_id=${labSelecionadoId}&data=${dataFormatada}`);
-            renderizarDetalhesDia(dados.agendamentos);
+            renderizarDetalhesDia(dados.agendamentos_por_turno);
         } catch (error) {
             exibirAlerta('Erro ao carregar agenda diária.', 'danger');
             container.innerHTML = '<p class="text-danger">Não foi possível carregar os agendamentos.</p>';
         }
     }
 
-    function renderizarDetalhesDia(agendamentos) {
+    function renderizarDetalhesDia(agendamentosPorTurno) {
         const container = document.getElementById('detalhes-dia-container');
-        container.innerHTML = ['Manhã', 'Tarde', 'Noite'].map(turno => {
-            const agendamentosDoTurno = agendamentos[turno] || [];
-            return `
+        const dataFormatada = dataSelecionada.toISOString().split('T')[0];
+
+        container.innerHTML = ['Manhã', 'Tarde', 'Noite']
+            .map((turno) => {
+                const dadosTurno = agendamentosPorTurno[turno] || {
+                    agendamentos: [],
+                    horarios_disponiveis: [],
+                };
+                const agendamentosDoTurno = dadosTurno.agendamentos;
+                const horariosDisponiveis = dadosTurno.horarios_disponiveis;
+
+                return `
             <div class="card turno-card">
                 <div class="card-header">> ${turno}</div>
                 <div class="card-body">
-                    ${agendamentosDoTurno.length > 0
-                        ? agendamentosDoTurno.map(ag => {
-                            const horarios = JSON.parse(ag.horarios || '[]');
-                            const intervaloCalculado = calcularIntervaloDeTempo(horarios);
-                            const intervaloDeTempo = (ag.horario_inicio && ag.horario_fim)
-                                ? `${ag.horario_inicio} - ${ag.horario_fim}`
-                                : intervaloCalculado || 'Horário não informado';
-
-                            return `
+                    ${
+                        agendamentosDoTurno.length > 0
+                            ? `<h6><i class="bi bi-calendar-x"></i> Horários Ocupados</h6>` +
+                              agendamentosDoTurno
+                                  .map(
+                                      (ag) => `
                             <div class="agendamento-item">
                                 <div class="agendamento-info">
-                                    <strong>${escapeHTML(ag.turma_nome)}</strong>
-                                    <br>
+                                    <strong>${escapeHTML(ag.turma_nome)}</strong><br>
                                     <span class="text-muted small">
-                                        <i class="bi bi-clock"></i>
-                                        ${intervaloDeTempo}
+                                        <i class="bi bi-clock-fill"></i> 
+                                        ${calcularIntervaloDeTempo(ag.horarios)}
                                     </span>
                                 </div>
                                 <div class="agendamento-acoes btn-group">
@@ -127,18 +141,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     <button class="btn btn-sm btn-outline-danger" onclick="excluirAgendamento(${ag.id})" title="Excluir"><i class="bi bi-trash"></i></button>
                                 </div>
                             </div>
-                            `;
-                        }).join('')
-                        : '<p class="text-muted small">Nenhum agendamento neste turno.</p>'
+                          `
+                                  )
+                                  .join('')
+                            : '<p class="text-muted small">Nenhum agendamento neste turno.</p>'
+                    }
+                    ${
+                        horariosDisponiveis.length > 0
+                            ? `<h6 class="mt-4"><i class="bi bi-calendar-check"></i> Horários Disponíveis</h6>` +
+                              horariosDisponiveis
+                                  .map(
+                                      (h) => `<span class="badge bg-light text-dark border me-1 mb-1">${h}</span>`
+                                  )
+                                  .join('')
+                            : ''
                     }
                 </div>
                 <div class="card-footer text-end">
-                    <a href="/novo-agendamento.html?lab_id=${labSelecionadoId}&data=${dataSelecionada.toISOString().split('T')[0]}&turno=${turno}" class="btn btn-primary btn-sm btn-novo-agendamento-turno">
+                    <a href="/novo-agendamento.html?lab_id=${labSelecionadoId}&data=${dataFormatada}&turno=${turno}" class="btn btn-primary btn-sm btn-novo-agendamento-turno">
                         <i class="bi bi-plus"></i> Novo Agendamento
                     </a>
                 </div>
-            </div>
-        `}).join('');
+            </div>`;
+            })
+            .join('');
     }
 
     function adicionarListeners() {
