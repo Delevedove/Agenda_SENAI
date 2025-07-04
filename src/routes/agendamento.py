@@ -422,61 +422,6 @@ def agendamentos_visao_semanal():
 
     return jsonify(resultado)
 
-
-@agendamento_bp.route('/agendamentos/agenda-diaria', methods=['GET'])
-def agendamentos_agenda_diaria():
-    """Retorna agendamentos de um dia separados por turno para um laboratório."""
-    autenticado, user = verificar_autenticacao(request)
-    if not autenticado:
-        return jsonify({'erro': 'Não autenticado'}), 401
-
-    lab_id_str = request.args.get('laboratorio_id')
-    data_str = request.args.get('data')
-    if not lab_id_str or not data_str:
-        return jsonify({'erro': 'Parâmetros laboratorio_id e data são obrigatórios'}), 400
-
-    try:
-        lab_id = int(lab_id_str)
-    except (TypeError, ValueError):
-        return jsonify({'erro': 'laboratorio_id inválido'}), 400
-
-    try:
-        dia = datetime.strptime(data_str, '%Y-%m-%d').date()
-    except ValueError:
-        return jsonify({'erro': 'Formato de data inválido. Use YYYY-MM-DD'}), 400
-
-    laboratorio = db.session.get(Laboratorio, lab_id)
-    if not laboratorio:
-        return jsonify({'erro': 'Laboratório não encontrado'}), 404
-
-    query = Agendamento.query.filter(
-        Agendamento.data == dia,
-        Agendamento.laboratorio == laboratorio.nome
-    )
-    if not verificar_admin(user):
-        query = query.filter(Agendamento.usuario_id == user.id)
-
-    agendamentos = query.all()
-
-    agenda_turnos = {'Manhã': [], 'Tarde': [], 'Noite': []}
-    for ag in agendamentos:
-        horarios = sorted(ag.horarios)
-        item = {
-            'id': ag.id,
-            'turma': ag.turma,
-            'horario_inicio': horarios[0] if horarios else None,
-            'horario_fim': horarios[-1] if horarios else None,
-        }
-        agenda_turnos.setdefault(ag.turno, []).append(item)
-
-    return jsonify({
-        'laboratorio_selecionado': {
-            'id': laboratorio.id,
-            'nome': laboratorio.nome,
-        },
-        'agendamentos': agenda_turnos
-    })
-
 @agendamento_bp.route('/agendamentos/verificar-disponibilidade', methods=['GET'])
 def verificar_disponibilidade():
     """
