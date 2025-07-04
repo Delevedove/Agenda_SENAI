@@ -1012,3 +1012,59 @@ input, select, textarea {
     font-weight: 600;
 }
 
+/* ======================================================= */
+/* == REGRAS DE CSS PARA RESPONSIVIDADE (MEDIA QUERIES) == */
+/* ======================================================= */
+
+/* Estilos para Tablets e Dispositivos Menores (abaixo de 992px) */
+@media (max-width: 991.98px) {
+    /* Ajusta o tamanho da fonte base para evitar quebra de texto */
+    body {
+        font-size: 0.95rem;
+    }
+
+    /* Reduz o padding da sidebar para dar mais espaço */
+    .sidebar {
+        padding: 1rem;
+    }
+
+    /* Ajusta o espaçamento do conteúdo principal */
+    main.col-lg-9 {
+        padding-top: 1.5rem;
+    }
+}
+
+/* Estilos para Telemóveis (abaixo de 768px) */
+@media (max-width: 767.98px) {
+    /* Reduz ainda mais a fonte para telas pequenas */
+    body {
+        font-size: 0.9rem;
+    }
+
+    /* Melhora a aparência dos títulos em telas pequenas */
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    /* Centraliza o texto nos cards de KPI do dashboard */
+    .kpi-card .d-flex {
+        flex-direction: column;
+        align-items: center !important;
+        text-align: center;
+    }
+
+    .kpi-card .kpi-icon {
+        margin-top: 0.5rem;
+    }
+
+    /* Ajusta as pílulas do calendário para não quebrarem */
+    .pill-turno {
+        font-size: 11px; /* Letra menor dentro das pílulas */
+        padding: 2px 5px; /* Menos espaçamento interno */
+    }
+
+    /* Força os botões de ação do dashboard a terem um bom espaçamento */
+    .action-tile {
+        padding: 1rem;
+    }
+}
