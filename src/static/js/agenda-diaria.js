@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let labSelecionadoId = null;
     let dataSelecionada = new Date();
     let miniCalendar;
+    let agendamentoParaExcluirId = null; // Guarda o ID do agendamento a ser excluído
 
     const loadingEl = document.getElementById('loading-page');
     const contentEl = document.getElementById('agenda-content');
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navAnteriorBtn = document.getElementById('nav-anterior');
     const navHojeBtn = document.getElementById('nav-hoje');
     const navSeguinteBtn = document.getElementById('nav-seguinte');
+    const confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmarExclusaoModal'));
 
     // --- FUNÇÃO DE INICIALIZAÇÃO ---
     const inicializarPagina = async () => {
@@ -124,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             <div class="agendamento-acoes btn-group">
                                 <a href="/novo-agendamento.html?id=${ag.id}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
-                                <button class="btn btn-sm btn-outline-danger" onclick="window.excluirAgendamento(${ag.id})" title="Excluir"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="window.abrirModalExclusao(${ag.id})" title="Excluir"><i class="bi bi-trash"></i></button>
                             </div>
                         </div>`).join('') : ''
                     }
@@ -148,8 +150,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 carregarAgendaDiaria();
             }
         });
-        
+
         // ... (Listeners para nav-anterior, nav-hoje, etc., se você os adicionou)
+
+        // Listener para confirmar exclusão
+        const btnConfirmar = document.getElementById('btnConfirmarExclusao');
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', executarExclusao);
+        }
     };
 
     const calcularIntervaloDeTempo = (horariosJSON) => {
@@ -161,10 +169,25 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(e) { return ''; }
     };
     
-    window.excluirAgendamento = (id) => {
-        // Implemente a lógica do modal de confirmação aqui, se necessário
-        console.log("Excluir agendamento com ID:", id);
+    window.abrirModalExclusao = (id) => {
+        agendamentoParaExcluirId = id;
+        confirmacaoModal.show();
     };
+
+    async function executarExclusao() {
+        if (!agendamentoParaExcluirId) return;
+
+        try {
+            await chamarAPI(`/agendamentos/${agendamentoParaExcluirId}`, 'DELETE');
+            exibirAlerta('Agendamento excluído com sucesso!', 'success');
+            await carregarAgendaDiaria();
+        } catch (error) {
+            exibirAlerta(`Erro ao excluir agendamento: ${error.message}`, 'danger');
+        } finally {
+            agendamentoParaExcluirId = null;
+            confirmacaoModal.hide();
+        }
+    }
 
     inicializarPagina();
 });

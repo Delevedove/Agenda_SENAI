@@ -1,5 +1,6 @@
 """Rotas de agendamento de laboratorios."""
 from flask import Blueprint, request, jsonify, make_response, send_file
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, date, timedelta
 import json
 import csv
@@ -231,6 +232,35 @@ def remover_agendamento(id):
     except SQLAlchemyError as e:
         db.session.rollback()
         return handle_internal_error(e)
+
+# ROTA PARA EXCLUIR UM AGENDAMENTO
+
+@agendamento_bp.route('/agendamentos/<int:id>', methods=['DELETE'])
+@jwt_required()
+def deletar_agendamento(id):
+    """
+    Exclui um agendamento específico.
+    """
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    agendamento = db.session.get(Agendamento, id)
+
+    if not agendamento:
+        return jsonify({"erro": "Agendamento não encontrado"}), 404
+
+    # Opcional: Adicionar verificação de permissão. Ex: apenas admin ou quem criou pode excluir.
+    # if agendamento.usuario_id != user.id and not user.is_admin:
+    #     return jsonify({"erro": "Permissão negada"}), 403
+
+    try:
+        db.session.delete(agendamento)
+        db.session.commit()
+        return jsonify({"mensagem": "Agendamento excluído com sucesso"}), 200
+    except Exception as e:
+        db.session.rollback()
+        # Idealmente, você faria um log do erro 'e'
+        return jsonify({"erro": "Erro ao excluir o agendamento"}), 500
 
 @agendamento_bp.route('/agendamentos/calendario/<int:mes>/<int:ano>', methods=['GET'])
 def agendamentos_calendario(mes, ano):
