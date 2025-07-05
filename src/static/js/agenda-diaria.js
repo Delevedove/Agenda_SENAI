@@ -28,24 +28,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Função de inicialização
     async function inicializarPagina() {
+        // Adiciona a referência ao novo elemento
+        const emptyStateEl = document.getElementById('empty-state-container');
+
+        // Esconde o conteúdo principal por padrão para evitar piscar na tela
+        contentEl.style.display = 'none';
+        emptyStateEl.style.display = 'none';
+        loadingEl.style.display = 'block';
+
         await carregarLaboratorios();
-        inicializarMiniCalendario();
-        adicionarListeners();
-        
+
+        // --- LÓGICA DE EXIBIÇÃO CORRIGIDA ---
         if (laboratorios.length > 0) {
+            // Se há laboratórios, mostra a interface da agenda
+            inicializarMiniCalendario();
+            adicionarListeners();
+
             const primeiroLabIcon = document.querySelector('.lab-icon');
-            if(primeiroLabIcon) {
+            if (primeiroLabIcon) {
                 labSelecionadoId = primeiroLabIcon.dataset.id;
                 primeiroLabIcon.classList.add('active');
             }
-            await carregarAgendaDiaria();
+            await atualizarVisualizacaoCompleta(dataSelecionada);
+
             loadingEl.style.display = 'none';
-            contentEl.style.display = 'block';
-            if (miniCalendar) {
-                miniCalendar.updateSize();
-            }
+            contentEl.style.display = 'block'; // Mostra a agenda
         } else {
-            loadingEl.innerHTML = '<p class="text-muted">Nenhum laboratório cadastrado.</p>';
+            // Se NÃO há laboratórios, mostra a mensagem de estado vazio
+            loadingEl.style.display = 'none';
+            emptyStateEl.style.display = 'block'; // Mostra o novo container
         }
     }
 
