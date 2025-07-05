@@ -1,7 +1,7 @@
 """
 Inicializa a aplicacao Flask e registra os blueprints.
 """
-from flask import Flask
+from flask import Flask, render_template
 from flask_migrate import Migrate
 from src.limiter import limiter
 import os
@@ -18,6 +18,7 @@ from src.routes.sala import sala_bp
 from src.routes.turma import turma_bp
 from src.routes.user import user_bp
 from src.models.recurso import Recurso
+from src.models.laboratorio_turma import Turma
 
 def create_admin(app):
     """Cria o usuário administrador padrão de forma idempotente."""
@@ -106,6 +107,11 @@ def create_app():
     @app.route('/')
     def index():
         return app.send_static_file('index.html')
+
+    @app.route('/classes')
+    def classes_page():
+        turmas = Turma.query.all()
+        return render_template('classes.html', turmas=turmas)
 
     @app.route('/<path:path>')
     def static_file(path):
