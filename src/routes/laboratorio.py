@@ -11,12 +11,21 @@ laboratorio_bp = Blueprint('laboratorio', __name__)
 @laboratorio_bp.route('/laboratorios', methods=['GET'])
 @login_required
 def listar_laboratorios():
-    """
-    Lista todos os laboratórios disponíveis.
-    Acessível para todos os usuários autenticados.
-    """
-    laboratorios = Laboratorio.query.all()
-    return jsonify([lab.to_dict() for lab in laboratorios])
+    """Lista todos os laboratórios disponíveis."""
+    try:
+        laboratorios = db.session.query(Laboratorio).all()
+        return jsonify([
+            {
+                "id": lab.id,
+                "nome": lab.nome,
+                "classe_icone": lab.classe_icone,
+                "data_criacao": lab.data_criacao.strftime("%Y-%m-%d"),
+            }
+            for lab in laboratorios
+        ])
+    except Exception as e:
+        print("Erro ao listar laboratórios:", str(e))
+        return jsonify({"erro": "Erro ao buscar laboratórios"}), 500
 
 @laboratorio_bp.route('/laboratorios/<int:id>', methods=['GET'])
 @login_required
