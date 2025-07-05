@@ -75,20 +75,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function carregarLaboratorios() {
         try {
-            // A LINHA MAIS IMPORTANTE: O resultado da API é atribuído à variável global.
-            laboratorios = await chamarAPI('/laboratorios');
+            const laboratorios = await chamarAPI('/laboratorios');
+            const seletor = document.getElementById('seletor-laboratorios');
+            if (seletor) {
+                seletor.innerHTML = laboratorios.map(lab => {
+                    let iconClass;
 
-            if (seletorContainer) {
-                // Lógica de renderização dos ícones (continua igual)
-                seletorContainer.innerHTML = laboratorios.map(lab => {
-                    let iconClass = 'bi-box-seam';
-                    // ... (seu código switch para ícones) ...
-                    return `<div class="lab-icon" data-id="${lab.id}" title="${escapeHTML(lab.nome)}"><i class="bi ${iconClass}"></i><span>${escapeHTML(lab.nome)}</span></div>`;
+                    // --- LÓGICA INTELIGENTE DE SELEÇÃO DE ÍCONE ---
+                    // 1. Prioridade: Usa o ícone personalizado se ele existir e for válido.
+                    if (lab.classe_icone && lab.classe_icone.startsWith('bi-')) {
+                        iconClass = lab.classe_icone;
+                    }
+                    // 2. Fallback: Se não houver ícone personalizado, usa a lista predefinida.
+                    else {
+                        switch (lab.nome.toLowerCase()) {
+                            case 'informática': iconClass = 'bi-pc-display'; break;
+                            case 'soldagem': iconClass = 'bi-fire'; break;
+                            case 'ajustagem mecanica e usinagem': iconClass = 'bi-gear-fill'; break;
+                            case 'eletrica': iconClass = 'bi-lightning-charge-fill'; break;
+                            case 'eletronica': iconClass = 'bi-cpu-fill'; break;
+                            case 'laboratório 4.0': iconClass = 'bi-robot'; break;
+                            case 'auditório': iconClass = 'bi-mic-fill'; break;
+                            // 3. Fallback Final: Se não for nenhum dos anteriores, usa um ícone padrão.
+                            default: iconClass = 'bi-box-seam'; break;
+                        }
+                    }
+
+                    // Adiciona a classe 'bi' sempre, pois ela é a base para todos os ícones.
+                    return `
+                    <div class="lab-icon" data-id="${lab.id}" title="${escapeHTML(lab.nome)}">
+                        <i class="bi ${iconClass}"></i>
+                        <span>${escapeHTML(lab.nome)}</span>
+                    </div>
+                `;
                 }).join('');
             }
         } catch (error) {
             exibirAlerta('Erro ao carregar laboratórios.', 'danger');
-            laboratorios = []; // Garante que a lista fique vazia em caso de erro
         }
     }
 
