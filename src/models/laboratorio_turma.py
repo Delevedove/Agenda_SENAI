@@ -13,20 +13,24 @@ class Laboratorio(db.Model):
         data_atualizacao (datetime): Data da última atualização do registro
     """
     __tablename__ = 'laboratorios'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(50), nullable=False, unique=True)
+    # Novo campo para a classe de ícone do laboratório
+    classe_icone = db.Column(db.String(50), nullable=True, default='bi-box-seam')
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    def __init__(self, nome):
+
+    def __init__(self, nome, classe_icone=None):
         """
         Inicializa um novo laboratório.
-        
+
         Args:
             nome (str): Nome do laboratório
+            classe_icone (str, optional): Classe CSS do ícone do laboratório
         """
         self.nome = nome
+        self.classe_icone = classe_icone or 'bi-box-seam'
     
     def to_dict(self):
         """
@@ -38,6 +42,7 @@ class Laboratorio(db.Model):
         return {
             'id': self.id,
             'nome': self.nome,
+            'classe_icone': self.classe_icone,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }

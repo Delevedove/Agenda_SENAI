@@ -107,6 +107,13 @@
                                 <label for="nomeLaboratorio" class="form-label">Nome do Laboratório</label>
                                 <input type="text" class="form-control" id="nomeLaboratorio" placeholder="Ex: Lab 01" required>
                             </div>
+                            <div class="col-md-5">
+                                <label for="classeIconeLaboratorio" class="form-label">Classe do Ícone</label>
+                                <input type="text" class="form-control" id="classeIconeLaboratorio" placeholder="Ex: bi-robot">
+                                <small class="form-text text-muted">
+                                    Cole a classe do <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a> aqui.
+                                </small>
+                            </div>
                             <div class="col-md-4 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary w-100" id="btnSalvarLaboratorio">
                                     <i class="bi bi-plus-circle me-2"></i>Adicionar
@@ -274,7 +281,7 @@
                                 <td>${lab.nome}</td>
                                 <td>${formatarData(lab.data_criacao)}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarLaboratorio(${lab.id}, '${lab.nome}')">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editarLaboratorio(${lab.id}, '${lab.nome}', '${lab.classe_icone || ''}')">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" onclick="confirmarExclusao('laboratorio', ${lab.id}, '${lab.nome}')">
@@ -335,6 +342,7 @@
             async function salvarLaboratorio() {
                 const id = document.getElementById('laboratorioId').value;
                 const nome = document.getElementById('nomeLaboratorio').value;
+                const classeIcone = document.getElementById('classeIconeLaboratorio').value;
                 
                 if (!nome) {
                     exibirAlerta('O nome do laboratório é obrigatório.', 'danger');
@@ -344,11 +352,11 @@
                 try {
                     if (id) {
                         // Atualização
-                        await chamarAPI(`/laboratorios/${id}`, 'PUT', { nome });
+                        await chamarAPI(`/laboratorios/${id}`, 'PUT', { nome, classe_icone: classeIcone });
                         exibirAlerta('Laboratório atualizado com sucesso!', 'success');
                     } else {
                         // Criação
-                        await chamarAPI('/laboratorios', 'POST', { nome });
+                        await chamarAPI('/laboratorios', 'POST', { nome, classe_icone: classeIcone });
                         exibirAlerta('Laboratório cadastrado com sucesso!', 'success');
                     }
                     
@@ -394,9 +402,10 @@
             }
             
             // Função para editar um laboratório
-            window.editarLaboratorio = function(id, nome) {
+            window.editarLaboratorio = function(id, nome, classe) {
                 document.getElementById('laboratorioId').value = id;
                 document.getElementById('nomeLaboratorio').value = nome;
+                document.getElementById('classeIconeLaboratorio').value = classe || '';
                 document.getElementById('btnSalvarLaboratorio').innerHTML = '<i class="bi bi-check-circle me-2"></i>Atualizar';
                 document.getElementById('nomeLaboratorio').focus();
             };
