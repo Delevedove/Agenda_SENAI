@@ -1,2 +1,11 @@
 redis
 Flask-JWT-Extended
+
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Limiter
+gunicorn
+psycopg2-binary
+python-dotenv
+Flask-JWT-Extended
