@@ -24,7 +24,7 @@ RUN poetry install --no-root --without dev
 COPY ./src ./src
 
 # Expor a porta que o Gunicorn usará
-EXPOSE 8000
+EXPOSE 8080
 
 # Comando para iniciar a aplicação
-CMD ["poetry", "run", "gunicorn", "--bind", "0.0.0.0:8000", "src.main:create_app()"]
+CMD ["gunicorn", "src.main:app", "--bind", "0.0.0.0:8080"]
