@@ -49,46 +49,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // VERSÃO FINAL DA FUNÇÃO carregarLaboratorios
+
     async function carregarLaboratorios() {
         try {
-            laboratorios = await chamarAPI('/laboratorios');
+            const laboratorios = await chamarAPI('/laboratorios');
             const seletor = document.getElementById('seletor-laboratorios');
             if (seletor) {
                 seletor.innerHTML = laboratorios.map(lab => {
-                    let iconClass = 'bi-box-seam-fill'; // Ícone padrão para novos laboratórios
+                    let iconClass;
 
-                    // Lógica para escolher o ícone com base no nome
-                    switch (lab.nome.toLowerCase()) {
-                        case 'informática':
-                            iconClass = 'bi-pc-display';
-                            break;
-                        case 'soldagem':
-                            iconClass = 'bi-fire';
-                            break;
-                        case 'ajustagem mecanica e usinagem':
-                            iconClass = 'bi-gear-fill';
-                            break;
-                        // --- ÍCONES ATUALIZADOS ---
-                        case 'eletrica':
-                            iconClass = 'bi-lightning-charge-fill'; // Novo ícone
-                            break;
-                        case 'eletronica':
-                            iconClass = 'bi-cpu-fill'; // Novo ícone
-                            break;
-                        // --- FIM DA ATUALIZAÇÃO ---
-                        case 'laboratório 4.0':
-                            iconClass = 'bi-robot';
-                            break;
-                        case 'auditório':
-                            iconClass = 'bi-mic-fill';
-                            break;
+                    // --- NOVA LÓGICA INTELIGENTE ---
+                    // Passo 1: Tenta usar o ícone personalizado guardado na base de dados.
+                    if (lab.classe_icone && lab.classe_icone.startsWith('bi-')) {
+                        iconClass = lab.classe_icone;
+                    }
+                    // Passo 2 (Fallback): Se não houver ícone personalizado, usa a lógica de switch.
+                    else {
+                        switch (lab.nome.toLowerCase()) {
+                            case 'informática': iconClass = 'bi-pc-display'; break;
+                            case 'soldagem': iconClass = 'bi-fire'; break;
+                            case 'ajustagem mecanica e usinagem': iconClass = 'bi-gear-fill'; break;
+                            case 'eletrica': iconClass = 'bi-lightning-charge-fill'; break;
+                            case 'eletronica': iconClass = 'bi-cpu-fill'; break;
+                            case 'laboratório 4.0': iconClass = 'bi-robot'; break;
+                            case 'auditório': iconClass = 'bi-mic-fill'; break;
+                            // Passo 3 (Fallback final): Se não corresponder a nada, usa um ícone padrão.
+                            default: iconClass = 'bi-box-seam'; break;
+                        }
                     }
 
                     return `
-                    <div class="lab-icon" data-id="${lab.id}" title="${escapeHTML(lab.nome)}">
-                        <i class="bi ${iconClass}"></i>
-                        <span>${escapeHTML(lab.nome)}</span>
-                    </div>
+                        <div class="lab-icon" data-id="${lab.id}" title="${escapeHTML(lab.nome)}">
+                            <i class="bi ${iconClass}"></i>
+                            <span>${escapeHTML(lab.nome)}</span>
+                        </div>
                     `;
                 }).join('');
             }

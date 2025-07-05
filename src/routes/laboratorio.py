@@ -49,10 +49,13 @@ def criar_laboratorio():
     # Verifica se já existe um laboratório com o mesmo nome
     if Laboratorio.query.filter_by(nome=data['nome']).first():
         return jsonify({'erro': 'Já existe um laboratório com este nome'}), 400
-    
+
     # Cria o laboratório
     try:
-        novo_laboratorio = Laboratorio(nome=data['nome'])
+        novo_laboratorio = Laboratorio(
+            nome=data['nome'],
+            classe_icone=data.get('classe_icone')
+        )
         db.session.add(novo_laboratorio)
         db.session.commit()
         return jsonify(novo_laboratorio.to_dict()), 201
@@ -87,6 +90,7 @@ def atualizar_laboratorio(id):
     # Atualiza o laboratório
     try:
         laboratorio.nome = data['nome']
+        laboratorio.classe_icone = data.get('classe_icone', laboratorio.classe_icone)
         db.session.commit()
         return jsonify(laboratorio.to_dict())
     except SQLAlchemyError as e:
