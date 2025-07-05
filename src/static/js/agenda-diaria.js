@@ -55,7 +55,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const seletor = document.getElementById('seletor-laboratorios');
             if (seletor) {
                 seletor.innerHTML = laboratorios.map(lab => {
-                    let iconClass = 'bi-display';
+                    let iconClass = 'bi-box-seam-fill'; // Ícone padrão para novos laboratórios
+
+                    // Lógica para escolher o ícone com base no nome
                     switch (lab.nome.toLowerCase()) {
                         case 'informática':
                             iconClass = 'bi-pc-display';
@@ -66,12 +68,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                         case 'ajustagem mecanica e usinagem':
                             iconClass = 'bi-gear-fill';
                             break;
-                        case 'elétrica':
-                            iconClass = 'bi-lightning-fill';
+                        // --- ÍCONES ATUALIZADOS ---
+                        case 'eletrica':
+                            iconClass = 'bi-lightning-charge-fill'; // Novo ícone
                             break;
-                        case 'eletrônica':
-                            iconClass = 'bi-cpu-fill';
+                        case 'eletronica':
+                            iconClass = 'bi-cpu-fill'; // Novo ícone
                             break;
+                        // --- FIM DA ATUALIZAÇÃO ---
                         case 'laboratório 4.0':
                             iconClass = 'bi-robot';
                             break;
@@ -79,10 +83,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             iconClass = 'bi-mic-fill';
                             break;
                     }
+
                     return `
-                    <div class="lab-icon" data-id="${lab.id}" title="${lab.nome}">
+                    <div class="lab-icon" data-id="${lab.id}" title="${escapeHTML(lab.nome)}">
                         <i class="bi ${iconClass}"></i>
-                        <span>${lab.nome}</span>
+                        <span>${escapeHTML(lab.nome)}</span>
                     </div>
                     `;
                 }).join('');
