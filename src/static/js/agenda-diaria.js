@@ -54,12 +54,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             laboratorios = await chamarAPI('/laboratorios');
             const seletor = document.getElementById('seletor-laboratorios');
             if (seletor) {
-                seletor.innerHTML = laboratorios.map(lab => `
+                seletor.innerHTML = laboratorios.map(lab => {
+                    let iconClass = 'bi-display';
+                    switch (lab.nome.toLowerCase()) {
+                        case 'informática':
+                            iconClass = 'bi-pc-display';
+                            break;
+                        case 'soldagem':
+                            iconClass = 'bi-fire';
+                            break;
+                        case 'ajustagem mecanica e usinagem':
+                            iconClass = 'bi-gear-fill';
+                            break;
+                        case 'elétrica':
+                            iconClass = 'bi-lightning-fill';
+                            break;
+                        case 'eletrônica':
+                            iconClass = 'bi-cpu-fill';
+                            break;
+                        case 'laboratório 4.0':
+                            iconClass = 'bi-robot';
+                            break;
+                        case 'auditório':
+                            iconClass = 'bi-mic-fill';
+                            break;
+                    }
+                    return `
                     <div class="lab-icon" data-id="${lab.id}" title="${lab.nome}">
-                        <i class="bi bi-display"></i>
+                        <i class="bi ${iconClass}"></i>
                         <span>${lab.nome}</span>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             }
         } catch (error) {
             exibirAlerta('Erro ao carregar laboratórios.', 'danger');
