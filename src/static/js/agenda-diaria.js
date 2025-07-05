@@ -1,8 +1,8 @@
 // ==================================================================
-// == CÓDIGO COMPLETO E DEFINITIVO PARA agenda-diaria.js ==
+// == CÓDIGO COMPLETO E DEFINITIVO PARA agenda-diaria.js COM EXCLUSÃO CORRIGIDA ==
 // ==================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Garante que o usuário está autenticado antes de prosseguir
     if (!verificarAutenticacao()) return;
 
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             <div class="agendamento-acoes btn-group">
                                 <a href="/novo-agendamento.html?id=${ag.id}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
-                                <button class="btn btn-sm btn-outline-danger" onclick="window.abrirModalExclusao(${ag.id})" title="Excluir"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger btn-excluir" data-id="${ag.id}" title="Excluir"><i class="bi bi-trash"></i></button>
                             </div>
                         </div>`).join('') : ''
                     }
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     };
 
-    const adicionarListeners = () => {
+    function adicionarListeners() {
         seletorContainer.addEventListener('click', (e) => {
             const icon = e.target.closest('.lab-icon');
             if (icon && !icon.classList.contains('active')) {
@@ -151,14 +151,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // ... (Listeners para nav-anterior, nav-hoje, etc., se você os adicionou)
+        // ... (Listeners existentes para seletor de laboratório, etc.) ...
 
-        // Listener para confirmar exclusão
-        const btnConfirmar = document.getElementById('btnConfirmarExclusao');
-        if (btnConfirmar) {
-            btnConfirmar.addEventListener('click', executarExclusao);
-        }
-    };
+        // ** DELEGAÇÃO DE EVENTOS PARA EXCLUSÃO **
+        agendaContainer.addEventListener('click', (e) => {
+            const btnExcluir = e.target.closest('.btn-excluir');
+            if (btnExcluir) {
+                agendamentoParaExcluirId = btnExcluir.dataset.id;
+                confirmacaoModal.show();
+            }
+        });
+
+        document.getElementById('btnConfirmarExclusao').addEventListener('click', executarExclusao);
+    }
 
     const calcularIntervaloDeTempo = (horariosJSON) => {
         try {
@@ -169,12 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(e) { return ''; }
     };
     
-    window.abrirModalExclusao = (id) => {
-        agendamentoParaExcluirId = id;
-        confirmacaoModal.show();
-    };
-
-    async function executarExclusao() {
+    const executarExclusao = async () => {
         if (!agendamentoParaExcluirId) return;
 
         try {
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             agendamentoParaExcluirId = null;
             confirmacaoModal.hide();
         }
-    }
+    };
 
     inicializarPagina();
 });
