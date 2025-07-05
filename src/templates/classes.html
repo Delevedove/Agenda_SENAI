@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Turmas</title>
+</head>
+<body>
+    <h1>Turmas</h1>
+    <ul>
+    {% for turma in turmas %}
+        <li>{{ turma.nome }}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
